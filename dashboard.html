@@ -299,8 +299,15 @@ function render() {
     [["mate_pct", 0], ["repetition_pct", 1], ["other_draw_pct", 2]].map(([k, i]) => ({name: en[i][0], color: S[i], points: pts(k)})), {zero: true, max: 100, unit: "%", yDec: 0});
   lineChart(card("c-length", "Average game length", "Plies (half-moves) per game.", [["plies", S[0]]]),
     [{name: "Average plies", color: S[0], points: pts("avg_plies")}], {zero: true, yDec: 0});
-  lineChart(card("c-speed", "Speed", "Games per hour, including learning.", [["speed", S[0]]]),
-    [{name: "Games per hour", color: S[0], points: pts("games_per_hour")}], {zero: true, yDec: 0});
+  // Each 100-game block lasts only 15-20 seconds and games finish in clumps, so one block's speed
+  // jumps around a lot: the chart shows the average of the last 10 blocks (about 3 minutes).
+  const speedRows = rows.map(r => [r.total_games, r.games_per_hour]);
+  const smoothed = speedRows.map((p, i) => {
+    const w = speedRows.slice(Math.max(0, i - 9), i + 1).filter(q => q[1] != null);
+    return [p[0], w.length ? w.reduce((a, q) => a + q[1], 0) / w.length : null];
+  });
+  lineChart(card("c-speed", "Speed", "Games per hour, including learning (average of the last 10 blocks, about 3 minutes).", [["speed", S[0]]]),
+    [{name: "Games per hour", color: S[0], points: thin(smoothed)}], {zero: true, yDec: 0});
 
   const sr = inRange(status.strength || []);
   lineChart(card("c-strength", "Strength since training started", "Hourly check: each network plays its copy from the previous check; the Elo changes are added up.", botNames),
