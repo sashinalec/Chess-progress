@@ -81,6 +81,13 @@ th:first-child, td:first-child { text-align: left; }
 th { color: var(--ink-2); font-weight: 600; }
 details summary { cursor: pointer; color: var(--ink-2); margin: 12px 0 6px; }
 .tablewrap { overflow-x: auto; }
+/* Website only (progress_site.py): one tab per training run. Green = training now, red = not. */
+.runtabs { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 12px; }
+.runtabs a { padding: 6px 14px; border-radius: 8px; font-weight: 700; font-size: 13px; text-decoration: none;
+             color: var(--ink); border: 2px solid transparent; }
+.runtabs a.on { background: var(--pass-bg); }
+.runtabs a.off { background: var(--fail-bg); }
+.runtabs a.here { border-color: var(--ink); }
 /* Stockfish ladder grid: one column per rung, one row per bot. */
 table.rungs { width: auto; border-collapse: separate; border-spacing: 2px; font-size: 13px; }
 table.rungs th, table.rungs td { border: none; text-align: center; padding: 6px 10px; min-width: 52px; }
@@ -98,6 +105,7 @@ table.rungs td.none { background: var(--none-bg); color: var(--muted); }
 </head>
 <body>
 <main>
+  <nav class="runtabs" id="runtabs" hidden></nav>
   <header>
     <h1 id="title">Training dashboard</h1>
     <span id="state" class="pill off">waiting for data</span>
@@ -460,6 +468,25 @@ async function load() {
     }
   } catch (e) { /* the trainer may be between writes; try again next time */ }
 }
+// Website only: tabs for every training run, from runs.json (written by progress_site.py).
+// A run counts as training if its numbers arrived in the last 20 minutes and it wasn't stopped.
+async function loadTabs() {
+  if (["127.0.0.1", "localhost", ""].includes(location.hostname)) return;
+  try {
+    const runs = await fetch("runs.json", {cache: "no-store"}).then(r => r.ok ? r.json() : []);
+    const label = r => shown(r.replace(/_selfplay$/, "").replace(/_vs_/g, " vs "));
+    const nav = document.getElementById("runtabs");
+    nav.innerHTML = runs.map(r => {
+      const live = r.state !== "stopped" && r.updated &&
+        (Date.now() - new Date(r.updated.replace(" ", "T")).getTime()) < 20 * 60e3;
+      return `<a href="dashboard.html?run=${encodeURIComponent(r.run)}" class="${live ? "on" : "off"}${r.run === run ? " here" : ""}"
+        title="${live ? "training now" : "not training"}${r.updated ? " - last update " + r.updated : ""}">${label(r.run)}</a>`;
+    }).join("");
+    nav.hidden = runs.length === 0;
+  } catch (e) { /* no runs.json (yet): no tabs */ }
+}
+loadTabs();
+setInterval(loadTabs, 60000);
 load();
 setInterval(load, 10000);
 let rt = null;
