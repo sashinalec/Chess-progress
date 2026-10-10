@@ -309,10 +309,8 @@ function render() {
   lineChart(card("c-speed", "Speed", "Games per hour, including learning (average of the last 10 blocks, about 3 minutes).", [["speed", S[0]]]),
     [{name: "Games per hour", color: S[0], points: thin(smoothed)}], {zero: true, yDec: 0});
 
-  const sr = inRange(status.strength || []);
-  lineChart(card("c-strength", "Strength since training started", "Hourly check: each network plays its copy from the previous check; the Elo changes are added up.", botNames),
-    bots.map((b, i) => ({name: b, color: S[i], points: sr.filter(r => r.bot === b).map(r => [Number(r.games_trained), Number(r.rating_since_start)])})),
-    {yDec: 0, unit: " Elo", empty: "The first check runs one hour after training starts (it needs an earlier copy to compare with)."});
+  // (The "Strength since training started" chart was removed on 10 Oct 2026: the hourly strength
+  // check is switched off; the benchmark match and the Stockfish ladder measure progress.)
   // Benchmark: every N games against one fixed opponent (training_safety.BenchmarkMatch).
   const bm = inRange(status.benchmark || []);
   const opp = status.benchmark_opponent || "ai5's best";
@@ -412,7 +410,7 @@ function render() {
   const charts = document.getElementById("charts");
   if (!charts.dataset.ordered) {
     ["c-policy", "c-value", "c-results", "c-endings", "c-length", "c-speed",
-     "c-bench", "c-ladder", "c-ladder-current", "c-ladder-level", "c-strength",
+     "c-bench", "c-ladder", "c-ladder-current", "c-ladder-level",
      "c-ladder-table", "c-elo"].forEach(id => {
       const c = document.getElementById(id);
       if (c) charts.appendChild(c);
