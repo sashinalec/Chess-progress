@@ -1,0 +1,469 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Training dashboard</title>
+<style>
+:root {
+  color-scheme: light;
+  --page: #f9f9f7; --surface: #fcfcfb; --ink: #0b0b0b; --ink-2: #52514e; --muted: #898781;
+  --grid: #e1e0d9; --axis: #c3c2b7; --ring: rgba(11,11,11,0.10);
+  --s1: #2a78d6; --s2: #eb6834; --s3: #1baf7a;
+  --good: #0ca30c; --warning: #fab219; --critical: #d03b3b;
+  --light-sq: #f0eed6; --dark-sq: #6f9a52;
+  --head-bg: #1f5f80; --pass-bg: #c6e9c6; --fail-bg: #f5c6c6; --none-bg: #e2e1dc;
+}
+@media (prefers-color-scheme: dark) {
+  :root:where(:not([data-theme="light"])) {
+    color-scheme: dark;
+    --page: #0d0d0d; --surface: #1a1a19; --ink: #ffffff; --ink-2: #c3c2b7; --muted: #898781;
+    --grid: #2c2c2a; --axis: #383835; --ring: rgba(255,255,255,0.10);
+    --s1: #3987e5; --s2: #d95926; --s3: #199e70;
+    --light-sq: #c9c7b0; --dark-sq: #557a3e;
+    --head-bg: #1d4f6b; --pass-bg: #1f4d24; --fail-bg: #5c2525; --none-bg: #2c2c2a;
+  }
+}
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  --page: #0d0d0d; --surface: #1a1a19; --ink: #ffffff; --ink-2: #c3c2b7; --muted: #898781;
+  --grid: #2c2c2a; --axis: #383835; --ring: rgba(255,255,255,0.10);
+  --s1: #3987e5; --s2: #d95926; --s3: #199e70;
+  --light-sq: #c9c7b0; --dark-sq: #557a3e;
+  --head-bg: #1d4f6b; --pass-bg: #1f4d24; --fail-bg: #5c2525; --none-bg: #2c2c2a;
+}
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--page); color: var(--ink);
+       font: 14px/1.45 system-ui, -apple-system, "Segoe UI", sans-serif; }
+main { max-width: 1280px; margin: 0 auto; padding: 16px; }
+header { display: flex; flex-wrap: wrap; align-items: baseline; gap: 8px 16px; margin-bottom: 12px; }
+h1 { font-size: 20px; margin: 0; }
+.pill { font-size: 12px; padding: 2px 10px; border-radius: 999px; border: 1px solid var(--ring); color: var(--ink-2); }
+.pill.on::before { content: "\25CF "; color: var(--good); }
+.pill.off::before { content: "\25A0 "; color: var(--muted); }
+.sub { color: var(--muted); font-size: 12px; }
+.controls { margin-left: auto; display: flex; gap: 6px; }
+.controls button { font: inherit; font-size: 12px; padding: 4px 10px; border-radius: 6px; cursor: pointer;
+  border: 1px solid var(--ring); background: var(--surface); color: var(--ink-2); }
+.controls button[aria-pressed="true"] { color: var(--ink); font-weight: 600; border-color: var(--axis); }
+.tiles { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 8px; margin-bottom: 12px; }
+.tile { background: var(--surface); border: 1px solid var(--ring); border-radius: 10px; padding: 10px 12px; }
+.tile .label { color: var(--ink-2); font-size: 12px; }
+.tile .value { font-size: 22px; font-weight: 600; }
+.tile .note { color: var(--muted); font-size: 12px; }
+.warn { display: none; background: var(--surface); border: 1px solid var(--ring); border-left: 4px solid var(--warning);
+        border-radius: 8px; padding: 8px 12px; margin-bottom: 12px; }
+.warn b::before { content: "\26A0  "; }
+.grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(380px, 1fr)); gap: 12px; }
+.card { background: var(--surface); border: 1px solid var(--ring); border-radius: 10px; padding: 12px; min-width: 0; position: relative; }
+.card h2 { font-size: 14px; margin: 0 0 2px; }
+.card .desc { color: var(--muted); font-size: 12px; margin: 0 0 6px; }
+.legend { display: flex; flex-wrap: wrap; gap: 4px 14px; font-size: 12px; color: var(--ink-2); margin-bottom: 4px; }
+.legend span::before { content: ""; display: inline-block; width: 12px; height: 3px; border-radius: 2px;
+  background: var(--c); vertical-align: middle; margin-right: 5px; }
+svg { display: block; width: 100%; height: auto; overflow: visible; }
+.tip { position: absolute; pointer-events: none; background: var(--surface); border: 1px solid var(--axis); border-radius: 6px;
+       padding: 6px 8px; font-size: 12px; color: var(--ink); box-shadow: 0 2px 8px var(--ring); display: none; white-space: nowrap; z-index: 2; }
+.tip .k::before { content: ""; display: inline-block; width: 8px; height: 8px; border-radius: 50%;
+  background: var(--c); margin-right: 5px; }
+.empty { color: var(--muted); font-size: 13px; padding: 40px 0; text-align: center; }
+.board { display: grid; grid-template-columns: repeat(8, 1fr); width: 100%; max-width: 320px; aspect-ratio: 1;
+         border: 1px solid var(--axis); }
+.board div { display: flex; align-items: center; justify-content: center; font-size: clamp(18px, 4vw, 30px); line-height: 1; }
+.board .l { background: var(--light-sq); } .board .d { background: var(--dark-sq); }
+.pw { color: #fff; -webkit-text-stroke: 1.5px #000; } .pb { color: #000; -webkit-text-stroke: 0.6px #fff; }
+.events { font: 12px/1.5 ui-monospace, Consolas, monospace; color: var(--ink-2); max-height: 260px; overflow: auto; white-space: pre-wrap; }
+.events .w { color: var(--ink); }
+.events .w::before { content: "\26A0 "; color: var(--warning); }
+table { border-collapse: collapse; width: 100%; font-size: 12px; font-variant-numeric: tabular-nums; }
+th, td { text-align: right; padding: 3px 6px; border-bottom: 1px solid var(--grid); }
+th:first-child, td:first-child { text-align: left; }
+th { color: var(--ink-2); font-weight: 600; }
+details summary { cursor: pointer; color: var(--ink-2); margin: 12px 0 6px; }
+.tablewrap { overflow-x: auto; }
+/* Stockfish ladder grid: one column per rung, one row per bot. */
+table.rungs { width: auto; border-collapse: separate; border-spacing: 2px; font-size: 13px; }
+table.rungs th, table.rungs td { border: none; text-align: center; padding: 6px 10px; min-width: 52px; }
+table.rungs th { background: var(--head-bg); color: #fff; font-weight: 700; white-space: nowrap; }
+table.rungs th:first-child { min-width: 40px; }
+table.rungs td:first-child { text-align: left; background: var(--none-bg); font-weight: 600; }
+table.rungs td.pass { background: var(--pass-bg); }
+table.rungs td.fail { background: var(--fail-bg); }
+table.rungs td.none { background: var(--none-bg); color: var(--muted); }
+.key { display: flex; flex-wrap: wrap; gap: 4px 14px; font-size: 12px; color: var(--ink-2); margin-top: 6px; }
+.key span::before { content: ""; display: inline-block; width: 12px; height: 12px; border-radius: 2px;
+  background: var(--c); vertical-align: -2px; margin-right: 5px; }
+@media (max-width: 480px) { .grid { grid-template-columns: 1fr; } .controls { margin-left: 0; } }
+</style>
+</head>
+<body>
+<main>
+  <header>
+    <h1 id="title">Training dashboard</h1>
+    <span id="state" class="pill off">waiting for data</span>
+    <span class="sub" id="updated"></span>
+    <div class="controls" role="group" aria-label="Time range">
+      <button data-range="all" aria-pressed="true">Whole run</button>
+      <button data-range="6">Last 6 hours</button>
+      <button data-range="1">Last hour</button>
+    </div>
+  </header>
+  <div class="warn" id="warn"></div>
+  <section class="tiles" id="tiles"></section>
+  <section class="grid" id="charts"></section>
+  <section class="grid" style="margin-top:12px">
+    <div class="card"><h2>Latest finished game</h2><p class="desc" id="gamedesc"></p>
+      <div class="board" id="board" aria-label="Board of the latest game"></div></div>
+    <div class="card"><h2>Recent events</h2><p class="desc">Saves, restarts, strength checks and warnings (newest last).</p>
+      <div class="events" id="events"></div></div>
+  </section>
+  <details><summary>Show the numbers as a table (latest 40 blocks)</summary><div class="tablewrap" id="table"></div></details>
+</main>
+<script>
+"use strict";
+const run = new URLSearchParams(location.search).get("run") || "";
+let range = "all", status = null, history = [];
+const css = n => getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+const fmt = (v, d = 0) => v == null || isNaN(v) ? "-" : Number(v).toLocaleString(undefined, {maximumFractionDigits: d, minimumFractionDigits: d});
+const ago = s => s == null ? "-" : s < 90 ? `${Math.round(s)} s ago` : s < 5400 ? `${Math.round(s / 60)} min ago` : `${(s / 3600).toFixed(1)} h ago`;
+const dur = s => s < 3600 ? `${Math.round(s / 60)} min` : `${Math.floor(s / 3600)} h ${Math.round((s % 3600) / 60)} min`;
+
+document.querySelectorAll("[data-range]").forEach(b => b.onclick = () => {
+  range = b.dataset.range;
+  document.querySelectorAll("[data-range]").forEach(x => x.setAttribute("aria-pressed", x === b));
+  render();
+});
+
+function inRange(rows, timeKey = "time") {
+  if (range === "all") return rows;
+  const cut = Date.now() - Number(range) * 3600e3;
+  return rows.filter(r => new Date(String(r[timeKey]).replace(" ", "T")).getTime() >= cut);
+}
+
+// Thin a long series to at most `max` points by averaging neighbours.
+function thin(points, max = 300) {
+  if (points.length <= max) return points;
+  const size = Math.ceil(points.length / max), out = [];
+  for (let i = 0; i < points.length; i += size) {
+    const g = points.slice(i, i + size).filter(p => p[1] != null);
+    if (g.length) out.push([g[g.length - 1][0], g.reduce((a, p) => a + p[1], 0) / g.length]);
+  }
+  return out;
+}
+
+function niceTicks(lo, hi, n = 4) {
+  if (lo === hi) { lo -= 1; hi += 1; }
+  const step0 = (hi - lo) / n, mag = Math.pow(10, Math.floor(Math.log10(step0)));
+  const step = [1, 2, 2.5, 5, 10].map(m => m * mag).find(s => s >= step0);
+  const ticks = [];
+  for (let v = Math.ceil(lo / step) * step; v <= hi + 1e-9; v += step) ticks.push(+v.toFixed(10));
+  return {ticks, lo: Math.min(lo, ticks[0]), hi: Math.max(hi, ticks[ticks.length - 1])};
+}
+
+// A line chart: series = [{name, color, points: [[x, y], ...], dots?: bool, dash?: bool, ranges?: [[x, lo, hi]]}]
+function lineChart(card, series, opt = {}) {
+  const box = card.querySelector(".plot");
+  box.innerHTML = "";
+  const all = series.flatMap(s => s.points).filter(p => p[1] != null && isFinite(p[1]));
+  if (!all.length) { box.innerHTML = `<div class="empty">${opt.empty || "Not enough games yet."}</div>`; return; }
+  const W = Math.max(300, box.clientWidth || 400), H = 200, L = 48, R = 12, T = 8, B = 30;
+  let xs = all.map(p => p[0]), ys = all.map(p => p[1]);
+  series.forEach(s => (s.ranges || []).forEach(r => ys.push(r[1], r[2])));
+  let x0 = Math.min(...xs), x1 = Math.max(...xs);
+  if (x0 === x1) { x0 -= 1; x1 += 1; }
+  let y0 = opt.zero ? Math.min(0, ...ys) : Math.min(...ys), y1 = Math.max(...ys);
+  if (opt.max != null) y1 = Math.max(y1, opt.max);
+  const yt = niceTicks(y0, y1), xt = niceTicks(x0, x1, 4);
+  y0 = yt.lo; y1 = yt.hi;
+  const X = v => L + (v - x0) / (x1 - x0) * (W - L - R), Y = v => T + (1 - (v - y0) / (y1 - y0)) * (H - T - B);
+  let s = `<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="${card.dataset.title}">`;
+  yt.ticks.forEach(t => s += `<line x1="${L}" x2="${W - R}" y1="${Y(t)}" y2="${Y(t)}" stroke="var(--grid)"/>` +
+    `<text x="${L - 6}" y="${Y(t) + 4}" text-anchor="end" font-size="11" fill="var(--muted)">${fmt(t, opt.yDec || 0)}</text>`);
+  xt.ticks.filter(t => t >= x0 && t <= x1).forEach(t => s += `<text x="${X(t)}" y="${H - 10}" text-anchor="middle" font-size="11" fill="var(--muted)">${fmt(t)}</text>`);
+  s += `<line x1="${L}" x2="${W - R}" y1="${H - B}" y2="${H - B}" stroke="var(--axis)"/>`;
+  series.forEach(se => {
+    const pts = se.points.filter(p => p[1] != null && isFinite(p[1]));
+    (se.ranges || []).forEach(r => s += `<line x1="${X(r[0])}" x2="${X(r[0])}" y1="${Y(r[1])}" y2="${Y(r[2])}" stroke="${se.color}" stroke-width="2" stroke-linecap="round" opacity="0.5"/>`);
+    if (!se.dots && pts.length > 1)
+      s += `<path d="${pts.map((p, i) => (i ? "L" : "M") + X(p[0]).toFixed(1) + " " + Y(p[1]).toFixed(1)).join("")}" fill="none" stroke="${se.color}" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"${se.dash ? ' stroke-dasharray="6 4"' : ""}/>`;
+    if (se.dots || pts.length === 1)
+      pts.forEach(p => s += `<circle cx="${X(p[0])}" cy="${Y(p[1])}" r="4.5" fill="${se.color}" stroke="var(--surface)" stroke-width="2"/>`);
+  });
+  s += `<line class="cross" x1="0" x2="0" y1="${T}" y2="${H - B}" stroke="var(--axis)" visibility="hidden"/>`;
+  s += `<text x="${W - R}" y="${H}" text-anchor="end" font-size="11" fill="var(--muted)">${opt.xLabel || "games trained"}</text></svg>`;
+  box.innerHTML = s;
+  const svg = box.querySelector("svg"), cross = svg.querySelector(".cross"), tip = card.querySelector(".tip");
+  const allX = [...new Set(series.flatMap(se => se.points.map(p => p[0])))].sort((a, b) => a - b);
+  svg.addEventListener("mousemove", ev => {
+    const r = svg.getBoundingClientRect(), mx = (ev.clientX - r.left) / r.width * W;
+    let best = allX[0];
+    allX.forEach(x => { if (Math.abs(X(x) - mx) < Math.abs(X(best) - mx)) best = x; });
+    cross.setAttribute("x1", X(best)); cross.setAttribute("x2", X(best)); cross.setAttribute("visibility", "visible");
+    const lines = series.map(se => {
+      const p = se.points.find(q => q[0] === best);
+      return p && p[1] != null ? `<div><span class="k" style="--c:${se.color}"></span>${shown(se.name)}: <b>${fmt(p[1], opt.tipDec ?? opt.yDec ?? 1)}${opt.unit || ""}</b></div>` : "";
+    }).join("");
+    tip.innerHTML = `<div style="color:var(--ink-2)">${fmt(best)} ${opt.xLabel || "games trained"}</div>${lines}`;
+    tip.style.display = "block";
+    const cr = card.getBoundingClientRect(), tx = ev.clientX - cr.left + 14;
+    tip.style.left = Math.min(tx, cr.width - tip.offsetWidth - 8) + "px";
+    tip.style.top = (ev.clientY - cr.top + 10) + "px";
+  });
+  svg.addEventListener("mouseleave", () => { tip.style.display = "none"; cross.setAttribute("visibility", "hidden"); });
+}
+
+// Names as shown on the page (the log files keep the originals):
+// bots in capitals ("ai7" -> "AI7"); Stockfish ladder rungs without "sf" / "r" ("sf1320-r30" -> "1320-30").
+function shown(text) {
+  return String(text).replace(/\bai(\d+)\b/g, "AI$1").replace(/\bsf(\d+)-r(\d+)\b/g, "$1-$2").replace(/\bsf(\d+)\b/g, "$1");
+}
+
+function card(id, title, desc, names) {
+  let c = document.getElementById(id);
+  if (!c) {
+    c = document.createElement("div");
+    c.className = "card"; c.id = id; c.dataset.title = title;
+    c.innerHTML = `<h2>${title}</h2><p class="desc">${desc}</p><div class="legend"></div><div class="plot"></div><div class="tip"></div>`;
+    document.getElementById("charts").appendChild(c);
+  }
+  // Titles and descriptions can change (for example the ladder's current rung): refresh them every time.
+  c.dataset.title = title;
+  c.querySelector("h2").textContent = shown(title);
+  c.querySelector(".desc").textContent = shown(desc);
+  c.querySelector(".legend").innerHTML = names.length > 1 ? names.map((n, i) => `<span style="--c:${n[1]}">${shown(n[0])}</span>`).join("") : "";
+  return c;
+}
+
+function render() {
+  if (!status) return;
+  const S = [css("--s1"), css("--s2"), css("--s3")];
+  const bots = status.bots || [];
+  const two = status.white !== status.black;
+  document.getElementById("title").textContent = shown(two ? `Training ${status.white} (White) vs ${status.black} (Black)` : `Training ${status.white} (self-play)`);
+  const st = document.getElementById("state");
+  // On the always-online copy (progress_site.py) the numbers arrive every few minutes, not every 10 seconds.
+  const local = ["127.0.0.1", "localhost", ""].includes(location.hostname);
+  const live = status.state !== "stopped" && (Date.now() - new Date(status.updated.replace(" ", "T")).getTime()) < (local ? 60e3 : 20 * 60e3);
+  st.className = "pill " + (live ? "on" : "off");
+  st.textContent = live ? (local ? "training" : "training (this page updates every few minutes)")
+    : (status.state === "stopped" ? "stopped" : `no update for over ${local ? "a minute" : "20 minutes"}`);
+  document.getElementById("updated").textContent = `updated ${status.updated}`;
+
+  const buf = bots.map(b => `${shown(b)} ${fmt(100 * (status.buffers?.[b] || 0) / (status.buffer_capacity || 1))}%`).join(", ");
+  const tiles = [
+    ["Games trained", fmt(status.total_games), "all sessions"],
+    ["Speed", status.games_per_hour_10min ? fmt(status.games_per_hour_10min) : "-", "games per hour (last 10 min)"],
+    ["Running for", dur(status.running_seconds || 0), "this session"],
+    ["Last save", ago(status.last_save_seconds_ago), `autosave every ${status.autosave_minutes} min`],
+    ["Replay buffer", buf || "-", "full"],
+    ["Engine", status.engine_restarts ? `${status.engine_restarts} restart(s)` : "OK", `learning steps ${fmt(status.train_steps)}`],
+  ];
+  document.getElementById("tiles").innerHTML = tiles.map(t => `<div class="tile"><div class="label">${t[0]}</div><div class="value">${t[1]}</div><div class="note">${t[2]}</div></div>`).join("");
+
+  // Only this session's warnings in the banner (older ones stay in the events list).
+  const warns = (status.events || []).filter(e => e.includes("[warning]") && e.slice(0, 19) >= (status.session_started || "")).slice(-3);
+  const w = document.getElementById("warn");
+  w.style.display = warns.length ? "block" : "none";
+  w.innerHTML = warns.map(e => `<div><b>Warning</b> ${shown(e.replace(/^.*\[warning\]\s*/, ""))} <span class="sub">${e.slice(0, 19)}</span></div>`).join("");
+
+  const rows = inRange(history);
+  const pts = key => thin(rows.map(r => [r.total_games, r[key]]));
+  const botNames = bots.map((b, i) => [b, S[i]]);
+
+  // Solid: on the training positions. Dashed: on new games it never trained on (the honest number).
+  // A dashed line well above the solid one means the network is memorising, not learning.
+  // The first LOSS_FROM games are left out: a brand-new network's losses are far higher and squash the chart.
+  const LOSS_FROM = 2000;
+  const lossPts = key => thin(rows.filter(r => r.total_games >= LOSS_FROM).map(r => [r.total_games, r[key]]));
+  const lossSeries = kind => bots.flatMap((b, i) => [
+    {name: b + " training", color: S[i], points: lossPts(kind + "_loss_" + b)},
+    {name: b + " new games", color: S[i], dash: true, points: lossPts("heldout_" + kind + "_" + b)}]);
+  const lossEmpty = `Shown from ${fmt(LOSS_FROM)} games trained (the first games are left out).`;
+  lineChart(card("c-policy", "Policy loss", `How far the network's move choices are from the search's (lower is better). Solid: training positions; dashed: new games it never trained on. From ${fmt(LOSS_FROM)} games trained.`, botNames),
+    lossSeries("policy"), {yDec: 2, tipDec: 3, empty: lossEmpty});
+  lineChart(card("c-value", "Value loss", `How far the network's win/loss judgement is from the real results (lower is better). Solid: training positions; dashed: new games it never trained on. Dashed far above solid = memorising. From ${fmt(LOSS_FROM)} games trained.`, botNames),
+    lossSeries("value"), {yDec: 2, tipDec: 3, empty: lossEmpty});
+  const rn = two ? [[`${status.white} (White) wins`, S[0]], [`${status.black} (Black) wins`, S[1]], ["Draws", S[2]]] : [["White wins", S[0]], ["Black wins", S[1]], ["Draws", S[2]]];
+  lineChart(card("c-results", "Results", "Share of games in each block.", rn),
+    [["white_pct", 0], ["black_pct", 1], ["draw_pct", 2]].map(([k, i]) => ({name: rn[i][0], color: S[i], points: pts(k)})), {zero: true, max: 100, unit: "%", yDec: 0});
+  const en = [["Checkmate", S[0]], ["Repetition", S[1]], ["Other draws", S[2]]];
+  lineChart(card("c-endings", "How games end", "Other draws: 50-move rule, too little material, stalemate, the ply limit.", en),
+    [["mate_pct", 0], ["repetition_pct", 1], ["other_draw_pct", 2]].map(([k, i]) => ({name: en[i][0], color: S[i], points: pts(k)})), {zero: true, max: 100, unit: "%", yDec: 0});
+  lineChart(card("c-length", "Average game length", "Plies (half-moves) per game.", [["plies", S[0]]]),
+    [{name: "Average plies", color: S[0], points: pts("avg_plies")}], {zero: true, yDec: 0});
+  lineChart(card("c-speed", "Speed", "Games per hour, including learning.", [["speed", S[0]]]),
+    [{name: "Games per hour", color: S[0], points: pts("games_per_hour")}], {zero: true, yDec: 0});
+
+  const sr = inRange(status.strength || []);
+  lineChart(card("c-strength", "Strength since training started", "Hourly check: each network plays its copy from the previous check; the Elo changes are added up.", botNames),
+    bots.map((b, i) => ({name: b, color: S[i], points: sr.filter(r => r.bot === b).map(r => [Number(r.games_trained), Number(r.rating_since_start)])})),
+    {yDec: 0, unit: " Elo", empty: "The first check runs one hour after training starts (it needs an earlier copy to compare with)."});
+  // Benchmark: every N games against one fixed opponent (training_safety.BenchmarkMatch).
+  const bm = inRange(status.benchmark || []);
+  const opp = status.benchmark_opponent || "ai5's best";
+  const bmSeries = bots.length === 1
+    ? [["win_pct", "Wins", S[0]], ["draw_pct", "Draws", S[2]], ["loss_pct", "Losses", S[1]]].map(([k, n, c]) =>
+        ({name: n, color: c, points: bm.map(r => [Number(r.games_trained), Number(r[k])])}))
+    : bots.map((b, i) => ({name: b + " wins", color: S[i],
+        points: bm.filter(r => r.bot === b).map(r => [Number(r.games_trained), Number(r.win_pct)])}));
+  lineChart(card("c-bench", `Against ${opp}`,
+    `Every ${fmt(status.benchmark_every || 1000)} games: ${bm.length ? bm[bm.length - 1].games : 40} games against this fixed opponent (random openings, both colours, same search size). Share of games won, drawn and lost.`,
+    bmSeries.map(s => [s.name, s.color])),
+    bmSeries, {zero: true, max: 100, unit: "%", yDec: 0, empty: `The first match is played after ${fmt(status.benchmark_every || 1000)} games.`});
+
+  // Stockfish ladder (training_safety.StockfishLadder): up one rung at 75% of the games that weren't draws.
+  const ld = inRange(status.ladder || []);
+  // Rung names shown without the letters: "sf1320-r30" -> "1320-30", "sf1520" -> "1520".
+  const rungName = r => String(r || "random").replace(/^sf/, "").replace("-r", "-");
+  const now = bots.map(b => `${bots.length > 1 ? b + ": " : ""}${rungName((status.ladder_now || {})[b])}`).join(", ");
+  const ldSeries = bots.length === 1
+    ? [["win_pct", "Wins", S[0]], ["draw_pct", "Draws", S[2]], ["loss_pct", "Losses", S[1]]].map(([k, n, c]) =>
+        ({name: n, color: c, points: ld.map(r => [Number(r.games_trained), Number(r[k])])}))
+    : bots.map((b, i) => ({name: b + " wins", color: S[i],
+        points: ld.filter(r => r.bot === b).map(r => [Number(r.games_trained), Number(r.win_pct)])}));
+  // The running trainer reports its threshold (older trainers didn't: they used 75%).
+  const promote = Math.round(100 * (status.ladder_promote ?? 0.75));
+  lineChart(card("c-ladder", `Against the Stockfish ladder (now: ${now})`,
+    `Every ${fmt(status.ladder_every || 1000)} games: 40 games against the current rung (random moves, then Stockfish 1320 with fewer and fewer random moves, then Stockfish). Moves up a rung when it wins ${promote}% of the games that weren't draws; never down.`,
+    ldSeries.map(s => [s.name, s.color])),
+    ldSeries, {zero: true, max: 100, unit: "%", yDec: 0, empty: "The first match is played at the next 1,000 games trained."});
+  const num = v => (v === "" || v == null) ? null : Number(v);
+  const lvSeries = bots.flatMap((b, i) => [
+    {name: (bots.length > 1 ? b + " " : "") + "rung reached (its rating)", color: S[i],
+     points: ld.filter(r => r.bot === b).map(r => [Number(r.games_trained), num(r.rung_rating)])},
+    {name: (bots.length > 1 ? b + " " : "") + "estimate from the match", color: S[i], dots: true,
+     points: ld.filter(r => r.bot === b).map(r => [Number(r.games_trained), num(r.estimated_rating)])}]);
+  lineChart(card("c-ladder-level", "Stockfish ladder: level reached",
+    "Line: the rating of the rung being played (measured on the rating list, where Stockfish 1320 counts as 1320). Dots: a rough rating estimate from each 40-game match.",
+    lvSeries.filter(s => !s.dots).map(s => [s.name, s.color])),
+    lvSeries, {yDec: 0, empty: "The first match is played at the next 1,000 games trained."});
+
+  // The same matches, but only those against the CURRENT rung: starts afresh at every promotion.
+  const atRung = r => r.rung === ((status.ladder_now || {})[r.bot] || "random");
+  const curSeries = bots.length === 1
+    ? [["win_pct", "Wins", S[0]], ["draw_pct", "Draws", S[2]], ["loss_pct", "Losses", S[1]]].map(([k, n, c]) =>
+        ({name: n, color: c, points: ld.filter(atRung).map(r => [Number(r.games_trained), Number(r[k])])}))
+    : bots.map((b, i) => ({name: b + " wins", color: S[i],
+        points: ld.filter(r => r.bot === b && atRung(r)).map(r => [Number(r.games_trained), Number(r.win_pct)])}));
+  lineChart(card("c-ladder-current", `At the current rung only (${now})`,
+    "Only the matches against the rung it is on now: the chart starts afresh every time it moves up.",
+    curSeries.map(s => [s.name, s.color])),
+    curSeries, {zero: true, max: 100, unit: "%", yDec: 0,
+                empty: "No match against this rung yet: it has just moved up (the next match is at most 1,000 games away)."});
+
+  // Win rate against every rung: one column per rung, one row per bot.
+  // Green = passed, red = played but not passed yet, grey = not played yet. Hover for the full record.
+  const tcard = card("c-ladder-table", "Win rate against every rung",
+    "The best win rate it has reached in any one match against each rung (including the revisits every 10,000 games of rungs not yet beaten 100%). Hover over a box for the full record.", []);
+  tcard.style.gridColumn = "1 / -1";
+  // The ladder from the bottom up (an older trainer doesn't send it: the same list, written out).
+  const rungs = status.ladder_rungs || ["random", "sf1320-r80", "sf1320-r60", "sf1320-r50", "sf1320-r40", "sf1320-r30",
+    "sf1320-r20", "sf1320-r15", "sf1320-r10", "sf1320-r5", "sf1320", "sf1520", "sf1720", "sf1920", "sf2120", "sf2320",
+    "sf2520", "sf2720", "sf2920", "sf3120", "sf3190"];
+  // Ladder matches plus revisits (every 10,000 games, rungs passed but never beaten 100%).
+  const record = {};
+  (status.ladder || []).concat(status.ladder_revisits || []).forEach(r => {
+    const g = record[r.bot + "|" + r.rung] ??= {matches: 0, revisits: 0, w: 0, d: 0, l: 0, passed: null, best: 0};
+    g.matches++; g.w += Number(r.wins); g.d += Number(r.draws); g.l += Number(r.losses);
+    if (r.promoted === undefined) g.revisits++;
+    g.best = Math.max(g.best, Number(r.win_pct));
+    if (r.promoted === "1") g.passed = r.games_trained;
+  });
+  const box = (bot, rung) => {
+    const g = record[bot + "|" + rung];
+    if (!g) return `<td class="none" title="${rungName(rung)}: not played yet">-</td>`;
+    const n = g.w + g.d + g.l;
+    const tip = `${rungName(rung)}: best match ${Math.round(g.best)}% wins. All matches together: won ${g.w}, drew ${g.d}, lost ${g.l} of ${n} games (${g.matches} match${g.matches > 1 ? "es" : ""}${g.revisits ? `, ${g.revisits} of them revisits` : ""}); ` +
+      `won ${g.w + g.l ? Math.round(100 * g.w / (g.w + g.l)) : 0}% of the games that weren't draws` +
+      (g.passed ? `; passed at ${fmt(Number(g.passed))} games` : "; not passed yet");
+    return `<td class="${g.passed ? "pass" : "fail"}" title="${tip}">${Math.round(g.best)}%</td>`;
+  };
+  tcard.querySelector(".plot").innerHTML =
+    `<div class="tablewrap"><table class="rungs"><tr><th></th>${rungs.map(r => `<th>${rungName(r)}</th>`).join("")}</tr>` +
+    bots.map(b => `<tr><td>${shown(b)}</td>${rungs.map(r => box(b, r)).join("")}</tr>`).join("") + "</table></div>" +
+    `<div class="key"><span style="--c:var(--pass-bg)">passed</span><span style="--c:var(--fail-bg)">played, not passed yet</span>` +
+    `<span style="--c:var(--none-bg)">not played yet</span></div>`;
+
+  const er = status.elo_tests || [];
+  lineChart(card("c-elo", "Stockfish rating tests", "Menu option 5. Dots are estimates, bars the 95% range.", botNames),
+    bots.map((b, i) => {
+      const r = er.filter(x => x.bot === b && x.rating !== "");
+      return {name: b, color: S[i], dots: true, points: r.map(x => [Number(x.games_trained), Number(x.rating)]),
+              ranges: r.filter(x => x.low !== "" && x.high !== "").map(x => [Number(x.games_trained), Number(x.low), Number(x.high)])};
+    }), {yDec: 0, unit: "", empty: "No rating tests yet: use menu option 5 to run one."});
+
+  // The order of the charts on the page (cards are created in the order above, then
+  // arranged once): the Stockfish ladder charts sit together after the AI5 match.
+  const charts = document.getElementById("charts");
+  if (!charts.dataset.ordered) {
+    ["c-policy", "c-value", "c-results", "c-endings", "c-length", "c-speed",
+     "c-bench", "c-ladder", "c-ladder-current", "c-ladder-level", "c-strength",
+     "c-ladder-table", "c-elo"].forEach(id => {
+      const c = document.getElementById(id);
+      if (c) charts.appendChild(c);
+    });
+    charts.dataset.ordered = "1";
+  }
+
+  const g = status.last_game;
+  const boardEl = document.getElementById("board");
+  if (g && g.fens && g.fens.length) {
+    document.getElementById("gamedesc").textContent = `${g.result === "draw" ? "Draw" : (g.result === "white" ? "White won" : "Black won")} by ${g.ending}, ${g.plies} plies. Replaying it.`;
+    if (boardEl.dataset.game !== JSON.stringify(g.fens.length + g.ending + g.plies)) {
+      boardEl.dataset.game = JSON.stringify(g.fens.length + g.ending + g.plies);
+      replay(g.fens);
+    }
+  } else {
+    document.getElementById("gamedesc").textContent = "Appears once the first game of this session has finished.";
+  }
+  document.getElementById("events").innerHTML = (status.events || []).slice().map(e => `<div class="${e.includes("[warning]") ? "w" : ""}">${shown(e.replace(" [info]", "").replace(" [warning]", ""))}</div>`).join("");
+
+  const cols = ["time", "total_games", "games_per_hour", "white_pct", "black_pct", "draw_pct", "mate_pct", "repetition_pct", "avg_plies"]
+    .concat(bots.flatMap(b => ["policy_loss_" + b, "value_loss_" + b, "heldout_policy_" + b, "heldout_value_" + b]));
+  document.getElementById("table").innerHTML = `<table><tr>${cols.map(c => `<th>${shown(c.replace(/_/g, " "))}</th>`).join("")}</tr>` +
+    rows.slice(-40).reverse().map(r => `<tr>${cols.map(c => `<td>${r[c] ?? "-"}</td>`).join("")}</tr>`).join("") + "</table>";
+}
+
+const GLYPH = {K: "♚", Q: "♛", R: "♜", B: "♝", N: "♞", P: "♟"};
+let replayTimer = null;
+function drawBoard(fen) {
+  const rows = fen.split(" ")[0].split("/");
+  let html = "";
+  rows.forEach((row, r) => {
+    let f = 0;
+    for (const ch of row) {
+      if (/\d/.test(ch)) { for (let k = 0; k < +ch; k++, f++) html += `<div class="${(r + f) % 2 ? "d" : "l"}"></div>`; }
+      else { html += `<div class="${(r + f) % 2 ? "d" : "l"}"><span class="${ch === ch.toUpperCase() ? "pw" : "pb"}">${GLYPH[ch.toUpperCase()]}︎</span></div>`; f++; }
+    }
+  });
+  document.getElementById("board").innerHTML = html;
+}
+function replay(fens) {
+  clearInterval(replayTimer);
+  let i = 0;
+  drawBoard(fens[0]);
+  replayTimer = setInterval(() => { i++; if (i >= fens.length) { clearInterval(replayTimer); return; } drawBoard(fens[i]); }, 400);
+}
+
+async function load() {
+  try {
+    const [s, h] = await Promise.all([
+      fetch(`${run}/status.json`, {cache: "no-store"}).then(r => r.ok ? r.json() : null),
+      fetch(`${run}/history.json`, {cache: "no-store"}).then(r => r.ok ? r.json() : []).catch(() => []),
+    ]);
+    if (s) {
+      const first = !status;
+      status = s; history = h || []; render();
+      // First time: the chart cards were added one by one, so draw again
+      // once the page layout has settled (each chart measures its width).
+      if (first) requestAnimationFrame(render);
+    }
+  } catch (e) { /* the trainer may be between writes; try again next time */ }
+}
+load();
+setInterval(load, 10000);
+let rt = null;
+window.addEventListener("resize", () => { clearTimeout(rt); rt = setTimeout(render, 200); });
+</script>
+</body>
+</html>
