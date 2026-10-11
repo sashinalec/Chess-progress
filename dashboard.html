@@ -308,6 +308,36 @@ function render() {
     const w = speedRows.slice(Math.max(0, i - 9), i + 1).filter(q => q[1] != null);
     return [p[0], w.length ? w.reduce((a, q) => a + q[1], 0) / w.length : null];
   });
+  // The network (11 Oct 2026): every unit as a small square, coloured by how often it is active on 2,000
+  // real positions (red = dead, never active; orange = almost never; green = active, brighter = more often).
+  const netv = status.network || {};
+  const netIds = [];
+  Object.keys(netv).sort().forEach(bot => {
+    const v = netv[bot];
+    const total = v.layers.reduce((a, l) => a + l.rates.length, 0);
+    const dead = v.layers.reduce((a, l) => a + l.dead, 0);
+    const id = "c-net-" + bot;
+    netIds.push(id);
+    const c = card(id, `${shown(bot)}'s network: ${fmt(dead)} of ${fmt(total)} units dead (${(100 * dead / Math.max(1, total)).toFixed(1)}%)`,
+      `Every unit (neuron) as a square, measured at ${fmt(v.games)} games on ${fmt(v.positions)} real positions: how often it is active. ` +
+      `Dead units never are - they learn nothing. ${v.to_revive ? fmt(v.to_revive) + " dead units are being revived (a batch every 1,000 games). " : ""}` +
+      `${v.next_check ? "Next dead-unit check at " + fmt(v.next_check) + " games." : ""}`, []);
+    c.style.gridColumn = "1 / -1";
+    const colour = r => r === 0 ? "#d6453d" : r < 0.01 ? "#f0a030" : `hsl(140, 55%, ${Math.round(72 - 42 * Math.min(1, r))}%)`;
+    let html = '<div style="display:flex;flex-direction:column;gap:10px">';
+    v.layers.forEach(l => {
+      const cols = l.rates.length > 512 ? 128 : l.rates.length > 64 ? 64 : 32;
+      html += `<div><div style="font-size:12px;margin-bottom:3px"><b>${l.name}</b>: ${fmt(l.rates.length)} units, ` +
+        `<span style="color:#d6453d">${fmt(l.dead)} dead</span>, ${fmt(l.rates.filter(r => r > 0 && r < 0.01).length)} almost never active</div>` +
+        `<div style="display:grid;grid-template-columns:repeat(${cols},6px);gap:1px;max-width:100%;overflow-x:auto">` +
+        l.rates.map((r, i) => `<div title="${l.name}, unit ${i + 1}: active on ${(100 * r).toFixed(1)}% of positions" style="width:6px;height:6px;background:${colour(r)}"></div>`).join("") +
+        "</div></div>";
+    });
+    html += '</div><div class="key" style="margin-top:8px"><span style="--c:#d6453d">dead (never active)</span>' +
+      '<span style="--c:#f0a030">active on under 1% of positions</span><span style="--c:hsl(140,55%,55%)">active (darker = more often)</span></div>';
+    c.querySelector(".plot").innerHTML = html;
+  });
+
   lineChart(card("c-speed", "Speed", `Games per hour, including learning (average of the last 10 blocks, about 3 minutes). From ${fmt(LOSS_FROM)} games trained.`, [["speed", S[0]]]),
     [{name: "Games per hour", color: S[0], points: thin(smoothed)}], {zero: true, yDec: 0, empty: lossEmpty});
 
@@ -433,7 +463,7 @@ function render() {
   const charts = document.getElementById("charts");
   if (!charts.dataset.ordered) {
     ["c-policy", "c-value", "c-results", "c-endings", "c-length", "c-speed",
-     "c-bench", ...extraIds, "c-ladder", "c-ladder-current", "c-ladder-level",
+     ...netIds, "c-bench", ...extraIds, "c-ladder", "c-ladder-current", "c-ladder-level",
      "c-ladder-table", "c-elo"].forEach(id => {
       const c = document.getElementById(id);
       if (c) charts.appendChild(c);
