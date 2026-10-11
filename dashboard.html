@@ -320,7 +320,7 @@ function render() {
     netIds.push(id);
     const c = card(id, `${shown(bot)}'s network: ${fmt(dead)} of ${fmt(total)} units dead (${(100 * dead / Math.max(1, total)).toFixed(1)}%)`,
       `Every unit (neuron) as a square, measured at ${fmt(v.games)} games on ${fmt(v.positions)} real positions: how often it is active. ` +
-      `Dead units never are - they learn nothing. ${v.to_revive ? fmt(v.to_revive) + " dead units are being revived (a batch every 1,000 games). " : ""}` +
+      `Dead units never are - they learn nothing. ${v.to_revive ? fmt(v.to_revive) + " dead units are waiting to be revived (one per game). " : ""}` +
       `${v.next_check ? "Next dead-unit check at " + fmt(v.next_check) + " games." : ""}`, []);
     c.style.gridColumn = "1 / -1";
     const colour = r => r === 0 ? "#d6453d" : r < 0.01 ? "#f0a030" : `hsl(140, 55%, ${Math.round(72 - 42 * Math.min(1, r))}%)`;
