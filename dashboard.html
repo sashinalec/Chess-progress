@@ -404,6 +404,19 @@ function render() {
     `<div class="key"><span style="--c:var(--pass-bg)">passed</span><span style="--c:var(--fail-bg)">played, not passed yet</span>` +
     `<span style="--c:var(--none-bg)">not played yet</span></div>`;
 
+  // The easier benchmark (ai7 at 55,888 games, alongside the main one): the last chart on the page.
+  const bl = inRange(status.benchmark_low || []);
+  const oppLow = status.benchmark_low_opponent || "ai7 (55,888 games)";
+  const blSeries = bots.length === 1
+    ? [["win_pct", "Wins", S[0]], ["draw_pct", "Draws", S[2]], ["loss_pct", "Losses", S[1]]].map(([k, n, c]) =>
+        ({name: n, color: c, points: bl.map(r => [Number(r.games_trained), Number(r[k])])}))
+    : bots.map((b, i) => ({name: b + " wins", color: S[i],
+        points: bl.filter(r => r.bot === b).map(r => [Number(r.games_trained), Number(r.win_pct)])}));
+  lineChart(card("c-bench-low", `Against ${oppLow}`,
+    `An easier fixed opponent, played at the same moments as the match above: every ${fmt(status.benchmark_every || 1000)} games, ${bl.length ? bl[bl.length - 1].games : 40} games (random openings, both colours, same search size). Share of games won, drawn and lost.`,
+    blSeries.map(s => [s.name, s.color])),
+    blSeries, {zero: true, max: 100, unit: "%", yDec: 0, empty: `The first match is played at the next multiple of ${fmt(status.benchmark_every || 1000)} games (after a restart with this version).`});
+
   const er = status.elo_tests || [];
   lineChart(card("c-elo", "Stockfish rating tests", "Menu option 5. Dots are estimates, bars the 95% range.", botNames),
     bots.map((b, i) => {
@@ -418,7 +431,7 @@ function render() {
   if (!charts.dataset.ordered) {
     ["c-policy", "c-value", "c-results", "c-endings", "c-length", "c-speed",
      "c-bench", "c-ladder", "c-ladder-current", "c-ladder-level",
-     "c-ladder-table", "c-elo"].forEach(id => {
+     "c-ladder-table", "c-elo", "c-bench-low"].forEach(id => {
       const c = document.getElementById(id);
       if (c) charts.appendChild(c);
     });
