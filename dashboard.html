@@ -463,8 +463,8 @@ function render() {
   const charts = document.getElementById("charts");
   if (!charts.dataset.ordered) {
     ["c-policy", "c-value", "c-results", "c-endings", "c-length", "c-speed",
-     ...netIds, "c-bench", ...extraIds, "c-ladder", "c-ladder-current", "c-ladder-level",
-     "c-ladder-table", "c-elo"].forEach(id => {
+     "c-bench", ...extraIds, "c-ladder", "c-ladder-current", "c-ladder-level",
+     "c-ladder-table", ...netIds, "c-elo"].forEach(id => {
       const c = document.getElementById(id);
       if (c) charts.appendChild(c);
     });
