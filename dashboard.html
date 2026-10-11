@@ -370,6 +370,9 @@ function render() {
       xs.map(q => [q.name, q.color])),
       xs, {zero: true, max: 100, unit: "%", yDec: 0, empty: `The first match is played at the next ${fmt(status.benchmark_every || 2000)} games trained.`});
   });
+  // (11 Oct 2026, night) A page left open across a restart kept the charts of opponents the run no longer
+  // plays (ai6's old ai7/ai8/ai9 ones): those go now.
+  document.querySelectorAll('#charts > [id^="c-bench-"]').forEach(c => { if (!extraIds.includes(c.id)) c.remove(); });
 
   // Stockfish ladder (training_safety.StockfishLadder): up one rung at 75% of the games that weren't draws.
   const ld = inRange(status.ladder || []);
