@@ -302,13 +302,14 @@ function render() {
     [{name: "Average plies", color: S[0], points: pts("avg_plies")}], {zero: true, yDec: 0});
   // Each 100-game block lasts only 15-20 seconds and games finish in clumps, so one block's speed
   // jumps around a lot: the chart shows the average of the last 10 blocks (about 3 minutes).
-  const speedRows = rows.map(r => [r.total_games, r.games_per_hour]);
+  // Like the loss charts, it starts at LOSS_FROM games trained (owner, 11 Oct 2026).
+  const speedRows = rows.filter(r => r.total_games >= LOSS_FROM).map(r => [r.total_games, r.games_per_hour]);
   const smoothed = speedRows.map((p, i) => {
     const w = speedRows.slice(Math.max(0, i - 9), i + 1).filter(q => q[1] != null);
     return [p[0], w.length ? w.reduce((a, q) => a + q[1], 0) / w.length : null];
   });
-  lineChart(card("c-speed", "Speed", "Games per hour, including learning (average of the last 10 blocks, about 3 minutes).", [["speed", S[0]]]),
-    [{name: "Games per hour", color: S[0], points: thin(smoothed)}], {zero: true, yDec: 0});
+  lineChart(card("c-speed", "Speed", `Games per hour, including learning (average of the last 10 blocks, about 3 minutes). From ${fmt(LOSS_FROM)} games trained.`, [["speed", S[0]]]),
+    [{name: "Games per hour", color: S[0], points: thin(smoothed)}], {zero: true, yDec: 0, empty: lossEmpty});
 
   // (The "Strength since training started" chart was removed on 10 Oct 2026: the hourly strength
   // check is switched off; the benchmark match and the Stockfish ladder measure progress.)
@@ -404,7 +405,8 @@ function render() {
     `<div class="key"><span style="--c:var(--pass-bg)">passed</span><span style="--c:var(--fail-bg)">played, not passed yet</span>` +
     `<span style="--c:var(--none-bg)">not played yet</span></div>`;
 
-  // The easier benchmark (ai7 at 55,888 games, alongside the main one): the last chart on the page.
+  // The easier benchmark (ai7 at 55,888 games, alongside the main one): placed where "level
+  // reached" used to be, which moves one place on (owner, 11 Oct 2026).
   const bl = inRange(status.benchmark_low || []);
   const oppLow = status.benchmark_low_opponent || "ai7 (55,888 games)";
   const blSeries = bots.length === 1
@@ -430,8 +432,8 @@ function render() {
   const charts = document.getElementById("charts");
   if (!charts.dataset.ordered) {
     ["c-policy", "c-value", "c-results", "c-endings", "c-length", "c-speed",
-     "c-bench", "c-ladder", "c-ladder-current", "c-ladder-level",
-     "c-ladder-table", "c-elo", "c-bench-low"].forEach(id => {
+     "c-bench", "c-ladder", "c-ladder-current", "c-bench-low", "c-ladder-level",
+     "c-ladder-table", "c-elo"].forEach(id => {
       const c = document.getElementById(id);
       if (c) charts.appendChild(c);
     });
