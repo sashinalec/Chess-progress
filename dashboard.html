@@ -326,6 +326,21 @@ function render() {
     bmSeries.map(s => [s.name, s.color])),
     bmSeries, {zero: true, max: 100, unit: "%", yDec: 0, empty: `The first match is played after ${fmt(status.benchmark_every || 1000)} games.`});
 
+  // Extra benchmark opponents for this bot (training_safety.BENCHMARK_EXTRA, e.g. ai9 against ai8 and
+  // an older ai7): one chart each, right after the main benchmark chart, drawn the same way.
+  const extraIds = [];
+  (status.benchmarks_extra || []).forEach(x => {
+    const xr = inRange(x.rows || []);
+    const xs = [["win_pct", "Wins", S[0]], ["draw_pct", "Draws", S[2]], ["loss_pct", "Losses", S[1]]].map(([k, n, c]) =>
+      ({name: n, color: c, points: xr.map(r => [Number(r.games_trained), Number(r[k])])}));
+    const id = "c-bench-" + x.name;
+    extraIds.push(id);
+    lineChart(card(id, `Against ${x.opponent}`,
+      `Another fixed opponent, played at the same moments as the match above: every ${fmt(status.benchmark_every || 2000)} games, ${xr.length ? xr[xr.length - 1].games : 40} games (random openings, both colours, same search size). Share of games won, drawn and lost.`,
+      xs.map(q => [q.name, q.color])),
+      xs, {zero: true, max: 100, unit: "%", yDec: 0, empty: `The first match is played at the next ${fmt(status.benchmark_every || 2000)} games trained.`});
+  });
+
   // Stockfish ladder (training_safety.StockfishLadder): up one rung at 75% of the games that weren't draws.
   const ld = inRange(status.ladder || []);
   // Rung names shown without the letters: "sf1320-r30" -> "1320-30", "sf1520" -> "1520".
@@ -418,7 +433,7 @@ function render() {
   const charts = document.getElementById("charts");
   if (!charts.dataset.ordered) {
     ["c-policy", "c-value", "c-results", "c-endings", "c-length", "c-speed",
-     "c-bench", "c-ladder", "c-ladder-current", "c-ladder-level",
+     "c-bench", ...extraIds, "c-ladder", "c-ladder-current", "c-ladder-level",
      "c-ladder-table", "c-elo"].forEach(id => {
       const c = document.getElementById(id);
       if (c) charts.appendChild(c);
