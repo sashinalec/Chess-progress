@@ -341,7 +341,7 @@ function render() {
   lineChart(card("c-ladder", `Against the Stockfish ladder (now: ${now})`,
     `Every ${fmt(status.ladder_every || 1000)} games: 40 games against the current rung (random moves, then Stockfish 1320 with fewer and fewer random moves, then Stockfish). Moves up a rung when it wins ${promote}% of the games that weren't draws; never down.`,
     ldSeries.map(s => [s.name, s.color])),
-    ldSeries, {zero: true, max: 100, unit: "%", yDec: 0, empty: "The first match is played at the next 1,000 games trained."});
+    ldSeries, {zero: true, max: 100, unit: "%", yDec: 0, empty: `The first match is played at the next ${fmt(status.ladder_every || 2000)} games trained.`});
   const num = v => (v === "" || v == null) ? null : Number(v);
   const lvSeries = bots.flatMap((b, i) => [
     {name: (bots.length > 1 ? b + " " : "") + "rung reached (its rating)", color: S[i],
@@ -351,7 +351,7 @@ function render() {
   lineChart(card("c-ladder-level", "Stockfish ladder: level reached",
     "Line: the rating of the rung being played (measured on the rating list, where Stockfish 1320 counts as 1320). Dots: a rough rating estimate from each 40-game match.",
     lvSeries.filter(s => !s.dots).map(s => [s.name, s.color])),
-    lvSeries, {yDec: 0, empty: "The first match is played at the next 1,000 games trained."});
+    lvSeries, {yDec: 0, empty: `The first match is played at the next ${fmt(status.ladder_every || 2000)} games trained.`});
 
   // The same matches, but only those against the CURRENT rung: starts afresh at every promotion.
   const atRung = r => r.rung === ((status.ladder_now || {})[r.bot] || "random");
@@ -364,7 +364,7 @@ function render() {
     "Only the matches against the rung it is on now: the chart starts afresh every time it moves up.",
     curSeries.map(s => [s.name, s.color])),
     curSeries, {zero: true, max: 100, unit: "%", yDec: 0,
-                empty: "No match against this rung yet: it has just moved up (the next match is at most 1,000 games away)."});
+                empty: `No match against this rung yet: it has just moved up (the next match is at most ${fmt(status.ladder_every || 2000)} games away).`});
 
   // Win rate against every rung: one column per rung, one row per bot.
   // Green = passed, red = played but not passed yet, grey = not played yet. Hover for the full record.
@@ -405,20 +405,6 @@ function render() {
     `<div class="key"><span style="--c:var(--pass-bg)">passed</span><span style="--c:var(--fail-bg)">played, not passed yet</span>` +
     `<span style="--c:var(--none-bg)">not played yet</span></div>`;
 
-  // The easier benchmark (ai7 at 55,888 games, alongside the main one): placed where "level
-  // reached" used to be, which moves one place on (owner, 11 Oct 2026).
-  const bl = inRange(status.benchmark_low || []);
-  const oppLow = status.benchmark_low_opponent || "ai7 (55,888 games)";
-  const blSeries = bots.length === 1
-    ? [["win_pct", "Wins", S[0]], ["draw_pct", "Draws", S[2]], ["loss_pct", "Losses", S[1]]].map(([k, n, c]) =>
-        ({name: n, color: c, points: bl.map(r => [Number(r.games_trained), Number(r[k])])}))
-    : bots.map((b, i) => ({name: b + " wins", color: S[i],
-        points: bl.filter(r => r.bot === b).map(r => [Number(r.games_trained), Number(r.win_pct)])}));
-  lineChart(card("c-bench-low", `Against ${oppLow}`,
-    `An easier fixed opponent, played at the same moments as the match above: every ${fmt(status.benchmark_every || 1000)} games, ${bl.length ? bl[bl.length - 1].games : 40} games (random openings, both colours, same search size). Share of games won, drawn and lost.`,
-    blSeries.map(s => [s.name, s.color])),
-    blSeries, {zero: true, max: 100, unit: "%", yDec: 0, empty: `The first match is played at the next multiple of ${fmt(status.benchmark_every || 1000)} games (after a restart with this version).`});
-
   const er = status.elo_tests || [];
   lineChart(card("c-elo", "Stockfish rating tests", "Menu option 5. Dots are estimates, bars the 95% range.", botNames),
     bots.map((b, i) => {
@@ -432,7 +418,7 @@ function render() {
   const charts = document.getElementById("charts");
   if (!charts.dataset.ordered) {
     ["c-policy", "c-value", "c-results", "c-endings", "c-length", "c-speed",
-     "c-bench", "c-ladder", "c-ladder-current", "c-bench-low", "c-ladder-level",
+     "c-bench", "c-ladder", "c-ladder-current", "c-ladder-level",
      "c-ladder-table", "c-elo"].forEach(id => {
       const c = document.getElementById(id);
       if (c) charts.appendChild(c);
