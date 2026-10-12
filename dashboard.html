@@ -448,6 +448,7 @@ function render() {
     if (r.promoted === undefined && !r.nodes) g.revisits++;
     g.best = Math.max(g.best, Number(r.win_pct));
     if (r.nodes) (g.sizes ??= new Set()).add(`${fmt(Number(r.nodes))} ${r.unit === "simulations" ? "simulations" : "nodes"}`);
+    if (r.revisit_nodes) (g.sizes ??= new Set()).add(`${fmt(Number(r.revisit_nodes))} nodes (revisits)`);
     if (r.promoted === "1") { g.passed = r.games_trained; g.byTest = false; }
     // A menu option 9 test (saved with the revisits) that meets the ladder's pass rule - at least 10
     // games that weren't draws, half of them won (LADDER_MIN_DECISIVE / LADDER_PROMOTE) - counts as
