@@ -417,7 +417,7 @@ function render() {
   // Win rate against every rung: one column per rung, one row per bot.
   // Green = passed, red = played but not passed yet, grey = not played yet. Hover for the full record.
   const tcard = card("c-ladder-table", "Win rate against every rung",
-    "Every bot that has played the ladder, one row each. The best win rate it has reached in any one match against each rung (including the revisits every 10,000 games of rungs not yet beaten 100%). Hover over a box for the full record.", []);
+    "Every bot that has played the ladder, one row each (plus an 'added nodes' row for a bot's menu option 9 matches at other search sizes). The best win rate it has reached in any one match against each rung (including the revisits every 10,000 games of rungs not yet beaten 100%). Hover over a box for the full record.", []);
   tcard.style.gridColumn = "1 / -1";
   // The ladder from the bottom up (an older trainer doesn't send it: the same list, written out).
   const rungs = status.ladder_rungs || ["random", "sf1320-r80", "sf1320-r60", "sf1320-r50", "sf1320-r40", "sf1320-r30",
@@ -425,17 +425,24 @@ function render() {
     "sf2520", "sf2720", "sf2920", "sf3120", "sf3190"];
   // Ladder matches plus revisits (every 10,000 games, rungs passed but never beaten 100%),
   // of EVERY bot that has played the ladder (ladder_all.json), not only this run's bots.
-  const ladderRows = Array.isArray(ladderAll) && ladderAll.length ? ladderAll
+  const allRungRows = Array.isArray(ladderAll) && ladderAll.length ? ladderAll
     : (status.ladder || []).concat(status.ladder_revisits || []);
+  // (12 Oct 2026) Menu option 9 matches at another search size than the ladder's (rows with "nodes") get one
+  // extra row under the bot, "AI6 added nodes" (owner: no number in the label; the hover text gives each
+  // match's size) - never mixed into the bot's own row.
+  const ladderRows = allRungRows;
+  const rowKey = r => r.nodes ? `${r.bot}@added` : r.bot;
   const botNumber = b => Number((String(b).match(/\d+/) || [0])[0]);
-  const tableBots = [...new Set(ladderRows.map(r => r.bot).concat(bots))]
-    .sort((a, b) => botNumber(a) - botNumber(b) || (a < b ? -1 : 1));
+  const rowLabel = k => k.endsWith("@added") ? `${shown(k.slice(0, -6))} added nodes` : shown(k);
+  const tableBots = [...new Set(ladderRows.map(rowKey).concat(bots))]
+    .sort((a, b) => botNumber(a) - botNumber(b) || (a.endsWith("@added") - b.endsWith("@added")) || (a < b ? -1 : 1));
   const record = {};
   ladderRows.forEach(r => {
-    const g = record[r.bot + "|" + r.rung] ??= {matches: 0, revisits: 0, w: 0, d: 0, l: 0, passed: null, best: 0};
+    const g = record[rowKey(r) + "|" + r.rung] ??= {matches: 0, revisits: 0, w: 0, d: 0, l: 0, passed: null, best: 0};
     g.matches++; g.w += Number(r.wins); g.d += Number(r.draws); g.l += Number(r.losses);
-    if (r.promoted === undefined) g.revisits++;
+    if (r.promoted === undefined && !r.nodes) g.revisits++;
     g.best = Math.max(g.best, Number(r.win_pct));
+    if (r.nodes) (g.sizes ??= new Set()).add(`${fmt(Number(r.nodes))} ${r.unit === "simulations" ? "simulations" : "nodes"}`);
     if (r.promoted === "1") { g.passed = r.games_trained; g.byTest = false; }
     // A menu option 9 test (saved with the revisits) that meets the ladder's pass rule - at least 10
     // games that weren't draws, half of them won (LADDER_MIN_DECISIVE / LADDER_PROMOTE) - counts as
@@ -450,17 +457,18 @@ function render() {
     const g = record[bot + "|" + rung];
     if (!g) return `<td class="none" title="${rungName(rung)}: not played yet">-</td>`;
     const n = g.w + g.d + g.l;
-    const tip = `${rungName(rung)}: best match ${Math.round(g.best)}% wins. All matches together: won ${g.w}, drew ${g.d}, lost ${g.l} of ${n} games (${g.matches} match${g.matches > 1 ? "es" : ""}${g.revisits ? `, ${g.revisits} of them revisits` : ""}); ` +
+    const tip = `${rungName(rung)}${g.sizes ? ` (option 9 at ${[...g.sizes].join(", ")} a move)` : ""}: best match ${Math.round(g.best)}% wins. All matches together: won ${g.w}, drew ${g.d}, lost ${g.l} of ${n} games (${g.matches} match${g.matches > 1 ? "es" : ""}${g.revisits ? `, ${g.revisits} of them revisits` : ""}); ` +
       `won ${g.w + g.l ? Math.round(100 * g.w / (g.w + g.l)) : 0}% of the games that weren't draws` +
-      (g.passed ? (g.byTest ? `; passed in a menu option 9 test at ${fmt(Number(g.passed))} games (the ladder itself climbs one rung per match)`
+      (g.passed ? (g.byTest ? `; passed in a menu option 9 test at ${fmt(Number(g.passed))} games trained` + (bot.endsWith("@added") ? "" : " (the ladder itself climbs one rung per match)")
                                : `; passed at ${fmt(Number(g.passed))} games`) : "; not passed yet");
     return `<td class="${g.passed ? "pass" : "fail"}" title="${tip}">${Math.round(g.best)}%</td>`;
   };
   tcard.querySelector(".plot").innerHTML =
     `<div class="tablewrap"><table class="rungs"><tr><th></th>${rungs.map(r => `<th>${rungName(r)}</th>`).join("")}</tr>` +
-    tableBots.map(b => `<tr><td>${shown(b)}</td>${rungs.map(r => box(b, r)).join("")}</tr>`).join("") + "</table></div>" +
+    tableBots.map(b => `<tr><td>${rowLabel(b)}</td>${rungs.map(r => box(b, r)).join("")}</tr>`).join("") + "</table></div>" +
     `<div class="key"><span style="--c:var(--pass-bg)">passed</span><span style="--c:var(--fail-bg)">played, not passed yet</span>` +
     `<span style="--c:var(--none-bg)">not played yet</span></div>`;
+
 
   const er = status.elo_tests || [];
   lineChart(card("c-elo", "Stockfish rating tests", "Menu option 5. Dots are estimates, bars the 95% range.", botNames),
