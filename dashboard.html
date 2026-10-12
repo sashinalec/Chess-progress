@@ -12,7 +12,7 @@
   --s1: #2a78d6; --s2: #eb6834; --s3: #1baf7a;
   --good: #0ca30c; --warning: #fab219; --critical: #d03b3b;
   --light-sq: #f0eed6; --dark-sq: #6f9a52;
-  --head-bg: #1f5f80; --pass-bg: #c6e9c6; --fail-bg: #f5c6c6; --none-bg: #e2e1dc; --gold-bg: #f3d36b;
+  --head-bg: #1f5f80; --pass-bg: #c6e9c6; --fail-bg: #f5c6c6; --none-bg: #e2e1dc;
 }
 @media (prefers-color-scheme: dark) {
   :root:where(:not([data-theme="light"])) {
@@ -21,7 +21,7 @@
     --grid: #2c2c2a; --axis: #383835; --ring: rgba(255,255,255,0.10);
     --s1: #3987e5; --s2: #d95926; --s3: #199e70;
     --light-sq: #c9c7b0; --dark-sq: #557a3e;
-    --head-bg: #1d4f6b; --pass-bg: #1f4d24; --fail-bg: #5c2525; --none-bg: #2c2c2a; --gold-bg: #8a6d12;
+    --head-bg: #1d4f6b; --pass-bg: #1f4d24; --fail-bg: #5c2525; --none-bg: #2c2c2a;
   }
 }
 :root[data-theme="dark"] {
@@ -30,7 +30,7 @@
   --grid: #2c2c2a; --axis: #383835; --ring: rgba(255,255,255,0.10);
   --s1: #3987e5; --s2: #d95926; --s3: #199e70;
   --light-sq: #c9c7b0; --dark-sq: #557a3e;
-  --head-bg: #1d4f6b; --pass-bg: #1f4d24; --fail-bg: #5c2525; --none-bg: #2c2c2a; --gold-bg: #8a6d12;
+  --head-bg: #1d4f6b; --pass-bg: #1f4d24; --fail-bg: #5c2525; --none-bg: #2c2c2a;
 }
 * { box-sizing: border-box; }
 body { margin: 0; background: var(--page); color: var(--ink);
@@ -95,7 +95,6 @@ table.rungs th { background: var(--head-bg); color: #fff; font-weight: 700; whit
 table.rungs th:first-child { min-width: 40px; }
 table.rungs td:first-child { text-align: left; background: var(--none-bg); font-weight: 600; }
 table.rungs td.pass { background: var(--pass-bg); }
-table.rungs td.gold { background: var(--gold-bg); font-weight: 600; }   /* 100% in a match (owner, 12 Oct 2026) */
 table.rungs td.fail { background: var(--fail-bg); }
 table.rungs td.none { background: var(--none-bg); color: var(--muted); }
 .key { display: flex; flex-wrap: wrap; gap: 4px 14px; font-size: 12px; color: var(--ink-2); margin-top: 6px; }
@@ -435,11 +434,7 @@ function render() {
   const rowKey = r => r.nodes ? `${r.bot}@added` : r.bot;
   const botNumber = b => Number((String(b).match(/\d+/) || [0])[0]);
   const rowLabel = k => k.endsWith("@added") ? `${shown(k.slice(0, -6))} added nodes` : shown(k);
-  // Bots left out of this table (owner, 12 Oct 2026, evening): only hidden here - their results are all kept
-  // (stockfish_ladder.csv, ladder_all.json) and their own runs still show them.
-  const TABLE_HIDDEN = ["ai7", "ai8", "ai9"];
   const tableBots = [...new Set(ladderRows.map(rowKey).concat(bots))]
-    .filter(k => !TABLE_HIDDEN.includes(k.split("@")[0]) || bots.includes(k.split("@")[0]))
     .sort((a, b) => botNumber(a) - botNumber(b) || (a.endsWith("@added") - b.endsWith("@added")) || (a < b ? -1 : 1));
   const record = {};
   ladderRows.forEach(r => {
@@ -466,14 +461,12 @@ function render() {
       `won ${g.w + g.l ? Math.round(100 * g.w / (g.w + g.l)) : 0}% of the games that weren't draws` +
       (g.passed ? (g.byTest ? `; passed in a menu option 9 test at ${fmt(Number(g.passed))} games trained` + (bot.endsWith("@added") ? "" : " (the ladder itself climbs one rung per match)")
                                : `; passed at ${fmt(Number(g.passed))} games`) : "; not passed yet");
-    // Gold: 100% won in one match against that rung (owner, 12 Oct 2026); else green / red as before.
-    const cls = g.best >= 100 ? "gold" : g.passed ? "pass" : "fail";
-    return `<td class="${cls}" title="${tip}">${Math.round(g.best)}%</td>`;
+    return `<td class="${g.passed ? "pass" : "fail"}" title="${tip}">${Math.round(g.best)}%</td>`;
   };
   tcard.querySelector(".plot").innerHTML =
     `<div class="tablewrap"><table class="rungs"><tr><th></th>${rungs.map(r => `<th>${rungName(r)}</th>`).join("")}</tr>` +
     tableBots.map(b => `<tr><td>${rowLabel(b)}</td>${rungs.map(r => box(b, r)).join("")}</tr>`).join("") + "</table></div>" +
-    `<div class="key"><span style="--c:var(--gold-bg)">100%</span><span style="--c:var(--pass-bg)">passed</span><span style="--c:var(--fail-bg)">played, not passed yet</span>` +
+    `<div class="key"><span style="--c:var(--pass-bg)">passed</span><span style="--c:var(--fail-bg)">played, not passed yet</span>` +
     `<span style="--c:var(--none-bg)">not played yet</span></div>`;
 
 
