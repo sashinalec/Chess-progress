@@ -67,9 +67,10 @@ svg { display: block; width: 100%; height: auto; overflow: visible; }
 .tip .k::before { content: ""; display: inline-block; width: 8px; height: 8px; border-radius: 50%;
   background: var(--c); margin-right: 5px; }
 .empty { color: var(--muted); font-size: 13px; padding: 40px 0; text-align: center; }
-.board { display: grid; grid-template-columns: repeat(8, 1fr); width: 100%; max-width: 320px; aspect-ratio: 1;
+.board { display: grid; grid-template-columns: repeat(8, 1fr); grid-template-rows: repeat(8, 1fr); width: 100%; max-width: 320px; aspect-ratio: 1;
          border: 1px solid var(--axis); }
-.board div { display: flex; align-items: center; justify-content: center; font-size: clamp(18px, 4vw, 30px); line-height: 1; }
+.board div { display: flex; align-items: center; justify-content: center; font-size: clamp(18px, 4vw, 30px); line-height: 1;
+             aspect-ratio: 1; min-width: 0; min-height: 0; }   /* every square the same, empty rows too (12 Oct 2026) */
 .board .l { background: var(--light-sq); } .board .d { background: var(--dark-sq); }
 .pw { color: #fff; -webkit-text-stroke: 1.5px #000; } .pb { color: #000; -webkit-text-stroke: 0.6px #fff; }
 .events { font: 12px/1.5 ui-monospace, Consolas, monospace; color: var(--ink-2); max-height: 260px; overflow: auto; white-space: pre-wrap; }
