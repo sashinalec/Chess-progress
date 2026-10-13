@@ -1,0 +1,32 @@
+{
+ "ai12": {
+  "updated": "2026-10-13 21:26",
+  "groups": {
+   "ai6 (50,013 games)": {
+    "opening": {
+     "games": 40,
+     "mean": -1.41,
+     "gained_1": 32,
+     "lost_1": 52
+    },
+    "middlegame": {
+     "games": 40,
+     "mean": -1.0,
+     "gained_1": 25,
+     "lost_1": 42
+    },
+    "endgame": {
+     "games": 27,
+     "mean": -0.19,
+     "gained_1": 26,
+     "lost_1": 30
+    },
+    "_games": 40,
+    "_games_trained": [
+     25000,
+     25000
+    ]
+   }
+  }
+ }
+}
