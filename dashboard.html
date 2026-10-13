@@ -96,6 +96,8 @@ table.rungs th { background: var(--head-bg); color: #fff; font-weight: 700; whit
 table.rungs th:first-child { min-width: 40px; }
 table.rungs td:first-child { text-align: left; background: var(--none-bg); font-weight: 600; }
 table.rungs td.pass { background: var(--pass-bg); }
+.qbar { height: 14px; border-radius: 7px; background: var(--grid); overflow: hidden; margin: 6px 0 8px; }
+.qbar div { height: 100%; width: 0; background: var(--s1); border-radius: 7px; transition: width 0.6s; }
 table.rungs td.gold { background: var(--gold-bg); font-weight: 600; }   /* 100% in a match (owner, 12 Oct 2026) */
 table.rungs td.fail { background: var(--fail-bg); }
 table.rungs td.none { background: var(--none-bg); color: var(--muted); }
@@ -128,12 +130,18 @@ table.rungs td.none { background: var(--none-bg); color: var(--muted); }
       <div class="events" id="events"></div></div>
   </section>
   <details><summary>Show the numbers as a table (latest 40 blocks)</summary><div class="tablewrap" id="table"></div></details>
+  <section class="card" id="queuebar" style="margin-top:12px">
+    <h2>Training queue: AI10 to AI21</h2>
+    <div class="qbar" role="progressbar" aria-valuemin="0" aria-valuemax="100"><div id="qfill"></div></div>
+    <p class="desc" id="qtext">Working it out...</p>
+  </section>
 </main>
 <script>
 "use strict";
 const run = new URLSearchParams(location.search).get("run") || "";
 let range = "all", status = null, history = [];
 let ladderAll = null;      // every bot's ladder results (ladder_all.json), for the win-rate table
+let phaseReport = null;    // where each bot gains / loses ground by phase (phase_report.json, 13 Oct 2026)
 const css = n => getComputedStyle(document.documentElement).getPropertyValue(n).trim();
 const fmt = (v, d = 0) => v == null || isNaN(v) ? "-" : Number(v).toLocaleString(undefined, {maximumFractionDigits: d, minimumFractionDigits: d});
 const ago = s => s == null ? "-" : s < 90 ? `${Math.round(s)} s ago` : s < 5400 ? `${Math.round(s / 60)} min ago` : `${(s / 3600).toFixed(1)} h ago`;
@@ -479,6 +487,32 @@ function render() {
     `<span style="--c:var(--none-bg)">not played yet</span></div>`;
 
 
+  // Where each bot gains and loses ground, by phase (phase_report.py, owner 13 Oct 2026).
+  if (phaseReport && Object.keys(phaseReport).length) {
+    const pcard = card("c-phase", "Where each bot gains and loses, by phase",
+      "From each bot's match games: Stockfish (a measuring stick only) judges the position where the bot enters each phase and where it leaves it, from the bot's side. The average change in pawns: green = it gains ground there, red = it loses ground. Opening = 22+ pieces (after the 8 random moves), middlegame = 12-21, endgame = 11 or fewer. Mainly against ai6 at 50,013 games (the same yardstick for every bot). Hover for details.", []);
+    pcard.style.gridColumn = "1 / -1";
+    const phases = ["opening", "middlegame", "endgame"];
+    const groups = ["ai6 (50,013 games)", "Stockfish ladder"];
+    const cell = (x) => {
+      if (!x) return `<td class="none">-</td>`;
+      const m = x.mean, a = Math.min(1, Math.abs(m) / 1.5);
+      const bg = m >= 0 ? `color-mix(in srgb, var(--pass-bg) ${Math.round(25 + 75 * a)}%, transparent)`
+                        : `color-mix(in srgb, var(--fail-bg) ${Math.round(25 + 75 * a)}%, transparent)`;
+      return `<td style="background:${bg}" title="${x.games} games: gained a pawn or more in ${x.gained_1}%, lost a pawn or more in ${x.lost_1}%">${m >= 0 ? "+" : ""}${m.toFixed(2)}</td>`;
+    };
+    const bots = Object.keys(phaseReport).sort((a, b) => Number(a.slice(2)) - Number(b.slice(2)));
+    pcard.querySelector(".plot").innerHTML =
+      `<div class="tablewrap"><table class="rungs"><tr><th></th>${groups.map(g => `<th colspan="3">vs ${g}</th>`).join("")}</tr>` +
+      `<tr><th></th>${groups.map(() => phases.map(p => `<th>${p}</th>`).join("")).join("")}</tr>` +
+      bots.map(b => {
+        const r = phaseReport[b].groups || {};
+        const gt = (r[groups[0]] || {})._games_trained;
+        return `<tr><td title="updated ${phaseReport[b].updated}${gt ? `; games from ${fmt(gt[0])}-${fmt(gt[1])} games trained` : ""}">${shown(b)}</td>` +
+               groups.map(g => phases.map(p => cell((r[g] || {})[p])).join("")).join("") + "</tr>";
+      }).join("") + "</table></div>";
+  }
+
   const er = status.elo_tests || [];
   lineChart(card("c-elo", "Stockfish rating tests", "Menu option 5. Dots are estimates, bars the 95% range.", botNames),
     bots.map((b, i) => {
@@ -493,7 +527,7 @@ function render() {
   if (!charts.dataset.ordered) {
     ["c-policy", "c-value", "c-results", "c-endings", "c-length", "c-speed",
      "c-bench", ...extraIds, "c-ladder", "c-ladder-current", "c-ladder-level",
-     "c-ladder-table", ...netIds, "c-elo"].forEach(id => {
+     "c-ladder-table", "c-phase", ...netIds, "c-elo"].forEach(id => {
       const c = document.getElementById(id);
       if (c) charts.appendChild(c);
     });
@@ -542,14 +576,15 @@ function replay(fens) {
 
 async function load() {
   try {
-    const [s, h, la] = await Promise.all([
+    const [s, h, la, pr] = await Promise.all([
       fetch(`${run}/status.json`, {cache: "no-store"}).then(r => r.ok ? r.json() : null),
       fetch(`${run}/history.json`, {cache: "no-store"}).then(r => r.ok ? r.json() : []).catch(() => []),
       fetch("ladder_all.json", {cache: "no-store"}).then(r => r.ok ? r.json() : null).catch(() => null),
+      fetch("phase_report.json", {cache: "no-store"}).then(r => r.ok ? r.json() : null).catch(() => null),
     ]);
     if (s) {
       const first = !status;
-      status = s; history = h || []; if (la) ladderAll = la; render();
+      status = s; history = h || []; if (la) ladderAll = la; if (pr) phaseReport = pr; render();
       // First time: the chart cards were added one by one, so draw again
       // once the page layout has settled (each chart measures its width).
       if (first) requestAnimationFrame(render);
@@ -577,6 +612,45 @@ loadTabs();
 setInterval(loadTabs, 60000);
 load();
 setInterval(load, 10000);
+
+// Training queue progress (owner, 13 Oct 2026): AI10-AI21, 25,000 games each, in the queue's order.
+// Hours each bot needs for 25,000 games: measured for the ones already trained, the rest estimated from
+// the speed of the networks measured so far (8-bit maths for ai13, ai18, ai14, ai19). Progress is weighted
+// by those hours, so a slow bot counts for more than a quick one.
+const QUEUE = [["ai10", 3.1], ["ai11", 4.0], ["ai12", 4.8], ["ai15", 3.1], ["ai16", 4.5], ["ai17", 5.0],
+               ["ai13", 6.5], ["ai18", 5.8], ["ai14", 11], ["ai19", 19], ["ai20", 5.3], ["ai21", 5.5]];
+const QUEUE_TARGET = 25000;
+function hoursText(h) {
+  const d = Math.floor(h / 24), r = Math.round(h - 24 * d);
+  return d ? `${d} day${d > 1 ? "s" : ""} ${r} h` : `${Math.max(1, Math.round(h))} h`;
+}
+async function loadQueue() {
+  // Only the bots that have started (the website's runs.json lists the runs; the local dashboard has no such
+  // list, so there every bot is asked for and the missing ones count as 0).
+  const runs = new Set((await fetch("runs.json", {cache: "no-store"}).then(r => r.ok ? r.json() : []).catch(() => []))
+    .map(r => r.run));
+  const games = await Promise.all(QUEUE.map(([b]) => runs.size && !runs.has(`${b}_selfplay`) ? 0 :
+    fetch(`${b}_selfplay/status.json`, {cache: "no-store"}).then(r => r.ok ? r.json() : null)
+      .then(s => s ? Number(s.total_games) || 0 : 0).catch(() => 0)));
+  let total = 0, done = 0, now = null;
+  QUEUE.forEach(([b, h], i) => {
+    const f = Math.min(1, games[i] / QUEUE_TARGET);
+    total += h; done += f * h;
+    if (f < 1 && now === null) now = i;
+  });
+  const pct = 100 * done / total, left = total - done;
+  document.getElementById("qfill").style.width = pct.toFixed(1) + "%";
+  document.querySelector("#queuebar .qbar").setAttribute("aria-valuenow", pct.toFixed(0));
+  const finish = new Date(Date.now() + left * 3600e3);
+  const when = finish.toLocaleString(undefined, {weekday: "short", day: "numeric", month: "short", hour: "2-digit", minute: "2-digit"});
+  const bots = QUEUE.filter((q, i) => games[i] >= QUEUE_TARGET).length;   // of QUEUE.length
+  document.getElementById("qtext").textContent = now === null
+    ? `All ${QUEUE.length} bots have reached ${fmt(QUEUE_TARGET)} games.`
+    : `${pct.toFixed(0)}% done (${bots} of ${QUEUE.length} bots finished) - about ${hoursText(left)} to go, finishing around ${when}. ` +
+      `Now: ${QUEUE[now][0].toUpperCase()}, ${fmt(games[now])} of ${fmt(QUEUE_TARGET)} games. (An estimate, from each network's speed.)`;
+}
+loadQueue();
+setInterval(loadQueue, 60000);
 let rt = null;
 window.addEventListener("resize", () => { clearTimeout(rt); rt = setTimeout(render, 200); });
 </script>
