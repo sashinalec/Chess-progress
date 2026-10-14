@@ -491,12 +491,12 @@ function render() {
   // Where each bot gains and loses ground, by phase (phase_report.py, owner 13 Oct 2026).
   if (phaseReport && Object.keys(phaseReport).length) {
     const pcard = card("c-phase", "Where each bot gains and loses, by phase",
-      "From each bot's match games: Stockfish (a measuring stick only) judges the position where the bot enters each phase and where it leaves it, from the bot's side. The average change in pawns: green = it gains ground there, red = it loses ground. Opening = 22+ pieces (after the 8 random moves), middlegame = 12-21, endgame = 11 or fewer. Against ai12 at 25,000 games, against AI20 (the 50-game box matches and the 1,000-game matches together) and the Stockfish ladder. Rows: AI20, AI21 and AI23 (its row fills in after its first turn). Hover for details.", []);
+      "From each bot's match games: Stockfish (a measuring stick only) judges the position where the bot enters each phase and where it leaves it, from the bot's side. The average change in pawns: green = it gains ground there, red = it loses ground. Opening = 22+ pieces (after the 8 random moves), middlegame = 12-21, endgame = 11 or fewer. Against ai12 at 25,000 games, against the fixed AI20 at 30,000 games (AI21 and AI23 play it every 5,000 games) and the Stockfish ladder. Rows: AI20, AI21 and AI23 (its row fills in after its first turn). Hover for details.", []);
     pcard.style.gridColumn = "1 / -1";
     const phases = ["opening", "middlegame", "endgame"];
     // Columns (owner, 14 Oct 2026: ai12 instead of ai6, and AI20 added): which of a bot's match groups each one takes.
     const groups = [["ai12 (25,000 games)", (k, b) => k.startsWith("ai12 (")],
-                    ["ai20 (30k games)", (k, b) => k.startsWith("ai20 (") || (k === "AI20 vs AI21 match" && b !== "ai20")],
+                    ["ai20 (30k games)", (k, b) => k === "ai20 (30,000 games)"],     // the fixed AI20 at 30,000 games only
                     ["Stockfish ladder", (k, b) => k === "Stockfish ladder"]];
     // Several groups in one column (e.g. AI21's boxes and 1,000-game matches against AI20): averaged by games.
     const merged = (b, take) => {
