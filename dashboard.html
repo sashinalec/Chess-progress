@@ -105,6 +105,23 @@ table.rungs td.none { background: var(--none-bg); color: var(--muted); }
 .key span::before { content: ""; display: inline-block; width: 12px; height: 12px; border-radius: 2px;
   background: var(--c); vertical-align: -2px; margin-right: 5px; }
 @media (max-width: 480px) { .grid { grid-template-columns: 1fr; } .controls { margin-left: 0; } }
+/* Quick-test game viewer (owner, 14 Oct 2026) */
+.gchip { font-size: 11px; border: 1px solid var(--axis); border-radius: 4px; padding: 1px 5px; margin: 1px 2px 1px 0; cursor: pointer;
+         background: var(--none-bg); color: var(--ink); white-space: nowrap; }
+.gchip.win { background: var(--pass-bg); } .gchip.loss { background: var(--fail-bg); }
+#gv { position: fixed; inset: 0; z-index: 50; background: rgba(0, 0, 0, 0.55); display: flex; align-items: center; justify-content: center; padding: 16px; }
+#gv[hidden] { display: none; }
+#gv .gvbox { background: var(--surface); color: var(--ink); border-radius: 10px; padding: 14px; width: min(420px, 100%);
+             max-height: calc(100vh - 32px); overflow: auto; box-sizing: border-box; }
+#gv .gvhead { display: flex; justify-content: space-between; gap: 8px; align-items: flex-start; }
+#gv .board { max-width: none; }
+#gv .board .hl { box-shadow: inset 0 0 0 999px rgba(246, 200, 60, 0.55); }
+#gv .gvp { font-weight: 600; font-size: 13px; margin: 6px 0; }
+#gv .gvbtns { display: flex; gap: 6px; margin: 8px 0; }
+#gv button { font: inherit; border: 1px solid var(--axis); border-radius: 6px; background: var(--surface); color: var(--ink); cursor: pointer; }
+#gv .gvbtns button { flex: 1; font-size: 18px; padding: 5px 0; }
+#gvmoves { font: 12px/1.5 ui-monospace, Consolas, monospace; max-height: 140px; overflow: auto; }
+#gvmoves b { background: var(--gold-bg); border-radius: 3px; padding: 0 2px; }
 </style>
 </head>
 <body>
@@ -136,6 +153,14 @@ table.rungs td.none { background: var(--none-bg); color: var(--muted); }
     <p class="desc" id="qtext">Working it out...</p>
   </section>
 </main>
+<div id="gv" hidden><div class="gvbox" role="dialog" aria-label="Game viewer">
+  <div class="gvhead"><b id="gvtitle"></b><button data-a="close" title="Close (Esc)">&#x2715;</button></div>
+  <div class="sub">Left / right arrow: a move back / on. Home / End: start / end. Space: play / pause. Esc: close.</div>
+  <div class="gvp" id="gvtop"></div><div class="board" id="gvboard"></div><div class="gvp" id="gvbot"></div>
+  <div class="sub" id="gvstate"></div>
+  <div class="gvbtns"><button data-a="start" title="Start (Home)">&#x23EE;</button><button data-a="back" title="Back one move (left arrow)">&#x276E;</button><button data-a="play" id="gvplay" title="Play / pause (space)">&#x25B6;&#xFE0E;</button><button data-a="fwd" title="Forward one move (right arrow)">&#x276F;</button><button data-a="end" title="End (End)">&#x23ED;</button></div>
+  <div id="gvmoves"></div>
+</div></div>
 <script>
 "use strict";
 const run = new URLSearchParams(location.search).get("run") || "";
@@ -547,15 +572,18 @@ function render() {
   // Quick Stockfish tests (menu options 13 and 14, owner 14 Oct 2026): every bot, newest first.
   if (Array.isArray(quickTests) && quickTests.length) {
     const qcard = card("c-quick", "Quick Stockfish tests",
-      "Menu options 13 (10 games a Stockfish level, climbing from 1320 until the bot scores under 25%) and 14 (10 games against one level). The bot thinks for a set number of nodes or seconds a move; Stockfish 0.1 s a move at its set strength. 10 games a level is a rough guide only.", []);
+      "Menu options 13 (10 games a Stockfish level, climbing from 1320 until the bot scores under 25%) and 14 (10 games against one level). The bot thinks for a set number of nodes or seconds a move; Stockfish 0.1 s a move at its set strength. 10 games a level is a rough guide only. Click a game (W won, D drawn, L lost) to look through it: left / right arrow keys.", []);
     qcard.style.gridColumn = "1 / -1";
     const lv = x => { try { return JSON.parse(x.ladder).map(([e, p, n]) => `${e}: ${p}/${n}`).join(" &middot; "); } catch (e) { return ""; } };
     const rating = x => x.rating !== "" ? `${x.rating} (${x.low}-${x.high})` : (x.note || "-");
     qcard.querySelector(".plot").innerHTML =
-      `<div class="tablewrap"><table class="rungs"><tr><th>When</th><th>Bot</th><th>Games trained</th><th>Test</th><th>A move</th><th>Score at each Stockfish level</th><th>Rating (95% range)</th></tr>` +
-      quickTests.slice().reverse().map(x => `<tr><td>${String(x.time).replace("T", " ").slice(0, 16)}</td><td>${shown(x.bot)}</td>` +
+      `<div class="tablewrap"><table class="rungs"><tr><th>When</th><th>Bot</th><th>Games trained</th><th>Test</th><th>A move</th><th>Score at each Stockfish level</th><th>Rating (95% range)</th><th>Games (click to view)</th></tr>` +
+      quickTests.map((x, ti) => `<tr><td>${String(x.time).replace("T", " ").slice(0, 16)}</td><td>${shown(x.bot)}</td>` +
         `<td>${fmt(Number(x.games_trained))}</td><td>${x.test === "climb" ? "climb (13)" : "one level (14)"}</td><td>${x.limit}</td>` +
-        `<td>${lv(x)}</td><td>${x.test === "climb" ? rating(x) : "-"}</td></tr>`).join("") + "</table></div>";
+        `<td>${lv(x)}</td><td>${x.test === "climb" ? rating(x) : "-"}</td><td style="white-space: normal; min-width: 230px; max-width: 420px">` +
+        (x.games || []).map((g, gi) => { const k = g.pts === 1 ? "win" : g.pts === 0 ? "loss" : "draw";
+          return `<button class="gchip ${k}" data-t="${ti}" data-g="${gi}" title="Game ${gi + 1}: ${k === "win" ? "won" : k === "loss" ? "lost" : "drawn"} as ${g.bw ? "White" : "Black"} against Stockfish ${g.lv}">${k[0].toUpperCase()} &#x25B6;&#xFE0E;</button>`; }).join("") +
+        `</td></tr>`).reverse().join("") + "</table></div>";
   }
 
   const er = status.elo_tests || [];
@@ -619,6 +647,70 @@ function replay(fens) {
   replayTimer = setInterval(() => { i++; if (i >= fens.length) { clearInterval(replayTimer); return; } drawBoard(fens[i]); }, 400);
 }
 
+// Quick-test game viewer (owner, 14 Oct 2026): any game of the "Quick Stockfish tests" card, move by move.
+// The positions are worked out here from the moves (UCI): castling, en passant and promotion included.
+const gvSq = s => (8 - +s[1]) * 8 + "abcdefgh".indexOf(s[0]);
+const GV_START = [..."rnbqkbnrpppppppp", ...Array(32).fill(""), ..."PPPPPPPPRNBQKBNR"];
+function gvApply(b, u) {
+  b = b.slice();
+  const f = gvSq(u.slice(0, 2)), t = gvSq(u.slice(2, 4)), p = b[f];
+  if (p.toUpperCase() === "K" && Math.abs(t - f) === 2) { if (t > f) { b[f + 1] = b[f + 3]; b[f + 3] = ""; } else { b[f - 1] = b[f - 4]; b[f - 4] = ""; } }
+  if (p.toUpperCase() === "P" && (t - f) % 8 !== 0 && !b[t]) b[t + (p === "P" ? 8 : -8)] = "";     // en passant
+  b[t] = u.length > 4 ? (p === "P" ? u[4].toUpperCase() : u[4].toLowerCase()) : p;
+  b[f] = "";
+  return b;
+}
+let gv = null;
+function gvOpen(t, i) {
+  const test = quickTests[t], g = test.games[i];
+  const uci = g.u ? g.u.split(" ") : [], san = g.s ? g.s.split(" ") : [];
+  const pos = [GV_START];
+  uci.forEach(u => pos.push(gvApply(pos[pos.length - 1], u)));
+  gv = {pos, uci, san, at: 0, flip: !g.bw, play: false, r: g.r};
+  const bot = `${shown(test.bot)} (${test.limit})`, sf = `Stockfish ${g.lv}`;
+  document.getElementById("gvtitle").textContent =
+    `${shown(test.bot)}, game ${i + 1} of ${test.games.length}: ${g.pts === 1 ? "won" : g.pts === 0 ? "lost" : "drawn"} as ${g.bw ? "White" : "Black"} against ${sf}`;
+  document.getElementById("gvtop").textContent = sf;          // the bot always at the bottom
+  document.getElementById("gvbot").textContent = bot;
+  document.getElementById("gv").hidden = false;
+  gvShow();
+}
+function gvShow() {
+  const v = gv, n = v.uci.length, arr = v.pos[v.at];
+  const last = v.at ? [gvSq(v.uci[v.at - 1].slice(0, 2)), gvSq(v.uci[v.at - 1].slice(2, 4))] : [];
+  const idx = [...Array(64).keys()];
+  if (v.flip) idx.reverse();
+  document.getElementById("gvboard").innerHTML = idx.map(k => {
+    const ch = arr[k], cls = `${((k >> 3) + (k & 7)) % 2 ? "d" : "l"}${last.includes(k) ? " hl" : ""}`;
+    return `<div class="${cls}">${ch ? `<span class="${ch === ch.toUpperCase() ? "pw" : "pb"}">${GLYPH[ch.toUpperCase()]}&#xFE0E;</span>` : ""}</div>`;
+  }).join("");
+  document.getElementById("gvstate").textContent = `Move ${v.at} of ${n}` + (v.at === n ? ` - ${v.r}` : "");
+  document.getElementById("gvmoves").innerHTML = v.san.map((m, i) => (i % 2 ? "" : `${i / 2 + 1}. `) +
+    (i === v.at - 1 ? `<b>${m}</b>` : m)).join(" ");
+  document.getElementById("gvplay").innerHTML = v.play ? "&#x23F8;" : "&#x25B6;&#xFE0E;";
+}
+function gvAct(a) {
+  if (!gv) return;
+  if (a === "close") { gv = null; document.getElementById("gv").hidden = true; return; }
+  const n = gv.uci.length;
+  if (a === "start") gv.at = 0; else if (a === "end") gv.at = n;
+  else if (a === "back") gv.at = Math.max(0, gv.at - 1); else if (a === "fwd") gv.at = Math.min(n, gv.at + 1);
+  gv.play = a === "play" ? !gv.play : false;
+  if (a === "play" && gv.play && gv.at === n) gv.at = 0;
+  gvShow();
+}
+document.addEventListener("click", e => {
+  const chip = e.target.closest(".gchip");
+  if (chip) { gvOpen(+chip.dataset.t, +chip.dataset.g); return; }
+  const b = e.target.closest("#gv [data-a]");
+  if (b) gvAct(b.dataset.a); else if (e.target.id === "gv") gvAct("close");
+});
+document.addEventListener("keydown", e => {
+  if (!gv) return;
+  const a = {ArrowLeft: "back", ArrowRight: "fwd", Home: "start", End: "end", " ": "play", Escape: "close"}[e.key];
+  if (a) { e.preventDefault(); gvAct(a); }
+});
+setInterval(() => { if (gv && gv.play && gv.at < gv.uci.length) { gv.at++; if (gv.at === gv.uci.length) gv.play = false; gvShow(); } }, 1000);
 async function load() {
   try {
     const [s, h, la, pr, hh, qt] = await Promise.all([
