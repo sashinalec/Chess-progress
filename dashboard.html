@@ -152,6 +152,7 @@ table.rungs td.none { background: var(--none-bg); color: var(--muted); }
     <div class="qbar" role="progressbar" aria-valuemin="0" aria-valuemax="100"><div id="qfill"></div></div>
     <p class="desc" id="qtext">Working it out...</p>
   </section>
+  <section class="grid" id="bottomcards" style="margin-top:12px"></section>
 </main>
 <div id="gv" hidden><div class="gvbox" role="dialog" aria-label="Game viewer">
   <div class="gvhead"><b id="gvtitle"></b><button data-a="close" title="Close (Esc)">&#x2715;</button></div>
@@ -584,6 +585,53 @@ function render() {
         (x.games || []).map((g, gi) => { const k = g.pts === 1 ? "win" : g.pts === 0 ? "loss" : "draw";
           return `<button class="gchip ${k}" data-t="${ti}" data-g="${gi}" title="Game ${gi + 1}: ${k === "win" ? "won" : k === "loss" ? "lost" : "drawn"} as ${g.bw ? "White" : "Black"} against Stockfish ${g.lv}">${k[0].toUpperCase()} &#x25B6;&#xFE0E;</button>`; }).join("") +
         `</td></tr>`).reverse().join("") + "</table></div>";
+  }
+
+  // Best game against any rung (owner, 14 Oct 2026): the "Win rate against every rung" table, but from the quick
+  // tests (menu options 13 and 14): one row per bot, one column per Stockfish level, the best win rate in any one
+  // test. Passed (green) = at least half of the games that weren't draws won, as on the ladder.
+  if (Array.isArray(quickTests) && quickTests.length) {
+    const bcard = card("c-quick-best", "Best game against any rung",
+      "From the quick tests (menu options 13 and 14, 10 games a level, at any number of nodes or seconds a move): the best win rate the bot has reached in any one test against each Stockfish level. Gold = all 10 won; green = passed (at least half of the games that weren't draws won, as on the ladder); red = played, not passed yet; grey = not played yet. Hover over a box for the full record.", []);
+    bcard.style.gridColumn = "1 / -1";
+    const bottom = document.getElementById("bottomcards");          // the very bottom of the page (owner)
+    if (bcard.parentElement !== bottom) bottom.appendChild(bcard);
+    const rec = {};
+    quickTests.forEach(t => {
+      const byLevel = {};
+      (t.games || []).forEach(g => {
+        const x = byLevel[g.lv] ??= {w: 0, d: 0, l: 0};
+        if (g.pts === 1) x.w++; else if (g.pts === 0) x.l++; else x.d++;
+      });
+      Object.entries(byLevel).forEach(([lv, x]) => {
+        const n = x.w + x.d + x.l, pct = 100 * x.w / n;
+        const r = rec[t.bot + "|" + lv] ??= {tests: 0, w: 0, d: 0, l: 0, best: -1, bestText: "", passed: false};
+        r.tests++; r.w += x.w; r.d += x.d; r.l += x.l;
+        if (x.w + x.l > 0 && x.w >= 0.5 * (x.w + x.l)) r.passed = true;
+        if (pct > r.best) {
+          r.best = pct;
+          r.bestText = `won ${x.w}, drew ${x.d}, lost ${x.l} at ${t.limit} a move, ${fmt(Number(t.games_trained))} games trained, ` +
+                       `${String(t.time).replace("T", " ").slice(0, 16)} (option ${t.test === "climb" ? 13 : 14})`;
+        }
+      });
+    });
+    const levels = [...new Set([1320, 1520, 1720, 1920, 2120, 2320, 2520, 2720, 2920, 3120, 3190]
+      .concat(Object.keys(rec).map(k => Number(k.split("|")[1]))))].sort((a, b) => a - b);
+    const qbots = [...new Set(quickTests.map(t => t.bot))].sort((a, b) => Number(a.slice(2)) - Number(b.slice(2)));
+    const qbox = (b, lv) => {
+      const r = rec[b + "|" + lv];
+      if (!r) return `<td class="none" title="Stockfish ${lv}: not played yet">-</td>`;
+      const n = r.w + r.d + r.l;
+      const tip = `Stockfish ${lv}: best test ${Math.round(r.best)}% wins (${r.bestText}). All quick tests together: won ${r.w}, drew ${r.d}, lost ${r.l} of ${n} games ` +
+                  `(${r.tests} test${r.tests > 1 ? "s" : ""}); won ${r.w + r.l ? Math.round(100 * r.w / (r.w + r.l)) : 0}% of the games that weren't draws` +
+                  (r.passed ? "; passed" : "; not passed yet");
+      return `<td class="${r.best >= 100 ? "gold" : r.passed ? "pass" : "fail"}" title="${tip}">${Math.round(r.best)}%</td>`;
+    };
+    bcard.querySelector(".plot").innerHTML =
+      `<div class="tablewrap"><table class="rungs"><tr><th></th>${levels.map(lv => `<th>${lv}</th>`).join("")}</tr>` +
+      qbots.map(b => `<tr><td>${shown(b)}</td>${levels.map(lv => qbox(b, lv)).join("")}</tr>`).join("") + "</table></div>" +
+      `<div class="key"><span style="--c:var(--gold-bg)">100%</span><span style="--c:var(--pass-bg)">passed</span><span style="--c:var(--fail-bg)">played, not passed yet</span>` +
+      `<span style="--c:var(--none-bg)">not played yet</span></div>`;
   }
 
   const er = status.elo_tests || [];
