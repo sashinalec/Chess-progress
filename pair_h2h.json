@@ -1,0 +1,13 @@
+[
+ {
+  "time": "2026-10-14 04:28",
+  "round": 1,
+  "ai20_games": 15000,
+  "ai21_games": 15000,
+  "games": 1000,
+  "ai20_wins": 457,
+  "draws": 138,
+  "ai21_wins": 405,
+  "ai20_score_pct": 52.6
+ }
+]
