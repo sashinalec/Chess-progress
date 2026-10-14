@@ -141,6 +141,7 @@ table.rungs td.none { background: var(--none-bg); color: var(--muted); }
 const run = new URLSearchParams(location.search).get("run") || "";
 let range = "all", status = null, history = [];
 let ladderAll = null;      // every bot's ladder results (ladder_all.json), for the win-rate table
+let quickTests = null;     // quick Stockfish tests, menu options 13 / 14 (quick_tests.json, 14 Oct 2026)
 let phaseReport = null;    // where each bot gains / loses ground by phase (phase_report.json, 13 Oct 2026)
 let pairH2H = null;        // AI20 vs AI21, 1,000-game matches (pair_h2h.json, 13 Oct 2026)
 const css = n => getComputedStyle(document.documentElement).getPropertyValue(n).trim();
@@ -543,6 +544,20 @@ function render() {
         `<td class="${r.ai20_score_pct > 50 ? "pass" : r.ai20_score_pct < 50 ? "fail" : "none"}">${r.ai20_score_pct}%</td></tr>`).join("") + "</table></div>";
   }
 
+  // Quick Stockfish tests (menu options 13 and 14, owner 14 Oct 2026): every bot, newest first.
+  if (Array.isArray(quickTests) && quickTests.length) {
+    const qcard = card("c-quick", "Quick Stockfish tests",
+      "Menu options 13 (10 games a Stockfish level, climbing from 1320 until the bot scores under 25%) and 14 (10 games against one level). The bot thinks for a set number of nodes or seconds a move; Stockfish 0.1 s a move at its set strength. 10 games a level is a rough guide only.", []);
+    qcard.style.gridColumn = "1 / -1";
+    const lv = x => { try { return JSON.parse(x.ladder).map(([e, p, n]) => `${e}: ${p}/${n}`).join(" &middot; "); } catch (e) { return ""; } };
+    const rating = x => x.rating !== "" ? `${x.rating} (${x.low}-${x.high})` : (x.note || "-");
+    qcard.querySelector(".plot").innerHTML =
+      `<div class="tablewrap"><table class="rungs"><tr><th>When</th><th>Bot</th><th>Games trained</th><th>Test</th><th>A move</th><th>Score at each Stockfish level</th><th>Rating (95% range)</th></tr>` +
+      quickTests.slice().reverse().map(x => `<tr><td>${String(x.time).replace("T", " ").slice(0, 16)}</td><td>${shown(x.bot)}</td>` +
+        `<td>${fmt(Number(x.games_trained))}</td><td>${x.test === "climb" ? "climb (13)" : "one level (14)"}</td><td>${x.limit}</td>` +
+        `<td>${lv(x)}</td><td>${x.test === "climb" ? rating(x) : "-"}</td></tr>`).join("") + "</table></div>";
+  }
+
   const er = status.elo_tests || [];
   lineChart(card("c-elo", "Stockfish rating tests", "Menu option 5. Dots are estimates, bars the 95% range.", botNames),
     bots.map((b, i) => {
@@ -557,7 +572,7 @@ function render() {
   if (!charts.dataset.ordered) {
     ["c-policy", "c-value", "c-results", "c-endings", "c-length", "c-speed",
      "c-bench", ...extraIds, "c-ladder", "c-ladder-current", "c-ladder-level",
-     "c-ladder-table", "c-phase", "c-h2h", ...netIds, "c-elo"].forEach(id => {
+     "c-ladder-table", "c-phase", "c-h2h", ...netIds, "c-elo", "c-quick"].forEach(id => {
       const c = document.getElementById(id);
       if (c) charts.appendChild(c);
     });
@@ -606,16 +621,17 @@ function replay(fens) {
 
 async function load() {
   try {
-    const [s, h, la, pr, hh] = await Promise.all([
+    const [s, h, la, pr, hh, qt] = await Promise.all([
       fetch(`${run}/status.json`, {cache: "no-store"}).then(r => r.ok ? r.json() : null),
       fetch(`${run}/history.json`, {cache: "no-store"}).then(r => r.ok ? r.json() : []).catch(() => []),
       fetch("ladder_all.json", {cache: "no-store"}).then(r => r.ok ? r.json() : null).catch(() => null),
       fetch("phase_report.json", {cache: "no-store"}).then(r => r.ok ? r.json() : null).catch(() => null),
       fetch("pair_h2h.json", {cache: "no-store"}).then(r => r.ok ? r.json() : null).catch(() => null),
+      fetch("quick_tests.json", {cache: "no-store"}).then(r => r.ok ? r.json() : null).catch(() => null),
     ]);
     if (s) {
       const first = !status;
-      status = s; history = h || []; if (la) ladderAll = la; if (pr) phaseReport = pr; if (hh) pairH2H = hh; render();
+      status = s; history = h || []; if (la) ladderAll = la; if (pr) phaseReport = pr; if (hh) pairH2H = hh; if (qt) quickTests = qt; render();
       // First time: the chart cards were added one by one, so draw again
       // once the page layout has settled (each chart measures its width).
       if (first) requestAnimationFrame(render);
