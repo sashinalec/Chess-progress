@@ -30,26 +30,101 @@
   }
  },
  "ai20": {
-  "updated": "2026-10-14 01:23",
+  "updated": "2026-10-14 07:32",
   "groups": {
    "Stockfish ladder": {
     "opening": {
      "games": 200,
-     "mean": -1.66,
+     "mean": -2.36,
      "gained_1": 24,
-     "lost_1": 54
+     "lost_1": 58
     },
     "middlegame": {
-     "games": 191,
-     "mean": 0.38,
-     "gained_1": 39,
-     "lost_1": 41
+     "games": 195,
+     "mean": -0.35,
+     "gained_1": 29,
+     "lost_1": 43
     },
     "endgame": {
-     "games": 134,
-     "mean": 1.69,
-     "gained_1": 43,
-     "lost_1": 25
+     "games": 121,
+     "mean": 1.21,
+     "gained_1": 33,
+     "lost_1": 26
+    },
+    "_games": 200,
+    "_games_trained": [
+     30000,
+     30000
+    ]
+   },
+   "ai16 (25,000 games)": {
+    "opening": {
+     "games": 120,
+     "mean": -0.83,
+     "gained_1": 32,
+     "lost_1": 48
+    },
+    "middlegame": {
+     "games": 119,
+     "mean": -1.22,
+     "gained_1": 27,
+     "lost_1": 55
+    },
+    "endgame": {
+     "games": 86,
+     "mean": -1.41,
+     "gained_1": 20,
+     "lost_1": 42
+    },
+    "_games": 120,
+    "_games_trained": [
+     5000,
+     30000
+    ]
+   },
+   "ai12 (25,000 games)": {
+    "opening": {
+     "games": 120,
+     "mean": 0.01,
+     "gained_1": 42,
+     "lost_1": 42
+    },
+    "middlegame": {
+     "games": 119,
+     "mean": -0.85,
+     "gained_1": 30,
+     "lost_1": 48
+    },
+    "endgame": {
+     "games": 94,
+     "mean": 0.2,
+     "gained_1": 30,
+     "lost_1": 28
+    },
+    "_games": 120,
+    "_games_trained": [
+     5000,
+     30000
+    ]
+   },
+   "AI20 vs AI21 match": {
+    "opening": {
+     "games": 200,
+     "mean": 0.75,
+     "gained_1": 48,
+     "lost_1": 35
+    },
+    "middlegame": {
+     "games": 199,
+     "mean": 0.08,
+     "gained_1": 42,
+     "lost_1": 36
+    },
+    "endgame": {
+     "games": 162,
+     "mean": 0.02,
+     "gained_1": 29,
+     "lost_1": 31
     },
     "_games": 200,
     "_games_trained": [
@@ -57,54 +132,29 @@
      15000
     ]
    },
-   "ai16 (25,000 games)": {
+   "ai21 (15,000 games)": {
     "opening": {
-     "games": 60,
-     "mean": -0.97,
-     "gained_1": 28,
-     "lost_1": 58
+     "games": 150,
+     "mean": 0.28,
+     "gained_1": 42,
+     "lost_1": 41
     },
     "middlegame": {
-     "games": 60,
-     "mean": -1.35,
-     "gained_1": 25,
-     "lost_1": 57
+     "games": 148,
+     "mean": 0.23,
+     "gained_1": 38,
+     "lost_1": 35
     },
     "endgame": {
-     "games": 42,
-     "mean": -1.56,
-     "gained_1": 19,
-     "lost_1": 40
+     "games": 116,
+     "mean": 0.71,
+     "gained_1": 34,
+     "lost_1": 23
     },
-    "_games": 60,
+    "_games": 150,
     "_games_trained": [
-     5000,
-     15000
-    ]
-   },
-   "ai12 (25,000 games)": {
-    "opening": {
-     "games": 60,
-     "mean": -0.94,
-     "gained_1": 27,
-     "lost_1": 50
-    },
-    "middlegame": {
-     "games": 60,
-     "mean": -1.31,
-     "gained_1": 23,
-     "lost_1": 53
-    },
-    "endgame": {
-     "games": 49,
-     "mean": -0.94,
-     "gained_1": 20,
-     "lost_1": 43
-    },
-    "_games": 60,
-    "_games_trained": [
-     5000,
-     15000
+     20000,
+     30000
     ]
    }
   }
