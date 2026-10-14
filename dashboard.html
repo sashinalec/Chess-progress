@@ -491,10 +491,28 @@ function render() {
   // Where each bot gains and loses ground, by phase (phase_report.py, owner 13 Oct 2026).
   if (phaseReport && Object.keys(phaseReport).length) {
     const pcard = card("c-phase", "Where each bot gains and loses, by phase",
-      "From each bot's match games: Stockfish (a measuring stick only) judges the position where the bot enters each phase and where it leaves it, from the bot's side. The average change in pawns: green = it gains ground there, red = it loses ground. Opening = 22+ pieces (after the 8 random moves), middlegame = 12-21, endgame = 11 or fewer. Mainly against ai6 at 50,013 games (the same yardstick for every bot). Hover for details.", []);
+      "From each bot's match games: Stockfish (a measuring stick only) judges the position where the bot enters each phase and where it leaves it, from the bot's side. The average change in pawns: green = it gains ground there, red = it loses ground. Opening = 22+ pieces (after the 8 random moves), middlegame = 12-21, endgame = 11 or fewer. Against ai12 at 25,000 games, against AI20 (the 50-game box matches and the 1,000-game matches together) and the Stockfish ladder. Rows: AI20, AI21 and AI23 (its row fills in after its first turn). Hover for details.", []);
     pcard.style.gridColumn = "1 / -1";
     const phases = ["opening", "middlegame", "endgame"];
-    const groups = ["ai6 (50,013 games)", "Stockfish ladder"];
+    // Columns (owner, 14 Oct 2026: ai12 instead of ai6, and AI20 added): which of a bot's match groups each one takes.
+    const groups = [["ai12 (25,000 games)", (k, b) => k.startsWith("ai12 (")],
+                    ["ai20 (30k games)", (k, b) => k.startsWith("ai20 (") || (k === "AI20 vs AI21 match" && b !== "ai20")],
+                    ["Stockfish ladder", (k, b) => k === "Stockfish ladder"]];
+    // Several groups in one column (e.g. AI21's boxes and 1,000-game matches against AI20): averaged by games.
+    const merged = (b, take) => {
+      const gs = Object.entries((phaseReport[b] || {}).groups || {}).filter(([k]) => take(k, b)).map(([, g]) => g);
+      if (!gs.length) return null;
+      const out = {};
+      phases.forEach(p => {
+        const xs = gs.map(g => g[p]).filter(Boolean), n = xs.reduce((s, x) => s + x.games, 0);
+        if (!n) return;
+        const avg = key => xs.reduce((s, x) => s + x[key] * x.games, 0) / n;
+        out[p] = {games: n, mean: avg("mean"), gained_1: Math.round(avg("gained_1")), lost_1: Math.round(avg("lost_1"))};
+      });
+      const gt = gs.map(g => g._games_trained).filter(Boolean);
+      if (gt.length) out._games_trained = [Math.min(...gt.map(x => x[0])), Math.max(...gt.map(x => x[1]))];
+      return out;
+    };
     const cell = (x) => {
       if (!x) return `<td class="none">-</td>`;
       const m = x.mean, a = Math.min(1, Math.abs(m) / 1.5);
@@ -502,15 +520,15 @@ function render() {
                         : `color-mix(in srgb, var(--fail-bg) ${Math.round(25 + 75 * a)}%, transparent)`;
       return `<td style="background:${bg}" title="${x.games} games: gained a pawn or more in ${x.gained_1}%, lost a pawn or more in ${x.lost_1}%">${m >= 0 ? "+" : ""}${m.toFixed(2)}</td>`;
     };
-    const bots = Object.keys(phaseReport).sort((a, b) => Number(a.slice(2)) - Number(b.slice(2)));
+    // Rows (owner, 14 Oct 2026): the rotation's bots only, AI23 shown (as dashes) before its first report.
+    const rows = ["ai20", "ai21", "ai23"].map(b => [b, groups.map(([, take]) => merged(b, take))]);
     pcard.querySelector(".plot").innerHTML =
-      `<div class="tablewrap"><table class="rungs"><tr><th></th>${groups.map(g => `<th colspan="3">vs ${g}</th>`).join("")}</tr>` +
+      `<div class="tablewrap"><table class="rungs"><tr><th></th>${groups.map(([g]) => `<th colspan="3">vs ${g}</th>`).join("")}</tr>` +
       `<tr><th></th>${groups.map(() => phases.map(p => `<th>${p}</th>`).join("")).join("")}</tr>` +
-      bots.map(b => {
-        const r = phaseReport[b].groups || {};
-        const gt = (r[groups[0]] || {})._games_trained;
-        return `<tr><td title="updated ${phaseReport[b].updated}${gt ? `; games from ${fmt(gt[0])}-${fmt(gt[1])} games trained` : ""}">${shown(b)}</td>` +
-               groups.map(g => phases.map(p => cell((r[g] || {})[p])).join("")).join("") + "</tr>";
+      rows.map(([b, cols]) => {
+        const gt = (cols.find(Boolean) || {})._games_trained;
+        return `<tr><td title="${phaseReport[b] ? `updated ${phaseReport[b].updated}` : "no report yet (made after each of its turns)"}${gt ? `; games from ${fmt(gt[0])}-${fmt(gt[1])} games trained` : ""}">${shown(b)}</td>` +
+               cols.map(r => phases.map(p => cell((r || {})[p])).join("")).join("") + "</tr>";
       }).join("") + "</table></div>";
   }
 
