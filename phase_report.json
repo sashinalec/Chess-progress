@@ -185,101 +185,101 @@
   }
  },
  "ai21": {
-  "updated": "2026-10-14 19:12",
+  "updated": "2026-10-15 22:19",
   "groups": {
    "Stockfish ladder": {
     "opening": {
      "games": 200,
-     "mean": -1.48,
-     "gained_1": 33,
-     "lost_1": 52
+     "mean": -2.77,
+     "gained_1": 20,
+     "lost_1": 62
     },
     "middlegame": {
-     "games": 196,
-     "mean": 1.04,
-     "gained_1": 39,
-     "lost_1": 36
+     "games": 197,
+     "mean": -1.27,
+     "gained_1": 24,
+     "lost_1": 52
     },
     "endgame": {
-     "games": 121,
-     "mean": 1.89,
-     "gained_1": 41,
-     "lost_1": 17
+     "games": 115,
+     "mean": 1.1,
+     "gained_1": 28,
+     "lost_1": 21
     },
     "_games": 200,
     "_games_trained": [
-     30000,
-     30000
+     45000,
+     45000
     ]
    },
    "ai12 (25,000 games)": {
     "opening": {
-     "games": 120,
-     "mean": -0.39,
-     "gained_1": 41,
-     "lost_1": 44
+     "games": 180,
+     "mean": -0.14,
+     "gained_1": 44,
+     "lost_1": 40
     },
     "middlegame": {
-     "games": 120,
-     "mean": -0.15,
-     "gained_1": 36,
-     "lost_1": 45
+     "games": 180,
+     "mean": -0.04,
+     "gained_1": 38,
+     "lost_1": 42
     },
     "endgame": {
-     "games": 102,
-     "mean": -0.57,
-     "gained_1": 26,
-     "lost_1": 38
+     "games": 149,
+     "mean": -0.11,
+     "gained_1": 32,
+     "lost_1": 34
     },
-    "_games": 120,
+    "_games": 180,
     "_games_trained": [
      5000,
-     30000
+     45000
     ]
    },
    "ai16 (25,000 games)": {
     "opening": {
-     "games": 120,
-     "mean": 0.09,
-     "gained_1": 42,
+     "games": 180,
+     "mean": 0.18,
+     "gained_1": 41,
      "lost_1": 39
     },
     "middlegame": {
-     "games": 119,
-     "mean": -1.06,
-     "gained_1": 32,
-     "lost_1": 48
+     "games": 179,
+     "mean": -0.94,
+     "gained_1": 33,
+     "lost_1": 47
     },
     "endgame": {
-     "games": 97,
-     "mean": -0.03,
-     "gained_1": 32,
-     "lost_1": 35
+     "games": 146,
+     "mean": -0.35,
+     "gained_1": 29,
+     "lost_1": 36
     },
-    "_games": 120,
+    "_games": 180,
     "_games_trained": [
      5000,
-     30000
+     45000
     ]
    },
    "ai20 (15,000 games)": {
     "opening": {
      "games": 150,
-     "mean": -0.87,
-     "gained_1": 31,
+     "mean": -0.83,
+     "gained_1": 30,
      "lost_1": 45
     },
     "middlegame": {
      "games": 149,
-     "mean": -0.59,
-     "gained_1": 30,
-     "lost_1": 46
+     "mean": -0.65,
+     "gained_1": 28,
+     "lost_1": 47
     },
     "endgame": {
      "games": 122,
-     "mean": -0.8,
+     "mean": -0.82,
      "gained_1": 25,
-     "lost_1": 44
+     "lost_1": 45
     },
     "_games": 150,
     "_games_trained": [
@@ -290,51 +290,51 @@
    "AI20 vs AI21 match": {
     "opening": {
      "games": 200,
-     "mean": -0.77,
-     "gained_1": 36,
-     "lost_1": 48
+     "mean": -0.09,
+     "gained_1": 42,
+     "lost_1": 43
     },
     "middlegame": {
      "games": 199,
-     "mean": -0.1,
-     "gained_1": 36,
-     "lost_1": 41
+     "mean": -0.01,
+     "gained_1": 38,
+     "lost_1": 40
     },
     "endgame": {
-     "games": 162,
-     "mean": -0.02,
-     "gained_1": 30,
+     "games": 164,
+     "mean": 0.34,
+     "gained_1": 31,
      "lost_1": 27
     },
     "_games": 200,
     "_games_trained": [
-     15000,
-     15000
+     30000,
+     30000
     ]
    },
    "ai20 (30,000 games)": {
     "opening": {
-     "games": 150,
-     "mean": -0.33,
-     "gained_1": 36,
-     "lost_1": 45
+     "games": 200,
+     "mean": -0.16,
+     "gained_1": 34,
+     "lost_1": 40
     },
     "middlegame": {
-     "games": 148,
-     "mean": -0.46,
-     "gained_1": 29,
-     "lost_1": 43
+     "games": 198,
+     "mean": -0.5,
+     "gained_1": 33,
+     "lost_1": 44
     },
     "endgame": {
-     "games": 121,
-     "mean": -0.28,
-     "gained_1": 26,
-     "lost_1": 37
+     "games": 153,
+     "mean": -0.23,
+     "gained_1": 30,
+     "lost_1": 33
     },
-    "_games": 150,
+    "_games": 200,
     "_games_trained": [
-     20000,
-     30000
+     30000,
+     45000
     ]
    }
   }
