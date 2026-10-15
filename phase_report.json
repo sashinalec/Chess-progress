@@ -313,5 +313,110 @@
     ]
    }
   }
+ },
+ "ai23": {
+  "updated": "2026-10-15 02:48",
+  "groups": {
+   "Stockfish ladder": {
+    "opening": {
+     "games": 200,
+     "mean": -1.97,
+     "gained_1": 26,
+     "lost_1": 54
+    },
+    "middlegame": {
+     "games": 198,
+     "mean": -0.48,
+     "gained_1": 25,
+     "lost_1": 45
+    },
+    "endgame": {
+     "games": 125,
+     "mean": 0.88,
+     "gained_1": 30,
+     "lost_1": 24
+    },
+    "_games": 200,
+    "_games_trained": [
+     30000,
+     30000
+    ]
+   },
+   "ai12 (25,000 games)": {
+    "opening": {
+     "games": 120,
+     "mean": -0.16,
+     "gained_1": 33,
+     "lost_1": 42
+    },
+    "middlegame": {
+     "games": 119,
+     "mean": -0.28,
+     "gained_1": 34,
+     "lost_1": 47
+    },
+    "endgame": {
+     "games": 93,
+     "mean": -0.97,
+     "gained_1": 17,
+     "lost_1": 35
+    },
+    "_games": 120,
+    "_games_trained": [
+     5000,
+     30000
+    ]
+   },
+   "ai16 (25,000 games)": {
+    "opening": {
+     "games": 120,
+     "mean": -0.47,
+     "gained_1": 38,
+     "lost_1": 45
+    },
+    "middlegame": {
+     "games": 120,
+     "mean": -1.0,
+     "gained_1": 30,
+     "lost_1": 48
+    },
+    "endgame": {
+     "games": 94,
+     "mean": -0.86,
+     "gained_1": 21,
+     "lost_1": 35
+    },
+    "_games": 120,
+    "_games_trained": [
+     5000,
+     30000
+    ]
+   },
+   "ai20 (30,000 games)": {
+    "opening": {
+     "games": 200,
+     "mean": -0.24,
+     "gained_1": 40,
+     "lost_1": 42
+    },
+    "middlegame": {
+     "games": 196,
+     "mean": -0.15,
+     "gained_1": 33,
+     "lost_1": 42
+    },
+    "endgame": {
+     "games": 163,
+     "mean": -0.36,
+     "gained_1": 27,
+     "lost_1": 33
+    },
+    "_games": 200,
+    "_games_trained": [
+     15000,
+     30000
+    ]
+   }
+  }
  }
 }
