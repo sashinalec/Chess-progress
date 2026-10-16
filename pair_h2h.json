@@ -31,5 +31,16 @@
   "draws": 118,
   "ai21_wins": 408,
   "ai20_score_pct": 53.3
+ },
+ {
+  "time": "2026-10-16 03:40",
+  "round": 4,
+  "ai20_games": 50001,
+  "ai21_games": 50000,
+  "games": 1000,
+  "ai20_wins": 376,
+  "draws": 105,
+  "ai21_wins": 519,
+  "ai20_score_pct": 42.9
  }
 ]
