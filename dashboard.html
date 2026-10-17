@@ -651,7 +651,15 @@ function render() {
     pcardP.querySelector(".plot").innerHTML =
       `<p>${pr.cycle ? `Now: cycle ${pr.cycle}, half ${pr.sub} of ${pr.subs} - ${pr.block} (${pr.left} block${pr.left === 1 ? "" : "s"} left in this half, ${fmt(pr.games_each_block)} games each).` : "Not started yet: it begins when every bot has 50,000 games."}</p>` +
       `<p>Placements so far: ${poolData.cycles.length}. Frozen copies still in the pool: ${(poolData.active_frozen || []).map(b => shown(b) + " (50k)").join(", ") || "-"}.` +
-      `${(poolData.dropped || []).length ? " Dropped: " + poolData.dropped.map(d => `${shown(d.bot)} (50k) after cycle ${d.cycle}, beaten by ${d.beaten_by.map(shown).join(", ")}`).join("; ") + "." : ""}</p>`;
+      `${(poolData.dropped || []).length ? " Dropped: " + poolData.dropped.map(d => `${shown(d.bot)} (50k) after cycle ${d.cycle}, beaten by ${d.beaten_by.map(shown).join(", ")}`).join("; ") + "." : ""}</p>` +
+      // (17 Oct 2026) The latest blocks and each bot's games this cycle, while the pool plays.
+      (pr.games ? `<p>Games this cycle (out of about 10,000 each): ${live.map(b => `${shown(b)} ${fmt(pr.games[b] || 0)}`).join(", ")}.${pr.started ? ` This block started at ${pr.started}.` : ""}</p>` : "") +
+      ((pr.recent || []).length ? `<div class="tablewrap"><table class="rungs"><tr><th>Latest blocks</th><th>Won</th><th>Drawn</th><th>Lost</th><th>Score</th></tr>` +
+        pr.recent.slice().reverse().map(x => {
+          const n = x.w + x.d + x.l, p = pct(x.w, x.d, n);
+          const opp = x.kind === "frozen" ? `${shown(x.b)} (50k)` : shown(x.b);
+          return `<tr><td>${shown(x.a)} vs ${opp}</td><td>${x.w}</td><td>${x.d}</td><td>${x.l}</td><td style="${shade(p)}">${p == null ? "-" : p.toFixed(0) + "%"}</td></tr>`;
+        }).join("") + "</table></div>" : "");
     // Stockfish ladder after 50k.
     const sf = poolData.stockfish || [];
     const sfRungs = rungs.filter(r => sf.some(x => x.rung === r));
