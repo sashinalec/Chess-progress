@@ -14,19 +14,11 @@
   "cycle": 1,
   "sub": 1,
   "subs": 2,
-  "block": "ai25 vs ai26@50k",
-  "left": 8,
+  "block": "ai26 vs ai26@50k",
+  "left": 7,
   "games_each_block": 416,
-  "started": "23:55",
+  "started": "23:58",
   "recent": [
-   {
-    "kind": "frozen",
-    "a": "ai23",
-    "b": "ai25",
-    "w": 212,
-    "d": 42,
-    "l": 162
-   },
    {
     "kind": "frozen",
     "a": "ai24",
@@ -82,6 +74,14 @@
     "w": 197,
     "d": 64,
     "l": 155
+   },
+   {
+    "kind": "frozen",
+    "a": "ai25",
+    "b": "ai26",
+    "w": 165,
+    "d": 54,
+    "l": 197
    }
   ],
   "games": {
@@ -89,7 +89,7 @@
    "ai21": 4576,
    "ai23": 4576,
    "ai24": 4576,
-   "ai25": 4160,
+   "ai25": 4576,
    "ai26": 4160
   }
  },
