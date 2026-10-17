@@ -12,29 +12,13 @@
  "dropped": [],
  "progress": {
   "cycle": 1,
-  "sub": 1,
+  "sub": 2,
   "subs": 2,
-  "block": "ai26 self-play",
-  "left": 1,
+  "block": "ai20 vs ai24",
+  "left": 55,
   "games_each_block": 416,
-  "started": "00:27",
+  "started": "00:39",
   "recent": [
-   {
-    "kind": "frozen",
-    "a": "ai25",
-    "b": "ai25",
-    "w": 160,
-    "d": 92,
-    "l": 164
-   },
-   {
-    "kind": "frozen",
-    "a": "ai26",
-    "b": "ai25",
-    "w": 222,
-    "d": 40,
-    "l": 154
-   },
    {
     "kind": "frozen",
     "a": "ai20",
@@ -82,15 +66,31 @@
     "w": 177,
     "d": 66,
     "l": 173
+   },
+   {
+    "kind": "pair",
+    "a": "ai20",
+    "b": "ai21",
+    "w": 176,
+    "d": 62,
+    "l": 178
+   },
+   {
+    "kind": "pair",
+    "a": "ai20",
+    "b": "ai23",
+    "w": 146,
+    "d": 46,
+    "l": 224
    }
   ],
   "games": {
-   "ai20": 4992,
-   "ai21": 4992,
-   "ai23": 4992,
+   "ai20": 5824,
+   "ai21": 5408,
+   "ai23": 5408,
    "ai24": 4992,
    "ai25": 4992,
-   "ai26": 4576
+   "ai26": 4992
   }
  },
  "active_frozen": [
