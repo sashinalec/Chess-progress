@@ -121,8 +121,10 @@ function render(d, st) {
   const rows = live.map(a => {
     const [sl, nl] = score(a, live.filter(b => b !== a)), [sf, nf] = score(a, frozen.map(f => `${f}@50k`)), [sa, na] = score(a, Object.keys(vs).filter(k => k.startsWith(a + "|")).map(k => k.split("|")[1]));
     return {a, sl, nl, sf, nf, sa, na};
-  }).sort((x, y) => (y.sl ?? -1) - (x.sl ?? -1));
-  const s1 = card(`Standings in cycle ${cycle || "-"} so far`, "Each bot's score in this cycle's pool games: against the other live bots, against the frozen 50,000-game copies, and both together. Every bot learns its pool games at its self-play block, at the end of each half.");
+  }).sort((x, y) => (y.sl ?? y.sa ?? -1) - (x.sl ?? x.sa ?? -1));
+  const partial = !st && !pr.cycle_blocks;      // the website before the pool saves the whole cycle (17 Oct 2026)
+  const s1 = card(`Standings in cycle ${cycle || "-"} so far`, "Each bot's score in this cycle's pool games: against the other live bots, against the frozen 50,000-game copies, and both together. Every bot learns its pool games at its self-play block, at the end of each half." +
+    (partial ? " <b>For now from the latest 8 blocks only: the whole cycle appears once the pool has been restarted.</b>" : ""));
   s1.innerHTML = blocks.length ? `<div class="tablewrap"><table class="t"><tr><th>Place</th><th>Bot</th><th>vs live bots</th><th>vs frozen copies</th><th>All</th><th>Games</th></tr>` +
     rows.map((r, i) => `<tr><td>${i + 1}</td><td>${shown(r.a)}</td><td style="${shade(r.sl)}">${r.sl == null ? "-" : r.sl.toFixed(1) + "%"}</td><td style="${shade(r.sf)}">${r.sf == null ? "-" : r.sf.toFixed(1) + "%"}</td><td style="${shade(r.sa)}"><b>${r.sa == null ? "-" : r.sa.toFixed(1) + "%"}</b></td><td>${fmt(r.na)}</td></tr>`).join("") + "</table></div>"
     : `<p class="empty">No pool games in this cycle yet.</p>`;
