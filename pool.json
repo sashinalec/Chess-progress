@@ -14,19 +14,11 @@
   "cycle": 1,
   "sub": 1,
   "subs": 2,
-  "block": "ai26 vs ai26@50k",
-  "left": 7,
+  "block": "ai20 self-play",
+  "left": 6,
   "games_each_block": 416,
-  "started": "23:58",
+  "started": "00:02",
   "recent": [
-   {
-    "kind": "frozen",
-    "a": "ai24",
-    "b": "ai25",
-    "w": 248,
-    "d": 33,
-    "l": 135
-   },
    {
     "kind": "frozen",
     "a": "ai25",
@@ -82,6 +74,14 @@
     "w": 165,
     "d": 54,
     "l": 197
+   },
+   {
+    "kind": "frozen",
+    "a": "ai26",
+    "b": "ai26",
+    "w": 177,
+    "d": 66,
+    "l": 173
    }
   ],
   "games": {
@@ -90,7 +90,7 @@
    "ai23": 4576,
    "ai24": 4576,
    "ai25": 4576,
-   "ai26": 4160
+   "ai26": 4576
   }
  },
  "active_frozen": [
