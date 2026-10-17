@@ -1,0 +1,220 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Pool dashboard</title>
+<style>
+:root {
+  color-scheme: light;
+  --page: #f9f9f7; --surface: #fcfcfb; --ink: #0b0b0b; --ink-2: #52514e; --muted: #898781;
+  --grid: #e1e0d9; --axis: #c3c2b7; --ring: rgba(11,11,11,0.10); --bar: #2a78d6;
+  --head-bg: #1f5f80; --pass-bg: #c6e9c6; --fail-bg: #f5c6c6; --none-bg: #e2e1dc; --gold-bg: #f3d36b;
+}
+@media (prefers-color-scheme: dark) {
+  :root:where(:not([data-theme="light"])) {
+    color-scheme: dark;
+    --page: #0d0d0d; --surface: #1a1a19; --ink: #ffffff; --ink-2: #c3c2b7; --muted: #898781;
+    --grid: #2c2c2a; --axis: #383835; --ring: rgba(255,255,255,0.10); --bar: #3987e5;
+    --head-bg: #1d4f6b; --pass-bg: #1f4d24; --fail-bg: #5c2525; --none-bg: #2c2c2a; --gold-bg: #8a6d12;
+  }
+}
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  --page: #0d0d0d; --surface: #1a1a19; --ink: #ffffff; --ink-2: #c3c2b7; --muted: #898781;
+  --grid: #2c2c2a; --axis: #383835; --ring: rgba(255,255,255,0.10); --bar: #3987e5;
+  --head-bg: #1d4f6b; --pass-bg: #1f4d24; --fail-bg: #5c2525; --none-bg: #2c2c2a; --gold-bg: #8a6d12;
+}
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--page); color: var(--ink); font: 14px/1.45 system-ui, -apple-system, "Segoe UI", sans-serif; }
+main { max-width: 1280px; margin: 0 auto; padding: 16px; }
+header { display: flex; flex-wrap: wrap; align-items: baseline; gap: 8px 16px; margin-bottom: 12px; }
+h1 { font-size: 20px; margin: 0; } h2 { font-size: 15px; margin: 0 0 4px; }
+a { color: var(--bar); }
+.sub, .desc { color: var(--muted); font-size: 12px; } .desc { margin: 0 0 8px; }
+.grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(380px, 1fr)); gap: 12px; }
+.card { background: var(--surface); border: 1px solid var(--ring); border-radius: 10px; padding: 12px; min-width: 0; }
+.wide { grid-column: 1 / -1; }
+.tiles { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 12px; margin-bottom: 12px; }
+.tile { background: var(--surface); border: 1px solid var(--ring); border-radius: 10px; padding: 10px 12px; }
+.tile .k { color: var(--muted); font-size: 12px; } .tile .v { font-size: 22px; font-weight: 700; } .tile .n { color: var(--muted); font-size: 12px; }
+.bar { height: 10px; background: var(--none-bg); border-radius: 5px; overflow: hidden; margin: 4px 0 2px; }
+.bar > div { height: 100%; background: var(--bar); }
+.tablewrap { overflow-x: auto; }
+table.t { border-collapse: separate; border-spacing: 2px; font-size: 13px; font-variant-numeric: tabular-nums; }
+table.t th, table.t td { text-align: center; padding: 5px 9px; min-width: 48px; white-space: nowrap; }
+table.t th { background: var(--head-bg); color: #fff; font-weight: 700; }
+table.t td:first-child, table.t th:first-child { text-align: left; }
+td.none { background: var(--none-bg); color: var(--muted); } td.pass { background: var(--pass-bg); }
+td.fail { background: var(--fail-bg); } td.gold { background: var(--gold-bg); }
+.empty { color: var(--muted); padding: 24px 0; text-align: center; }
+</style>
+</head>
+<body>
+<main>
+  <header>
+    <h1>Pool: the bots against each other</h1>
+    <span class="sub" id="updated">loading...</span>
+    <a class="sub" href="dashboard.html">the training dashboard</a>
+  </header>
+  <section class="tiles" id="tiles"></section>
+  <section class="grid" id="cards"></section>
+</main>
+<script>
+const LIVE_DEFAULT = ["ai20", "ai21", "ai23", "ai24", "ai25", "ai26"];
+const RUNGS = ["random", "sf1320-r80", "sf1320-r60", "sf1320-r50", "sf1320-r40", "sf1320-r30", "sf1320-r20", "sf1320-r15",
+  "sf1320-r10", "sf1320-r5", "sf1320", "sf1520", "sf1720", "sf1920", "sf2120", "sf2320", "sf2520", "sf2720", "sf2920", "sf3120", "sf3190"];
+const shown = b => String(b).replace(/^ai/, "AI");
+const rungName = r => String(r || "random").replace(/^sf/, "").replace("-r", "-");
+const fmt = (v, d = 0) => v == null || isNaN(v) ? "-" : Number(v).toLocaleString(undefined, {maximumFractionDigits: d, minimumFractionDigits: d});
+const pct = (w, d, n) => n ? 100 * (w + d / 2) / n : null;
+const shade = (p, mid = 50) => p == null ? "" : `background:color-mix(in srgb, var(${p >= mid ? "--pass-bg" : "--fail-bg"}) ${Math.round(25 + 75 * Math.min(1, Math.abs(p - mid) / 25))}%, transparent)`;
+const hm = s => s >= 3600 ? `${Math.floor(s / 3600)} h ${Math.round(s % 3600 / 60)} min` : `${Math.max(1, Math.round(s / 60))} min`;
+function card(title, desc, wide) {
+  const c = document.createElement("div");
+  c.className = "card" + (wide ? " wide" : "");
+  c.innerHTML = `<h2>${title}</h2>${desc ? `<p class="desc">${desc}</p>` : ""}<div class="body"></div>`;
+  document.getElementById("cards").appendChild(c);
+  return c.querySelector(".body");
+}
+function tile(k, v, n) { return `<div class="tile"><div class="k">${k}</div><div class="v">${v}</div><div class="n">${n || ""}</div></div>`; }
+
+function render(d, st) {
+  document.getElementById("cards").innerHTML = "";
+  const live = d.live || LIVE_DEFAULT;
+  const pr = d.progress || {};
+  const frozen = (st && st.active_frozen) || d.active_frozen || live;
+  const blocks = (st && st.blocks) || pr.cycle_blocks || pr.recent || [];
+  const games = (st && st.games) || pr.games || {};
+  const cycle = st ? st.cycle : pr.cycle, half = st ? st.sub + 1 : pr.sub, halves = pr.subs || 2;
+  const poolBlocks = live.length * (live.length - 1) / 2 + live.length * frozen.length, perHalf = poolBlocks + live.length;
+  const doneHalf = st ? st.done.length : (pr.left != null ? perHalf - pr.left : null);
+  document.getElementById("updated").textContent = [d.updated ? `last placement ${d.updated}` : "", pr.started ? `this block started at ${pr.started}` : "", "refreshes every 30 s"].filter(Boolean).join(" - ");
+
+  // Estimate: block times (when the pool records them), else 3 min a pool block and 6 a self-play block.
+  const ts = blocks.filter(b => b.t).map(b => b.t);
+  const gaps = ts.slice(1).map((t, i) => t - ts[i]).filter(g => g > 20 && g < 3600);
+  const med = a => { const s = a.slice().sort((x, y) => x - y); return s.length ? s[Math.floor(s.length / 2)] : null; };
+  const poolSec = med(gaps.slice(-15)) || 180, selfSec = 360;
+  let leftSec = null;
+  if (doneHalf != null) {
+    const poolLeft = Math.max(0, poolBlocks - doneHalf), selfLeft = Math.min(live.length, perHalf - doneHalf);
+    leftSec = poolLeft * poolSec + selfLeft * selfSec + (halves - half) * (poolBlocks * poolSec + live.length * selfSec) + 45 * 60;
+  }
+  const avgGames = live.reduce((s, b) => s + (games[b] || 0), 0) / live.length;
+  document.getElementById("tiles").innerHTML =
+    tile("Cycle", cycle || "-", `half ${half || "-"} of ${halves}`) +
+    tile("Now playing", pr.block ? pr.block.replace(/ai(\d+)/g, "AI$1").replace("@50k", " (50k)") : "-", pr.games_each_block ? `${fmt(pr.games_each_block)} games a block` : "") +
+    tile("This half", doneHalf != null ? `${doneHalf} / ${perHalf}` : "-", `<div class="bar"><div style="width:${doneHalf != null ? 100 * doneHalf / perHalf : 0}%"></div></div>blocks done`) +
+    tile("This cycle", `${fmt(avgGames)} / 10,000`, `<div class="bar"><div style="width:${Math.min(100, avgGames / 100)}%"></div></div>games a bot (average)`) +
+    tile("Next placement", leftSec != null ? `~${hm(leftSec)}` : "-", leftSec != null ? `around ${new Date(Date.now() + leftSec * 1000).toLocaleTimeString([], {hour: "2-digit", minute: "2-digit"})} (quiet hours not counted)` : "") +
+    tile("Placements done", (d.cycles || []).length, `frozen copies in: ${frozen.length} of ${live.length}`);
+
+  // Standings this cycle.
+  const vs = {};   // "a|b" -> [w, d, l] from a's side (b: a live bot, or "ai20@50k")
+  const add = (a, b, w, dr, l) => { const t = vs[`${a}|${b}`] ??= [0, 0, 0]; t[0] += w; t[1] += dr; t[2] += l; };
+  blocks.forEach(x => {
+    if (x.kind === "pair") { add(x.a, x.b, x.w, x.d, x.l); add(x.b, x.a, x.l, x.d, x.w); }
+    else if (x.kind === "frozen") add(x.a, `${x.b}@50k`, x.w, x.d, x.l);
+  });
+  const score = (a, keys) => { let p = 0, n = 0; keys.forEach(k => { const t = vs[`${a}|${k}`]; if (t) { p += t[0] + t[1] / 2; n += t[0] + t[1] + t[2]; } }); return n ? [100 * p / n, n] : [null, 0]; };
+  const rows = live.map(a => {
+    const [sl, nl] = score(a, live.filter(b => b !== a)), [sf, nf] = score(a, frozen.map(f => `${f}@50k`)), [sa, na] = score(a, Object.keys(vs).filter(k => k.startsWith(a + "|")).map(k => k.split("|")[1]));
+    return {a, sl, nl, sf, nf, sa, na};
+  }).sort((x, y) => (y.sl ?? -1) - (x.sl ?? -1));
+  const s1 = card(`Standings in cycle ${cycle || "-"} so far`, "Each bot's score in this cycle's pool games: against the other live bots, against the frozen 50,000-game copies, and both together. Every bot learns its pool games at its self-play block, at the end of each half.");
+  s1.innerHTML = blocks.length ? `<div class="tablewrap"><table class="t"><tr><th>Place</th><th>Bot</th><th>vs live bots</th><th>vs frozen copies</th><th>All</th><th>Games</th></tr>` +
+    rows.map((r, i) => `<tr><td>${i + 1}</td><td>${shown(r.a)}</td><td style="${shade(r.sl)}">${r.sl == null ? "-" : r.sl.toFixed(1) + "%"}</td><td style="${shade(r.sf)}">${r.sf == null ? "-" : r.sf.toFixed(1) + "%"}</td><td style="${shade(r.sa)}"><b>${r.sa == null ? "-" : r.sa.toFixed(1) + "%"}</b></td><td>${fmt(r.na)}</td></tr>`).join("") + "</table></div>"
+    : `<p class="empty">No pool games in this cycle yet.</p>`;
+
+  // Games waiting to be learned: pool games since the bot's last self-play block (the pool's own count when given).
+  const s2 = card("Games waiting to be learned", "Pool games each bot has played since its last self-play block: they are learned at the start of its next one (its own moves only).");
+  const backlog = pr.backlog || Object.fromEntries(live.map(b => {
+    let n = 0;
+    for (let i = blocks.length - 1; i >= 0; i--) {
+      const x = blocks[i];
+      if (x.kind === "self" && x.a === b) break;
+      if (x.a === b || (x.kind === "pair" && x.b === b)) n += (x.w || 0) + (x.d || 0) + (x.l || 0);
+    }
+    return [b, n];
+  }));
+  const maxB = Math.max(1, ...Object.values(backlog));
+  s2.innerHTML = `<div class="tablewrap"><table class="t"><tr><th>Bot</th><th>Waiting</th><th style="min-width:180px"></th></tr>` +
+    live.map(b => `<tr><td>${shown(b)}</td><td>${fmt(backlog[b] || 0)}</td><td><div class="bar"><div style="width:${100 * (backlog[b] || 0) / maxB}%"></div></div></td></tr>`).join("") + "</table></div>";
+
+  // Cross-table.
+  const s3 = card(`Cross-table, cycle ${cycle || "-"} so far`, "The row bot's score against each opponent in this cycle's pool games (both halves together). (50k) = the frozen copy at 50,000 games. Hover for won-drawn-lost.", true);
+  const cols = live.concat(frozen.map(f => `${f}@50k`));
+  s3.innerHTML = blocks.length ? `<div class="tablewrap"><table class="t"><tr><th></th>${cols.map(c => `<th>${c.includes("@") ? shown(c.split("@")[0]) + " (50k)" : shown(c)}</th>`).join("")}</tr>` +
+    live.map(a => `<tr><td>${shown(a)}</td>${cols.map(c => {
+      const t = vs[`${a}|${c}`];
+      if (c === a || !t) return `<td class="none">-</td>`;
+      const p = pct(t[0], t[1], t[0] + t[1] + t[2]);
+      return `<td style="${shade(p)}" title="won ${t[0]}, drew ${t[1]}, lost ${t[2]}">${p.toFixed(0)}%</td>`;
+    }).join("")}</tr>`).join("") + "</table></div>" : `<p class="empty">No pool games in this cycle yet.</p>`;
+
+  // Frozen copies and the drop rule.
+  const s4 = card("Frozen 50,000-game copies", "Each copy's score against the live bots this cycle. It is dropped when 3 live bots each beat it by more than 75% in one cycle; its games are then shared out between the other opponents.");
+  const dropped = d.dropped || (st && st.dropped) || [];
+  s4.innerHTML = `<div class="tablewrap"><table class="t"><tr><th>Copy</th><th>Its score</th><th>Bots beating it by 75%+</th><th>Status</th></tr>` +
+    live.map(f => {
+      const dr = dropped.find(x => x.bot === f);
+      if (dr) return `<tr><td>${shown(f)} (50k)</td><td>-</td><td>${dr.beaten_by.map(shown).join(", ")}</td><td class="fail">dropped after cycle ${dr.cycle}</td></tr>`;
+      let p = 0, n = 0; const by = [];
+      live.forEach(a => { const t = vs[`${a}|${f}@50k`]; if (t) { p += t[2] + t[1] / 2; n += t[0] + t[1] + t[2]; if (pct(t[0], t[1], t[0] + t[1] + t[2]) > 75) by.push(a); } });
+      const sc = n ? 100 * p / n : null;
+      return `<tr><td>${shown(f)} (50k)</td><td style="${shade(sc)}">${sc == null ? "-" : sc.toFixed(1) + "%"}</td><td>${by.length ? by.map(shown).join(", ") : "none"} (${by.length} of 3)</td><td class="pass">in the pool</td></tr>`;
+    }).join("") + "</table></div>";
+
+  // Latest blocks.
+  const s5 = card("Latest blocks", "The newest first: won, drawn and lost from the first bot's side.");
+  const latest = blocks.filter(x => x.kind !== "self").slice(-12).reverse();
+  s5.innerHTML = latest.length ? `<div class="tablewrap"><table class="t"><tr><th>Block</th><th>Won</th><th>Drawn</th><th>Lost</th><th>Score</th></tr>` +
+    latest.map(x => { const p = pct(x.w, x.d, x.w + x.d + x.l); return `<tr><td>${shown(x.a)} vs ${shown(x.b)}${x.kind === "frozen" ? " (50k)" : ""}</td><td>${x.w}</td><td>${x.d}</td><td>${x.l}</td><td style="${shade(p)}">${p.toFixed(0)}%</td></tr>`; }).join("") + "</table></div>"
+    : `<p class="empty">No blocks yet.</p>`;
+
+  // Placements.
+  const cyc = d.cycles || [], last = cyc[cyc.length - 1], prev = cyc[cyc.length - 2];
+  const rr = (c, a, b) => { if (!c) return null; const ab = c.rr[`${a}|${b}`], ba = c.rr[`${b}|${a}`];
+    if (ab) return pct(ab[0], ab[1], ab[0] + ab[1] + ab[2]); if (ba) { const p = pct(ba[0], ba[1], ba[0] + ba[1] + ba[2]); return p == null ? null : 100 - p; } return null; };
+  const total = (c, a) => { const ps = live.filter(b => b !== a).map(b => rr(c, a, b)).filter(p => p != null); return ps.length ? ps.reduce((s, p) => s + p, 0) / ps.length : null; };
+  const p1 = card(`All against each other${last ? ` (placement after cycle ${last.cycle})` : ""}`, "The row bot's score against the column bot in 100 games (50 with each colour) at the latest placement.", true);
+  p1.innerHTML = last ? `<div class="tablewrap"><table class="t"><tr><th></th>${live.map(b => `<th>vs ${shown(b)}</th>`).join("")}<th>Total</th></tr>` +
+    live.map(a => `<tr><td>${shown(a)}</td>${live.map(b => { if (a === b) return `<td class="none">-</td>`; const p = rr(last, a, b); return p == null ? `<td class="none">-</td>` : `<td style="${shade(p)}">${p.toFixed(0)}%</td>`; }).join("")}<td style="${shade(total(last, a))}"><b>${total(last, a) == null ? "-" : total(last, a).toFixed(1) + "%"}</b></td></tr>`).join("") + "</table></div>"
+    : `<p class="empty">The first placement comes at the end of cycle 1.</p>`;
+  const p2 = card("Best against each other", "Ranked by total score in the latest all-against-all placement, with the change since the one before.");
+  p2.innerHTML = last ? `<div class="tablewrap"><table class="t"><tr><th>Place</th><th>Bot</th><th>Total</th><th>Change</th></tr>` +
+    live.map(b => [b, total(last, b), total(prev, b)]).filter(x => x[1] != null).sort((x, y) => y[1] - x[1])
+      .map(([b, t, p], i) => `<tr><td>${i + 1}</td><td>${shown(b)}</td><td style="${shade(t)}">${t.toFixed(1)}%</td><td>${p == null ? "-" : (t - p >= 0 ? "+" : "") + (t - p).toFixed(1)}</td></tr>`).join("") + "</table></div>"
+    : `<p class="empty">After the first placement.</p>`;
+  const sf = d.stockfish || [];
+  const p3 = card("Best against Stockfish (after 50,000 games)", "Ranked by the highest rung passed in a placement climb after 50,000 games, then by the best win rate at the rung above.");
+  const sfRank = live.map(b => { const m = sf.filter(x => x.bot === b); const pi = Math.max(-1, ...m.filter(x => x.passed).map(x => RUNGS.indexOf(x.rung)));
+    const ab = m.filter(x => RUNGS.indexOf(x.rung) === pi + 1); return {b, n: m.length, pi, best: ab.length ? Math.max(...ab.map(x => Number(x.win_pct))) : null}; }).filter(x => x.n);
+  p3.innerHTML = sfRank.length ? `<div class="tablewrap"><table class="t"><tr><th>Place</th><th>Bot</th><th>Highest rung passed</th><th>Best at the next rung</th></tr>` +
+    sfRank.sort((x, y) => y.pi - x.pi || (y.best ?? -1) - (x.best ?? -1)).map((x, i) => `<tr><td>${i + 1}</td><td>${shown(x.b)}</td><td>${x.pi >= 0 ? rungName(RUNGS[x.pi]) : "-"}</td><td>${x.best == null ? "-" : `${Math.round(x.best)}% vs ${rungName(RUNGS[x.pi + 1])}`}</td></tr>`).join("") + "</table></div>"
+    : `<p class="empty">After the first placement.</p>`;
+  const sfR = RUNGS.filter(r => sf.some(x => x.rung === r));
+  const p4 = card("Stockfish ladder after 50,000 games", "The best win rate in any one placement match against each rung (50 games). Gold 100%, green passed, red played but not passed.", true);
+  p4.innerHTML = sf.length ? `<div class="tablewrap"><table class="t"><tr><th></th>${sfR.map(r => `<th>${rungName(r)}</th>`).join("")}</tr>` +
+    live.map(b => `<tr><td>${shown(b)}</td>${sfR.map(r => { const m = sf.filter(x => x.bot === b && x.rung === r); if (!m.length) return `<td class="none">-</td>`;
+      const best = Math.max(...m.map(x => Number(x.win_pct))), ok = m.some(x => x.passed);
+      return `<td class="${best >= 100 ? "gold" : ok ? "pass" : "fail"}" title="${m.length} match(es): won ${m.reduce((s, x) => s + x.wins, 0)}, drew ${m.reduce((s, x) => s + x.draws, 0)}, lost ${m.reduce((s, x) => s + x.losses, 0)}">${Math.round(best)}%</td>`; }).join("")}</tr>`).join("") + "</table></div>"
+    : `<p class="empty">After the first placement.</p>`;
+  const p5 = card("Total score over the cycles", "Each bot's all-against-all total at every placement: is it climbing?", true);
+  p5.innerHTML = cyc.length ? `<div class="tablewrap"><table class="t"><tr><th>Bot</th>${cyc.map(c => `<th>cycle ${c.cycle}</th>`).join("")}</tr>` +
+    live.map(b => `<tr><td>${shown(b)}</td>${cyc.map(c => { const t = total(c, b); return `<td style="${shade(t)}">${t == null ? "-" : t.toFixed(1) + "%"}</td>`; }).join("")}</tr>`).join("") + "</table></div>"
+    : `<p class="empty">After the first placement.</p>`;
+}
+
+async function load() {
+  const get = u => fetch(u, {cache: "no-store"}).then(r => r.ok ? r.json() : null).catch(() => null);
+  const [d, st] = await Promise.all([get("pool.json"), get("pool/state.json")]);
+  if (d) render(d, st);
+  else document.getElementById("updated").textContent = "The pool has not started yet.";
+}
+load();
+setInterval(load, 30000);
+</script>
+</body>
+</html>
