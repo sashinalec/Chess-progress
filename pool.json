@@ -1209,86 +1209,21 @@
  ],
  "dropped": [],
  "progress": {
-  "cycle": 1,
-  "sub": 2,
+  "cycle": 2,
+  "sub": 1,
   "subs": 2,
-  "block": "ai26 self-play",
-  "left": 1,
+  "block": "ai20 vs ai21",
+  "left": 57,
   "games_each_block": 416,
-  "started": "03:51",
-  "recent": [
-   {
-    "kind": "frozen",
-    "a": "ai25",
-    "b": "ai25",
-    "w": 212,
-    "d": 72,
-    "l": 132
-   },
-   {
-    "kind": "frozen",
-    "a": "ai26",
-    "b": "ai25",
-    "w": 231,
-    "d": 50,
-    "l": 135
-   },
-   {
-    "kind": "frozen",
-    "a": "ai20",
-    "b": "ai26",
-    "w": 250,
-    "d": 38,
-    "l": 128
-   },
-   {
-    "kind": "frozen",
-    "a": "ai21",
-    "b": "ai26",
-    "w": 245,
-    "d": 38,
-    "l": 133
-   },
-   {
-    "kind": "frozen",
-    "a": "ai23",
-    "b": "ai26",
-    "w": 250,
-    "d": 43,
-    "l": 123
-   },
-   {
-    "kind": "frozen",
-    "a": "ai24",
-    "b": "ai26",
-    "w": 264,
-    "d": 46,
-    "l": 106
-   },
-   {
-    "kind": "frozen",
-    "a": "ai25",
-    "b": "ai26",
-    "w": 198,
-    "d": 50,
-    "l": 168
-   },
-   {
-    "kind": "frozen",
-    "a": "ai26",
-    "b": "ai26",
-    "w": 199,
-    "d": 64,
-    "l": 153
-   }
-  ],
+  "started": "04:24",
+  "recent": [],
   "games": {
    "ai20": 9985,
    "ai21": 9984,
    "ai23": 9984,
    "ai24": 9984,
    "ai25": 9984,
-   "ai26": 9568
+   "ai26": 9984
   }
  },
  "active_frozen": [
