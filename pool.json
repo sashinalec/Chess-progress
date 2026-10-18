@@ -1212,10 +1212,10 @@
   "cycle": 2,
   "sub": 1,
   "subs": 2,
-  "block": "ai24 self-play",
-  "left": 3,
+  "block": "ai25 self-play",
+  "left": 2,
   "games_each_block": 416,
-  "started": "07:29",
+  "started": "07:33",
   "recent": [
    {
     "kind": "frozen",
@@ -1286,7 +1286,7 @@
    "ai20": 14979,
    "ai21": 14976,
    "ai23": 14976,
-   "ai24": 14560,
+   "ai24": 14977,
    "ai25": 14560,
    "ai26": 14560
   }
