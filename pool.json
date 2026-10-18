@@ -7,8 +7,1206 @@
   "ai25",
   "ai26"
  ],
- "cycles": [],
- "stockfish": [],
+ "cycles": [
+  {
+   "cycle": 1,
+   "time": "2026-10-18 04:24",
+   "games": {
+    "ai20": 9985,
+    "ai21": 9984,
+    "ai23": 9984,
+    "ai24": 9984,
+    "ai25": 9984,
+    "ai26": 9984
+   },
+   "rr": {
+    "ai20|ai21": [
+     46,
+     14,
+     40
+    ],
+    "ai20|ai23": [
+     48,
+     9,
+     43
+    ],
+    "ai20|ai24": [
+     44,
+     15,
+     41
+    ],
+    "ai20|ai25": [
+     46,
+     14,
+     40
+    ],
+    "ai20|ai26": [
+     55,
+     7,
+     38
+    ],
+    "ai21|ai23": [
+     42,
+     12,
+     46
+    ],
+    "ai21|ai24": [
+     39,
+     12,
+     49
+    ],
+    "ai21|ai25": [
+     48,
+     23,
+     29
+    ],
+    "ai21|ai26": [
+     54,
+     14,
+     32
+    ],
+    "ai23|ai24": [
+     41,
+     16,
+     43
+    ],
+    "ai23|ai25": [
+     53,
+     11,
+     36
+    ],
+    "ai23|ai26": [
+     48,
+     17,
+     35
+    ],
+    "ai24|ai25": [
+     55,
+     14,
+     31
+    ],
+    "ai24|ai26": [
+     51,
+     15,
+     34
+    ],
+    "ai25|ai26": [
+     40,
+     12,
+     48
+    ]
+   },
+   "pool": [
+    {
+     "kind": "pair",
+     "a": "ai20",
+     "b": "ai21",
+     "w": 172,
+     "d": 44,
+     "l": 200
+    },
+    {
+     "kind": "pair",
+     "a": "ai20",
+     "b": "ai23",
+     "w": 199,
+     "d": 43,
+     "l": 174
+    },
+    {
+     "kind": "pair",
+     "a": "ai20",
+     "b": "ai24",
+     "w": 208,
+     "d": 40,
+     "l": 168
+    },
+    {
+     "kind": "pair",
+     "a": "ai20",
+     "b": "ai25",
+     "w": 242,
+     "d": 45,
+     "l": 129
+    },
+    {
+     "kind": "pair",
+     "a": "ai20",
+     "b": "ai26",
+     "w": 224,
+     "d": 38,
+     "l": 154
+    },
+    {
+     "kind": "pair",
+     "a": "ai21",
+     "b": "ai23",
+     "w": 232,
+     "d": 36,
+     "l": 148
+    },
+    {
+     "kind": "pair",
+     "a": "ai21",
+     "b": "ai24",
+     "w": 207,
+     "d": 43,
+     "l": 166
+    },
+    {
+     "kind": "pair",
+     "a": "ai21",
+     "b": "ai25",
+     "w": 249,
+     "d": 37,
+     "l": 130
+    },
+    {
+     "kind": "pair",
+     "a": "ai21",
+     "b": "ai26",
+     "w": 233,
+     "d": 52,
+     "l": 131
+    },
+    {
+     "kind": "pair",
+     "a": "ai23",
+     "b": "ai24",
+     "w": 196,
+     "d": 47,
+     "l": 173
+    },
+    {
+     "kind": "pair",
+     "a": "ai23",
+     "b": "ai25",
+     "w": 236,
+     "d": 38,
+     "l": 142
+    },
+    {
+     "kind": "pair",
+     "a": "ai23",
+     "b": "ai26",
+     "w": 203,
+     "d": 42,
+     "l": 171
+    },
+    {
+     "kind": "pair",
+     "a": "ai24",
+     "b": "ai25",
+     "w": 237,
+     "d": 42,
+     "l": 137
+    },
+    {
+     "kind": "pair",
+     "a": "ai24",
+     "b": "ai26",
+     "w": 201,
+     "d": 45,
+     "l": 170
+    },
+    {
+     "kind": "pair",
+     "a": "ai25",
+     "b": "ai26",
+     "w": 150,
+     "d": 39,
+     "l": 227
+    },
+    {
+     "kind": "frozen",
+     "a": "ai20",
+     "b": "ai20",
+     "w": 159,
+     "d": 108,
+     "l": 149
+    },
+    {
+     "kind": "frozen",
+     "a": "ai21",
+     "b": "ai20",
+     "w": 212,
+     "d": 58,
+     "l": 146
+    },
+    {
+     "kind": "frozen",
+     "a": "ai23",
+     "b": "ai20",
+     "w": 182,
+     "d": 40,
+     "l": 194
+    },
+    {
+     "kind": "frozen",
+     "a": "ai24",
+     "b": "ai20",
+     "w": 186,
+     "d": 39,
+     "l": 191
+    },
+    {
+     "kind": "frozen",
+     "a": "ai25",
+     "b": "ai20",
+     "w": 130,
+     "d": 47,
+     "l": 239
+    },
+    {
+     "kind": "frozen",
+     "a": "ai26",
+     "b": "ai20",
+     "w": 172,
+     "d": 34,
+     "l": 210
+    },
+    {
+     "kind": "frozen",
+     "a": "ai20",
+     "b": "ai21",
+     "w": 148,
+     "d": 48,
+     "l": 220
+    },
+    {
+     "kind": "frozen",
+     "a": "ai21",
+     "b": "ai21",
+     "w": 155,
+     "d": 93,
+     "l": 168
+    },
+    {
+     "kind": "frozen",
+     "a": "ai23",
+     "b": "ai21",
+     "w": 155,
+     "d": 44,
+     "l": 217
+    },
+    {
+     "kind": "frozen",
+     "a": "ai24",
+     "b": "ai21",
+     "w": 141,
+     "d": 56,
+     "l": 219
+    },
+    {
+     "kind": "frozen",
+     "a": "ai25",
+     "b": "ai21",
+     "w": 125,
+     "d": 35,
+     "l": 256
+    },
+    {
+     "kind": "frozen",
+     "a": "ai26",
+     "b": "ai21",
+     "w": 134,
+     "d": 41,
+     "l": 241
+    },
+    {
+     "kind": "frozen",
+     "a": "ai20",
+     "b": "ai23",
+     "w": 197,
+     "d": 34,
+     "l": 185
+    },
+    {
+     "kind": "frozen",
+     "a": "ai21",
+     "b": "ai23",
+     "w": 223,
+     "d": 50,
+     "l": 143
+    },
+    {
+     "kind": "frozen",
+     "a": "ai23",
+     "b": "ai23",
+     "w": 167,
+     "d": 93,
+     "l": 156
+    },
+    {
+     "kind": "frozen",
+     "a": "ai24",
+     "b": "ai23",
+     "w": 188,
+     "d": 55,
+     "l": 173
+    },
+    {
+     "kind": "frozen",
+     "a": "ai25",
+     "b": "ai23",
+     "w": 150,
+     "d": 39,
+     "l": 227
+    },
+    {
+     "kind": "frozen",
+     "a": "ai26",
+     "b": "ai23",
+     "w": 172,
+     "d": 38,
+     "l": 206
+    },
+    {
+     "kind": "frozen",
+     "a": "ai20",
+     "b": "ai24",
+     "w": 198,
+     "d": 35,
+     "l": 183
+    },
+    {
+     "kind": "frozen",
+     "a": "ai21",
+     "b": "ai24",
+     "w": 215,
+     "d": 40,
+     "l": 161
+    },
+    {
+     "kind": "frozen",
+     "a": "ai23",
+     "b": "ai24",
+     "w": 182,
+     "d": 33,
+     "l": 201
+    },
+    {
+     "kind": "frozen",
+     "a": "ai24",
+     "b": "ai24",
+     "w": 162,
+     "d": 97,
+     "l": 157
+    },
+    {
+     "kind": "frozen",
+     "a": "ai25",
+     "b": "ai24",
+     "w": 147,
+     "d": 43,
+     "l": 226
+    },
+    {
+     "kind": "frozen",
+     "a": "ai26",
+     "b": "ai24",
+     "w": 163,
+     "d": 44,
+     "l": 209
+    },
+    {
+     "kind": "frozen",
+     "a": "ai20",
+     "b": "ai25",
+     "w": 243,
+     "d": 34,
+     "l": 139
+    },
+    {
+     "kind": "frozen",
+     "a": "ai21",
+     "b": "ai25",
+     "w": 250,
+     "d": 44,
+     "l": 122
+    },
+    {
+     "kind": "frozen",
+     "a": "ai23",
+     "b": "ai25",
+     "w": 212,
+     "d": 42,
+     "l": 162
+    },
+    {
+     "kind": "frozen",
+     "a": "ai24",
+     "b": "ai25",
+     "w": 248,
+     "d": 33,
+     "l": 135
+    },
+    {
+     "kind": "frozen",
+     "a": "ai25",
+     "b": "ai25",
+     "w": 160,
+     "d": 92,
+     "l": 164
+    },
+    {
+     "kind": "frozen",
+     "a": "ai26",
+     "b": "ai25",
+     "w": 222,
+     "d": 40,
+     "l": 154
+    },
+    {
+     "kind": "frozen",
+     "a": "ai20",
+     "b": "ai26",
+     "w": 214,
+     "d": 35,
+     "l": 167
+    },
+    {
+     "kind": "frozen",
+     "a": "ai21",
+     "b": "ai26",
+     "w": 238,
+     "d": 59,
+     "l": 119
+    },
+    {
+     "kind": "frozen",
+     "a": "ai23",
+     "b": "ai26",
+     "w": 194,
+     "d": 45,
+     "l": 177
+    },
+    {
+     "kind": "frozen",
+     "a": "ai24",
+     "b": "ai26",
+     "w": 197,
+     "d": 64,
+     "l": 155
+    },
+    {
+     "kind": "frozen",
+     "a": "ai25",
+     "b": "ai26",
+     "w": 165,
+     "d": 54,
+     "l": 197
+    },
+    {
+     "kind": "frozen",
+     "a": "ai26",
+     "b": "ai26",
+     "w": 177,
+     "d": 66,
+     "l": 173
+    },
+    {
+     "kind": "pair",
+     "a": "ai20",
+     "b": "ai21",
+     "w": 176,
+     "d": 62,
+     "l": 178
+    },
+    {
+     "kind": "pair",
+     "a": "ai20",
+     "b": "ai23",
+     "w": 146,
+     "d": 46,
+     "l": 224
+    },
+    {
+     "kind": "pair",
+     "a": "ai20",
+     "b": "ai24",
+     "w": 156,
+     "d": 52,
+     "l": 208
+    },
+    {
+     "kind": "pair",
+     "a": "ai20",
+     "b": "ai25",
+     "w": 204,
+     "d": 45,
+     "l": 167
+    },
+    {
+     "kind": "pair",
+     "a": "ai20",
+     "b": "ai26",
+     "w": 210,
+     "d": 50,
+     "l": 156
+    },
+    {
+     "kind": "pair",
+     "a": "ai21",
+     "b": "ai23",
+     "w": 173,
+     "d": 47,
+     "l": 196
+    },
+    {
+     "kind": "pair",
+     "a": "ai21",
+     "b": "ai24",
+     "w": 174,
+     "d": 58,
+     "l": 184
+    },
+    {
+     "kind": "pair",
+     "a": "ai21",
+     "b": "ai25",
+     "w": 234,
+     "d": 46,
+     "l": 136
+    },
+    {
+     "kind": "pair",
+     "a": "ai21",
+     "b": "ai26",
+     "w": 205,
+     "d": 56,
+     "l": 155
+    },
+    {
+     "kind": "pair",
+     "a": "ai23",
+     "b": "ai24",
+     "w": 162,
+     "d": 56,
+     "l": 198
+    },
+    {
+     "kind": "pair",
+     "a": "ai23",
+     "b": "ai25",
+     "w": 232,
+     "d": 46,
+     "l": 138
+    },
+    {
+     "kind": "pair",
+     "a": "ai23",
+     "b": "ai26",
+     "w": 232,
+     "d": 43,
+     "l": 141
+    },
+    {
+     "kind": "pair",
+     "a": "ai24",
+     "b": "ai25",
+     "w": 220,
+     "d": 42,
+     "l": 154
+    },
+    {
+     "kind": "pair",
+     "a": "ai24",
+     "b": "ai26",
+     "w": 225,
+     "d": 55,
+     "l": 136
+    },
+    {
+     "kind": "pair",
+     "a": "ai25",
+     "b": "ai26",
+     "w": 186,
+     "d": 43,
+     "l": 187
+    },
+    {
+     "kind": "frozen",
+     "a": "ai20",
+     "b": "ai20",
+     "w": 206,
+     "d": 44,
+     "l": 166
+    },
+    {
+     "kind": "frozen",
+     "a": "ai21",
+     "b": "ai20",
+     "w": 208,
+     "d": 43,
+     "l": 165
+    },
+    {
+     "kind": "frozen",
+     "a": "ai23",
+     "b": "ai20",
+     "w": 210,
+     "d": 55,
+     "l": 151
+    },
+    {
+     "kind": "frozen",
+     "a": "ai24",
+     "b": "ai20",
+     "w": 230,
+     "d": 48,
+     "l": 138
+    },
+    {
+     "kind": "frozen",
+     "a": "ai25",
+     "b": "ai20",
+     "w": 188,
+     "d": 44,
+     "l": 184
+    },
+    {
+     "kind": "frozen",
+     "a": "ai26",
+     "b": "ai20",
+     "w": 187,
+     "d": 55,
+     "l": 174
+    },
+    {
+     "kind": "frozen",
+     "a": "ai20",
+     "b": "ai21",
+     "w": 172,
+     "d": 57,
+     "l": 187
+    },
+    {
+     "kind": "frozen",
+     "a": "ai21",
+     "b": "ai21",
+     "w": 187,
+     "d": 51,
+     "l": 178
+    },
+    {
+     "kind": "frozen",
+     "a": "ai23",
+     "b": "ai21",
+     "w": 195,
+     "d": 59,
+     "l": 162
+    },
+    {
+     "kind": "frozen",
+     "a": "ai24",
+     "b": "ai21",
+     "w": 201,
+     "d": 42,
+     "l": 173
+    },
+    {
+     "kind": "frozen",
+     "a": "ai25",
+     "b": "ai21",
+     "w": 132,
+     "d": 50,
+     "l": 234
+    },
+    {
+     "kind": "frozen",
+     "a": "ai26",
+     "b": "ai21",
+     "w": 160,
+     "d": 48,
+     "l": 208
+    },
+    {
+     "kind": "frozen",
+     "a": "ai20",
+     "b": "ai23",
+     "w": 217,
+     "d": 37,
+     "l": 162
+    },
+    {
+     "kind": "frozen",
+     "a": "ai21",
+     "b": "ai23",
+     "w": 231,
+     "d": 29,
+     "l": 156
+    },
+    {
+     "kind": "frozen",
+     "a": "ai23",
+     "b": "ai23",
+     "w": 232,
+     "d": 71,
+     "l": 113
+    },
+    {
+     "kind": "frozen",
+     "a": "ai24",
+     "b": "ai23",
+     "w": 245,
+     "d": 28,
+     "l": 143
+    },
+    {
+     "kind": "frozen",
+     "a": "ai25",
+     "b": "ai23",
+     "w": 187,
+     "d": 49,
+     "l": 180
+    },
+    {
+     "kind": "frozen",
+     "a": "ai26",
+     "b": "ai23",
+     "w": 183,
+     "d": 54,
+     "l": 179
+    },
+    {
+     "kind": "frozen",
+     "a": "ai20",
+     "b": "ai24",
+     "w": 214,
+     "d": 58,
+     "l": 144
+    },
+    {
+     "kind": "frozen",
+     "a": "ai21",
+     "b": "ai24",
+     "w": 221,
+     "d": 46,
+     "l": 149
+    },
+    {
+     "kind": "frozen",
+     "a": "ai23",
+     "b": "ai24",
+     "w": 241,
+     "d": 49,
+     "l": 126
+    },
+    {
+     "kind": "frozen",
+     "a": "ai24",
+     "b": "ai24",
+     "w": 228,
+     "d": 68,
+     "l": 120
+    },
+    {
+     "kind": "frozen",
+     "a": "ai25",
+     "b": "ai24",
+     "w": 175,
+     "d": 45,
+     "l": 196
+    },
+    {
+     "kind": "frozen",
+     "a": "ai26",
+     "b": "ai24",
+     "w": 189,
+     "d": 50,
+     "l": 177
+    },
+    {
+     "kind": "frozen",
+     "a": "ai20",
+     "b": "ai25",
+     "w": 255,
+     "d": 30,
+     "l": 131
+    },
+    {
+     "kind": "frozen",
+     "a": "ai21",
+     "b": "ai25",
+     "w": 260,
+     "d": 40,
+     "l": 116
+    },
+    {
+     "kind": "frozen",
+     "a": "ai23",
+     "b": "ai25",
+     "w": 282,
+     "d": 36,
+     "l": 98
+    },
+    {
+     "kind": "frozen",
+     "a": "ai24",
+     "b": "ai25",
+     "w": 303,
+     "d": 33,
+     "l": 80
+    },
+    {
+     "kind": "frozen",
+     "a": "ai25",
+     "b": "ai25",
+     "w": 212,
+     "d": 72,
+     "l": 132
+    },
+    {
+     "kind": "frozen",
+     "a": "ai26",
+     "b": "ai25",
+     "w": 231,
+     "d": 50,
+     "l": 135
+    },
+    {
+     "kind": "frozen",
+     "a": "ai20",
+     "b": "ai26",
+     "w": 250,
+     "d": 38,
+     "l": 128
+    },
+    {
+     "kind": "frozen",
+     "a": "ai21",
+     "b": "ai26",
+     "w": 245,
+     "d": 38,
+     "l": 133
+    },
+    {
+     "kind": "frozen",
+     "a": "ai23",
+     "b": "ai26",
+     "w": 250,
+     "d": 43,
+     "l": 123
+    },
+    {
+     "kind": "frozen",
+     "a": "ai24",
+     "b": "ai26",
+     "w": 264,
+     "d": 46,
+     "l": 106
+    },
+    {
+     "kind": "frozen",
+     "a": "ai25",
+     "b": "ai26",
+     "w": 198,
+     "d": 50,
+     "l": 168
+    },
+    {
+     "kind": "frozen",
+     "a": "ai26",
+     "b": "ai26",
+     "w": 199,
+     "d": 64,
+     "l": 153
+    }
+   ],
+   "dropped": []
+  }
+ ],
+ "stockfish": [
+  {
+   "cycle": 1,
+   "time": "2026-10-18 04:11",
+   "bot": "ai20",
+   "games_trained": 50834,
+   "rung": "sf2320",
+   "wins": 18,
+   "draws": 14,
+   "losses": 18,
+   "win_pct": 36.0,
+   "passed": true
+  },
+  {
+   "cycle": 1,
+   "time": "2026-10-18 04:11",
+   "bot": "ai20",
+   "games_trained": 50834,
+   "rung": "sf2520",
+   "wins": 11,
+   "draws": 18,
+   "losses": 21,
+   "win_pct": 22.0,
+   "passed": false
+  },
+  {
+   "cycle": 1,
+   "time": "2026-10-18 04:12",
+   "bot": "ai20",
+   "games_trained": 50834,
+   "rung": "sf2520",
+   "wins": 8,
+   "draws": 7,
+   "losses": 35,
+   "win_pct": 16.0,
+   "passed": false
+  },
+  {
+   "cycle": 1,
+   "time": "2026-10-18 04:12",
+   "bot": "ai21",
+   "games_trained": 50832,
+   "rung": "sf2320",
+   "wins": 18,
+   "draws": 11,
+   "losses": 21,
+   "win_pct": 36.0,
+   "passed": false
+  },
+  {
+   "cycle": 1,
+   "time": "2026-10-18 04:13",
+   "bot": "ai21",
+   "games_trained": 50832,
+   "rung": "sf2320",
+   "wins": 24,
+   "draws": 11,
+   "losses": 15,
+   "win_pct": 48.0,
+   "passed": true
+  },
+  {
+   "cycle": 1,
+   "time": "2026-10-18 04:14",
+   "bot": "ai21",
+   "games_trained": 50832,
+   "rung": "sf2520",
+   "wins": 15,
+   "draws": 12,
+   "losses": 23,
+   "win_pct": 30.0,
+   "passed": false
+  },
+  {
+   "cycle": 1,
+   "time": "2026-10-18 04:14",
+   "bot": "ai21",
+   "games_trained": 50832,
+   "rung": "sf2520",
+   "wins": 14,
+   "draws": 12,
+   "losses": 24,
+   "win_pct": 28.0,
+   "passed": false
+  },
+  {
+   "cycle": 1,
+   "time": "2026-10-18 04:15",
+   "bot": "ai23",
+   "games_trained": 50832,
+   "rung": "sf2320",
+   "wins": 19,
+   "draws": 8,
+   "losses": 23,
+   "win_pct": 38.0,
+   "passed": false
+  },
+  {
+   "cycle": 1,
+   "time": "2026-10-18 04:15",
+   "bot": "ai23",
+   "games_trained": 50832,
+   "rung": "sf2320",
+   "wins": 21,
+   "draws": 9,
+   "losses": 20,
+   "win_pct": 42.0,
+   "passed": true
+  },
+  {
+   "cycle": 1,
+   "time": "2026-10-18 04:16",
+   "bot": "ai23",
+   "games_trained": 50832,
+   "rung": "sf2520",
+   "wins": 11,
+   "draws": 11,
+   "losses": 28,
+   "win_pct": 22.0,
+   "passed": false
+  },
+  {
+   "cycle": 1,
+   "time": "2026-10-18 04:17",
+   "bot": "ai23",
+   "games_trained": 50832,
+   "rung": "sf2520",
+   "wins": 13,
+   "draws": 10,
+   "losses": 27,
+   "win_pct": 26.0,
+   "passed": false
+  },
+  {
+   "cycle": 1,
+   "time": "2026-10-18 04:17",
+   "bot": "ai24",
+   "games_trained": 50832,
+   "rung": "sf2120",
+   "wins": 30,
+   "draws": 10,
+   "losses": 10,
+   "win_pct": 60.0,
+   "passed": true
+  },
+  {
+   "cycle": 1,
+   "time": "2026-10-18 04:18",
+   "bot": "ai24",
+   "games_trained": 50832,
+   "rung": "sf2320",
+   "wins": 21,
+   "draws": 5,
+   "losses": 24,
+   "win_pct": 42.0,
+   "passed": false
+  },
+  {
+   "cycle": 1,
+   "time": "2026-10-18 04:18",
+   "bot": "ai24",
+   "games_trained": 50832,
+   "rung": "sf2320",
+   "wins": 26,
+   "draws": 8,
+   "losses": 16,
+   "win_pct": 52.0,
+   "passed": true
+  },
+  {
+   "cycle": 1,
+   "time": "2026-10-18 04:19",
+   "bot": "ai24",
+   "games_trained": 50832,
+   "rung": "sf2520",
+   "wins": 12,
+   "draws": 17,
+   "losses": 21,
+   "win_pct": 24.0,
+   "passed": false
+  },
+  {
+   "cycle": 1,
+   "time": "2026-10-18 04:20",
+   "bot": "ai24",
+   "games_trained": 50832,
+   "rung": "sf2520",
+   "wins": 9,
+   "draws": 12,
+   "losses": 29,
+   "win_pct": 18.0,
+   "passed": false
+  },
+  {
+   "cycle": 1,
+   "time": "2026-10-18 04:20",
+   "bot": "ai25",
+   "games_trained": 50832,
+   "rung": "sf2120",
+   "wins": 24,
+   "draws": 7,
+   "losses": 19,
+   "win_pct": 48.0,
+   "passed": true
+  },
+  {
+   "cycle": 1,
+   "time": "2026-10-18 04:21",
+   "bot": "ai25",
+   "games_trained": 50832,
+   "rung": "sf2320",
+   "wins": 25,
+   "draws": 4,
+   "losses": 21,
+   "win_pct": 50.0,
+   "passed": true
+  },
+  {
+   "cycle": 1,
+   "time": "2026-10-18 04:21",
+   "bot": "ai25",
+   "games_trained": 50832,
+   "rung": "sf2520",
+   "wins": 12,
+   "draws": 15,
+   "losses": 23,
+   "win_pct": 24.0,
+   "passed": false
+  },
+  {
+   "cycle": 1,
+   "time": "2026-10-18 04:22",
+   "bot": "ai25",
+   "games_trained": 50832,
+   "rung": "sf2520",
+   "wins": 13,
+   "draws": 8,
+   "losses": 29,
+   "win_pct": 26.0,
+   "passed": false
+  },
+  {
+   "cycle": 1,
+   "time": "2026-10-18 04:22",
+   "bot": "ai26",
+   "games_trained": 50834,
+   "rung": "sf2120",
+   "wins": 25,
+   "draws": 10,
+   "losses": 15,
+   "win_pct": 50.0,
+   "passed": true
+  },
+  {
+   "cycle": 1,
+   "time": "2026-10-18 04:23",
+   "bot": "ai26",
+   "games_trained": 50834,
+   "rung": "sf2320",
+   "wins": 21,
+   "draws": 15,
+   "losses": 14,
+   "win_pct": 42.0,
+   "passed": true
+  },
+  {
+   "cycle": 1,
+   "time": "2026-10-18 04:23",
+   "bot": "ai26",
+   "games_trained": 50834,
+   "rung": "sf2520",
+   "wins": 10,
+   "draws": 15,
+   "losses": 25,
+   "win_pct": 20.0,
+   "passed": false
+  },
+  {
+   "cycle": 1,
+   "time": "2026-10-18 04:24",
+   "bot": "ai26",
+   "games_trained": 50834,
+   "rung": "sf2520",
+   "wins": 7,
+   "draws": 15,
+   "losses": 28,
+   "win_pct": 14.0,
+   "passed": false
+  }
+ ],
  "dropped": [],
  "progress": {
   "cycle": 1,
@@ -100,5 +1298,6 @@
   "ai24",
   "ai25",
   "ai26"
- ]
+ ],
+ "updated": "2026-10-18 04:24"
 }
