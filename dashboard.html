@@ -300,6 +300,15 @@ function render() {
   const buf = bots.map(b => `${shown(b)} ${fmt(100 * (status.buffers?.[b] || 0) / (status.buffer_capacity || 1))}%`).join(", ");
   const tiles = [
     ["Games trained", fmt(status.total_games), "all sessions"],
+    // (owner, 19 Oct 2026) After 50,000 games the bots also play in the pool: games against other bots don't count
+    // in "games trained" (self-play only), so they are shown here.
+    ...(() => {
+      const b = bots.find(x => poolData && (poolData.live || []).includes(x));
+      const pg = b && ((poolData.progress && poolData.progress.games) || ((poolData.cycles || []).slice(-1)[0] || {}).games || {})[b];
+      if (pg == null) return [];
+      const others = Math.max(0, pg - Math.max(0, status.total_games - 50000));
+      return [["Pool games", fmt(others), `against other bots since 50,000 - ${fmt(status.total_games + others)} games in all`]];
+    })(),
     ["Speed", status.games_per_hour_10min ? fmt(status.games_per_hour_10min) : "-", "games per hour (last 10 min)"],
     ["Running for", dur(status.running_seconds || 0), "this session"],
     ["Last save", ago(status.last_save_seconds_ago), `autosave every ${status.autosave_minutes} min`],
@@ -645,10 +654,11 @@ function render() {
     const shade = (p, mid = 50) => p == null ? "" : `background:color-mix(in srgb, var(${p >= mid ? "--pass-bg" : "--fail-bg"}) ${Math.round(25 + 75 * Math.min(1, Math.abs(p - mid) / 25))}%, transparent)`;
     // Progress.
     const pr = poolData.progress || {};
-    const pcardP = toBottom(card("c-pool", "Pool: the bots against each other after 50,000 games",
+    const pcardP = toBottom(card("c-pool", "Pool: the bots against each other after 50,000 games (full pool dashboard: pool.html)",
       "Each cycle every bot plays 10,000 games: against every other bot, every frozen 50,000-game copy still in the pool and itself (self-play), in two halves; then placement for all at once (all against all, 100 games a pair, and the Stockfish ladder). A frozen copy that 3 bots each beat by more than 75% in a cycle is dropped.", []));
     const games = (poolData.cycles.length ? poolData.cycles[poolData.cycles.length - 1].games : null) || {};
     pcardP.querySelector(".plot").innerHTML =
+      `<p><a href="pool.html">Open the pool dashboard</a></p>` +
       `<p>${pr.cycle ? `Now: cycle ${pr.cycle}, half ${pr.sub} of ${pr.subs} - ${pr.block} (${pr.left} block${pr.left === 1 ? "" : "s"} left in this half, ${fmt(pr.games_each_block)} games each).` : "Not started yet: it begins when every bot has 50,000 games."}</p>` +
       `<p>Placements so far: ${poolData.cycles.length}. Frozen copies still in the pool: ${(poolData.active_frozen || []).map(b => shown(b) + " (50k)").join(", ") || "-"}.` +
       `${(poolData.dropped || []).length ? " Dropped: " + poolData.dropped.map(d => `${shown(d.bot)} (50k) after cycle ${d.cycle}, beaten by ${d.beaten_by.map(shown).join(", ")}`).join("; ") + "." : ""}</p>` +

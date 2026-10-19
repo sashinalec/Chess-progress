@@ -101,7 +101,9 @@ function render(d, st) {
     const poolLeft = Math.max(0, poolBlocks - doneHalf), selfLeft = Math.min(live.length, perHalf - doneHalf);
     leftSec = poolLeft * poolSec + selfLeft * selfSec + (halves - half) * (poolBlocks * poolSec + live.length * selfSec) + 45 * 60;
   }
-  const avgGames = live.reduce((s, b) => s + (games[b] || 0), 0) / live.length;
+  // The pool's game counts run on from cycle to cycle: this cycle's = now - at the last placement.
+  const lastPlaced = (d.cycles || []).filter(c => c.cycle < cycle).slice(-1)[0];
+  const avgGames = live.reduce((s, b) => s + (games[b] || 0) - ((lastPlaced && lastPlaced.games && lastPlaced.games[b]) || 0), 0) / live.length;
   document.getElementById("tiles").innerHTML =
     tile("Cycle", cycle || "-", `half ${half || "-"} of ${halves}`) +
     tile("Now playing", pr.block ? pr.block.replace(/ai(\d+)/g, "AI$1").replace("@50k", " (50k)") : "-", pr.games_each_block ? `${fmt(pr.games_each_block)} games a block` : "") +
