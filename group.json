@@ -53,14 +53,14 @@
  "stockfish": [],
  "progress": {
   "round": 2,
-  "text": "round 2: games (2 pairs left; last finished ai21 vs ai24)",
-  "started": "23:14",
-  "blocks_left": 2,
+  "text": "round 2: games (1 pairs left; last finished ai21 vs ai25)",
+  "started": "23:16",
+  "blocks_left": 1,
   "games": {
    "ai20": 1200,
-   "ai21": 1000,
+   "ai21": 1200,
    "ai24": 1000,
-   "ai25": 800
+   "ai25": 1000
   },
   "blocks": [
    {
@@ -94,9 +94,17 @@
     "d": 26,
     "l": 82,
     "t": 1792534454.515594
+   },
+   {
+    "a": "ai21",
+    "b": "ai25",
+    "w": 100,
+    "d": 22,
+    "l": 78,
+    "t": 1792534565.1217103
    }
   ],
   "next_stockfish_at": 5000
  },
- "updated": "2026-10-20 23:14"
+ "updated": "2026-10-20 23:16"
 }
