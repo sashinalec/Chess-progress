@@ -1,0 +1,26 @@
+{
+ "bots": [
+  "ai20",
+  "ai21",
+  "ai24",
+  "ai25"
+ ],
+ "round_pairs": 100,
+ "rounds": [],
+ "stockfish": [],
+ "progress": {
+  "round": 1,
+  "text": "round 1: games (6 pairs to finish)",
+  "started": "22:52",
+  "blocks_left": 6,
+  "games": {
+   "ai20": 0,
+   "ai21": 0,
+   "ai24": 0,
+   "ai25": 0
+  },
+  "blocks": [],
+  "next_stockfish_at": 5000
+ },
+ "updated": "2026-10-20 22:52"
+}

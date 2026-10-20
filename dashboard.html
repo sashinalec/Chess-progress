@@ -168,6 +168,7 @@ const run = new URLSearchParams(location.search).get("run") || "";
 let range = "all", status = null, history = [];
 let ladderAll = null;      // every bot's ladder results (ladder_all.json), for the win-rate table
 let poolData = null;       // the pool after 50,000 games (pool.json, 16 Oct 2026)
+let groupData = null;      // group training, option 17 (group.json, 20 Oct 2026)
 let quickTests = null;     // quick Stockfish tests, menu options 13 / 14 (quick_tests.json, 14 Oct 2026)
 let phaseReport = null;    // where each bot gains / loses ground by phase (phase_report.json, 13 Oct 2026)
 let pairH2H = null;        // AI20 vs AI21, 1,000-game matches (pair_h2h.json, 13 Oct 2026)
@@ -732,6 +733,65 @@ function render() {
       "</table></div>" : `<p class="empty">No placement yet.</p>`;
   }
 
+  // The group (option 17, group_training.py, owner 20 Oct 2026): AI20, AI21, AI24 and AI25 play only each other and
+  // learn; measured only by these games and Stockfish climbs. At the bottom of the page.
+  if (groupData && Array.isArray(groupData.rounds)) {
+    const bottom = document.getElementById("bottomcards");
+    const toBottom = c => { c.style.gridColumn = "1 / -1"; if (c.parentElement !== bottom) bottom.appendChild(c); return c; };
+    const gb = groupData.bots || ["ai20", "ai21", "ai24", "ai25"];
+    const pct = (p, n) => n ? 100 * p / n : null;
+    const shade = (p, mid = 50) => p == null ? "" : `background:color-mix(in srgb, var(${p >= mid ? "--pass-bg" : "--fail-bg"}) ${Math.round(25 + 75 * Math.min(1, Math.abs(p - mid) / 25))}%, transparent)`;
+    const tally = rounds => {          // {a: {b: [points, games]}} and {a: [points, games]}
+      const vs = {}, tot = {};
+      gb.forEach(a => { vs[a] = {}; tot[a] = [0, 0]; gb.forEach(b => vs[a][b] = [0, 0]); });
+      rounds.forEach(r => Object.entries(r.rr || {}).forEach(([k, [w, d, l]]) => {
+        const [a, b] = k.split("|"), n = w + d + l;
+        if (!vs[a] || !vs[b]) return;
+        vs[a][b][0] += w + d / 2; vs[a][b][1] += n; vs[b][a][0] += l + d / 2; vs[b][a][1] += n;
+        tot[a][0] += w + d / 2; tot[a][1] += n; tot[b][0] += l + d / 2; tot[b][1] += n;
+      }));
+      return {vs, tot};
+    };
+    const rounds = groupData.rounds, pr = groupData.progress || {};
+    const all = tally(rounds), last = rounds.length ? tally(rounds.slice(-1)) : null, prev = rounds.length > 1 ? tally(rounds.slice(-2, -1)) : null;
+    const gcard = toBottom(card("c-group", "Group training (option 17): AI20, AI21, AI24 and AI25 against each other",
+      `Only these four, only each other: each round every pair plays ${fmt(2 * (groupData.round_pairs || 100))} games (both colours), then each bot learns from its own moves in them (no self-play). Standings over all rounds so far, the latest round and its change from the round before.`, []));
+    const order = gb.filter(b => all.tot[b][1]).sort((x, y) => pct(...all.tot[y]) - pct(...all.tot[x]));
+    gcard.querySelector(".plot").innerHTML =
+      `<p>${pr.round ? `Now: ${pr.text}${pr.started ? ` (since ${pr.started})` : ""}.` : "Not started yet."}` +
+      `${pr.games ? ` Group games each: ${gb.map(b => `${shown(b)} ${fmt(pr.games[b] || 0)}`).join(", ")}. Next Stockfish climbs at about ${fmt(pr.next_stockfish_at || 0)} games each.` : ""}</p>` +
+      ((pr.blocks || []).length ? `<p>This round so far: ${pr.blocks.map(x => `${shown(x.a)} ${x.w}-${x.d}-${x.l} ${shown(x.b)}`).join("; ")}.</p>` : "") +
+      (order.length ? `<div class="tablewrap"><table class="rungs"><tr><th>Place</th><th>Bot</th><th>All rounds (${rounds.length})</th><th>Latest round</th><th>Change</th><th>Games</th></tr>` +
+        order.map((b, i) => {
+          const t = pct(...all.tot[b]), l = last ? pct(...last.tot[b]) : null, p = prev ? pct(...prev.tot[b]) : null;
+          return `<tr><td>${i + 1}</td><td>${shown(b)}</td><td style="${shade(t)}"><b>${t.toFixed(1)}%</b></td>` +
+            `<td style="${shade(l)}">${l == null ? "-" : l.toFixed(1) + "%"}</td><td>${l == null || p == null ? "-" : (l - p >= 0 ? "+" : "") + (l - p).toFixed(1)}</td><td>${fmt(all.tot[b][1])}</td></tr>`;
+        }).join("") + "</table></div>" +
+        `<div class="tablewrap"><table class="rungs"><tr><th>All rounds</th>${gb.map(b => `<th>vs ${shown(b)}</th>`).join("")}</tr>` +
+        gb.map(a => `<tr><td>${shown(a)}</td>${gb.map(b => {
+          if (a === b) return `<td class="none">-</td>`;
+          const [p, n] = all.vs[a][b], s = pct(p, n);
+          return s == null ? `<td class="none">-</td>` : `<td style="${shade(s)}" title="${fmt(n)} games">${s.toFixed(1)}%</td>`;
+        }).join("")}</tr>`).join("") + "</table></div>" +
+        `<div class="tablewrap"><table class="rungs"><tr><th>Round</th>${gb.map(b => `<th>${shown(b)}</th>`).join("")}</tr>` +
+        rounds.slice(-12).reverse().map(r => { const t = tally([r]).tot;
+          return `<tr><td>${r.round} (${r.time.slice(5)})</td>${gb.map(b => { const s = pct(...t[b]); return `<td style="${shade(s)}">${s == null ? "-" : s.toFixed(1) + "%"}</td>`; }).join("")}</tr>`; }).join("") +
+        "</table></div>" : `<p class="empty">No round finished yet.</p>`);
+    const sf = groupData.stockfish || [];
+    const sfRungs = rungs.filter(r => sf.some(x => x.rung === r));
+    const gscard = toBottom(card("c-group-sf", "Group training: Stockfish climbs",
+      "The four bots' Stockfish climbs during group training: the best win rate in any one match against each rung (50 games). Gold = 100%, green = passed (at least half of the games that weren't draws won), red = played, not passed yet. Hover for the record.", []));
+    gscard.querySelector(".plot").innerHTML = sf.length ?
+      `<div class="tablewrap"><table class="rungs"><tr><th></th>${sfRungs.map(r => `<th>${rungName(r)}</th>`).join("")}</tr>` +
+      gb.map(b => `<tr><td>${shown(b)}</td>${sfRungs.map(r => {
+        const m = sf.filter(x => x.bot === b && x.rung === r);
+        if (!m.length) return `<td class="none">-</td>`;
+        const best = Math.max(...m.map(x => Number(x.win_pct))), passed = m.some(x => x.passed);
+        const w = m.reduce((s, x) => s + x.wins, 0), d = m.reduce((s, x) => s + x.draws, 0), l = m.reduce((s, x) => s + x.losses, 0);
+        return `<td class="${best >= 100 ? "gold" : passed ? "pass" : "fail"}" title="${rungName(r)} in group training: ${m.length} match${m.length > 1 ? "es" : ""}, won ${w}, drew ${d}, lost ${l}${passed ? "; passed" : ""}">${Math.round(best)}%</td>`;
+      }).join("")}</tr>`).join("") + "</table></div>" : `<p class="empty">No Stockfish climb yet (the first after about ${fmt(pr.next_stockfish_at || 5000)} group games each).</p>`;
+  }
+
   const er = status.elo_tests || [];
   lineChart(card("c-elo", "Stockfish rating tests", "Menu option 5. Dots are estimates, bars the 95% range.", botNames),
     bots.map((b, i) => {
@@ -859,7 +919,7 @@ document.addEventListener("keydown", e => {
 setInterval(() => { if (gv && gv.play && gv.at < gv.uci.length) { gv.at++; if (gv.at === gv.uci.length) gv.play = false; gvShow(); } }, 1000);
 async function load() {
   try {
-    const [s, h, la, pr, hh, qt, pd] = await Promise.all([
+    const [s, h, la, pr, hh, qt, pd, gd] = await Promise.all([
       fetch(`${run}/status.json`, {cache: "no-store"}).then(r => r.ok ? r.json() : null),
       fetch(`${run}/history.json`, {cache: "no-store"}).then(r => r.ok ? r.json() : []).catch(() => []),
       fetch("ladder_all.json", {cache: "no-store"}).then(r => r.ok ? r.json() : null).catch(() => null),
@@ -867,10 +927,11 @@ async function load() {
       fetch("pair_h2h.json", {cache: "no-store"}).then(r => r.ok ? r.json() : null).catch(() => null),
       fetch("quick_tests.json", {cache: "no-store"}).then(r => r.ok ? r.json() : null).catch(() => null),
       fetch("pool.json", {cache: "no-store"}).then(r => r.ok ? r.json() : null).catch(() => null),
+      fetch("group.json", {cache: "no-store"}).then(r => r.ok ? r.json() : null).catch(() => null),
     ]);
     if (s) {
       const first = !status;
-      status = s; history = h || []; if (la) ladderAll = la; if (pr) phaseReport = pr; if (hh) pairH2H = hh; if (qt) quickTests = qt; if (pd) poolData = pd; render();
+      status = s; history = h || []; if (la) ladderAll = la; if (pr) phaseReport = pr; if (hh) pairH2H = hh; if (qt) quickTests = qt; if (pd) poolData = pd; if (gd) groupData = gd; render();
       // First time: the chart cards were added one by one, so draw again
       // once the page layout has settled (each chart measures its width).
       if (first) requestAnimationFrame(render);
