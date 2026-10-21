@@ -835,10 +835,13 @@ function render() {
   if (Array.isArray(growthLog) && growthLog.length) {
     const last = growthLog[growthLog.length - 1];
     const gc = card("c-growth", "Network size (the bot chooses it)",
-      `Every 50 games each hidden layer gains a neuron if none of its neurons is dead, or loses a dead one. Now: ${last.sizes.join(", ")} (at ${fmt(last.games)} games). Latest check: ${(last.changes || []).join("; ")}.`, last.sizes.map((_, i) => [`layer ${i + 1}`, S[i % S.length]]));
+      `Every 100 games each hidden layer (and the value head, up to 64) gains a neuron if none of its neurons is dead, or loses a dead one. Now: ${last.sizes.map((n, i) => `${(last.names || [])[i] || "layer " + (i + 1)} ${n}`).join(", ")} (at ${fmt(last.games)} games). Latest check: ${(last.changes || []).join("; ")}.`,
+      last.sizes.map((_, i) => [(last.names || [])[i] || `layer ${i + 1}`, i < S.length ? S[i] : css("--s1")]));
     const step = Math.max(1, Math.floor(growthLog.length / 400));
     const pts = growthLog.filter((_, i) => i % step === 0 || i === growthLog.length - 1);
-    lineChart(gc, last.sizes.map((_, k) => ({name: `layer ${k + 1}`, color: S[k % S.length],
+    const GC = [S[0], S[1], S[2], "#8a63d2", "#d6453d"];
+    gc.querySelectorAll(".legend span").forEach((el, i) => el.style.setProperty("--c", GC[i % GC.length]));
+    lineChart(gc, last.sizes.map((_, k) => ({name: (last.names || [])[k] || `layer ${k + 1}`, color: GC[k % GC.length],
       points: pts.map(x => [x.games, x.sizes[k] ?? null])})), {yDec: 0, unit: "", empty: "No network check yet."});
   }
 
