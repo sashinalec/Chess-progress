@@ -109,6 +109,11 @@ table.rungs td.none { background: var(--none-bg); color: var(--muted); }
 .gchip { font-size: 11px; border: 1px solid var(--axis); border-radius: 4px; padding: 1px 5px; margin: 1px 2px 1px 0; cursor: pointer;
          background: var(--none-bg); color: var(--ink); white-space: nowrap; }
 .gchip.win { background: var(--pass-bg); } .gchip.loss { background: var(--fail-bg); }
+table.qtests td, table.qtests th { padding: 2px 6px; font-size: 12px; }
+table.qtests td.qgames { white-space: normal; min-width: 150px; max-width: 440px; }
+table.qtests .qlv { display: inline-block; margin: 0 8px 1px 0; white-space: nowrap; }
+table.qtests .gchip { font-size: 10px; padding: 0 3px; margin: 1px 1px 1px 0; min-width: 16px; }
+table.qtests .dim { opacity: 0.6; font-size: 11px; }
 #gv { position: fixed; inset: 0; z-index: 50; background: rgba(0, 0, 0, 0.55); display: flex; align-items: center; justify-content: center; padding: 16px; }
 #gv[hidden] { display: none; }
 #gv .gvbox { background: var(--surface); color: var(--ink); border-radius: 10px; padding: 14px; width: min(420px, 100%);
@@ -168,6 +173,8 @@ const run = new URLSearchParams(location.search).get("run") || "";
 let range = "all", status = null, history = [];
 let ladderAll = null;      // every bot's ladder results (ladder_all.json), for the win-rate table
 let poolData = null;       // the pool after 50,000 games (pool.json, 16 Oct 2026)
+let quickAll = false;      // the quick-tests card: all tests, or the latest 8 (20 Oct 2026)
+const quickOpen = new Set();   // quick tests whose every game is shown (more than 20 games)
 let groupData = null;      // group training, option 17 (group.json, 20 Oct 2026)
 let quickTests = null;     // quick Stockfish tests, menu options 13 / 14 (quick_tests.json, 14 Oct 2026)
 let phaseReport = null;    // where each bot gains / loses ground by phase (phase_report.json, 13 Oct 2026)
@@ -583,19 +590,38 @@ function render() {
 
   // Quick Stockfish tests (menu options 13 and 14, owner 14 Oct 2026): every bot, newest first.
   if (Array.isArray(quickTests) && quickTests.length) {
+    // (owner, 20 Oct 2026) Compact: one short line per test, newest first, the latest 8 unless "show all".
     const qcard = card("c-quick", "Quick Stockfish tests",
-      "Menu options 13 (a chosen number of games a Stockfish level - 10 unless chosen otherwise - climbing from 1320 until the bot scores under 25%) and 14 (the same against one level). The bot thinks for a set number of nodes or seconds a move; Stockfish 0.1 s a move at its set strength. A few games a level is a rough guide only. Click a game (W won, D drawn, L lost) to look through it: left / right arrow keys.", []);
+      "Options 13 (climb from 1720) and 14 (one level). Score at each level = points / games. Click W / D / L to replay a game (arrow keys).", []);
     qcard.style.gridColumn = "1 / -1";
-    const lv = x => { try { return JSON.parse(x.ladder).map(([e, p, n]) => `${e}: ${p}/${n}`).join(" &middot; "); } catch (e) { return ""; } };
-    const rating = x => x.rating !== "" ? `${x.rating} (${x.low}-${x.high})` : (x.note || "-");
+    const lv = x => { try { return JSON.parse(x.ladder).map(([e, p, n]) => `${e} <b>${p}/${n}</b>`).join(" &middot; "); } catch (e) { return ""; } };
+    const rating = x => x.test !== "climb" ? "" : x.rating !== "" ? `${x.rating} <span class="dim">±${Math.round((x.high - x.low) / 2)}</span>` : (x.note || "-");
+    const kg = n => n >= 1000 ? `${Math.round(n / 1000)}k` : fmt(n);
+    const kind = g => g.pts === 1 ? "win" : g.pts === 0 ? "loss" : "draw";
+    const chip = (g, gi, ti, text) => { const k = kind(g);
+      return `<button class="gchip ${k}" data-t="${ti}" data-g="${gi}" title="Game ${gi + 1}: ${k === "win" ? "won" : k === "loss" ? "lost" : "drawn"} as ${g.bw ? "White" : "Black"} against Stockfish ${g.lv} - click to replay">${text || k[0].toUpperCase()}</button>`; };
+    // Up to 20 games: every game. More (e.g. 100 a level): each level's wins / draws / losses as three buttons (each
+    // replays that level's first such game), and "all N games" to show them all.
+    const qgames = (x, ti) => {
+      const gs = (x.games || []).map((g, gi) => [g, gi]);
+      if (gs.length <= 20 || quickOpen.has(ti))
+        return gs.map(([g, gi]) => chip(g, gi, ti)).join("") +
+          (gs.length > 20 ? ` <button class="gchip" onclick="quickOpen.delete(${ti}); render()">fewer</button>` : "");
+      const levels = [...new Set(gs.map(([g]) => g.lv))];
+      return levels.map(L => { const at = gs.filter(([g]) => g.lv === L);
+        return `<span class="qlv">${L}: ${["win", "draw", "loss"].map(k => { const m = at.filter(([g]) => kind(g) === k);
+          return m.length ? chip(m[0][0], m[0][1], ti, `${k[0].toUpperCase()} ${m.length}`) : ""; }).join("")}</span>`; }).join("") +
+        `<button class="gchip" onclick="quickOpen.add(${ti}); render()">all ${gs.length} games</button>`;
+    };
+    const rowsQ = quickTests.map((x, ti) => [x, ti]).reverse();
+    const shownQ = quickAll ? rowsQ : rowsQ.slice(0, 8);
     qcard.querySelector(".plot").innerHTML =
-      `<div class="tablewrap"><table class="rungs"><tr><th>When</th><th>Bot</th><th>Games trained</th><th>Test</th><th>A move</th><th>Score at each Stockfish level</th><th>Rating (95% range)</th><th>Games (click to view)</th></tr>` +
-      quickTests.map((x, ti) => `<tr><td>${String(x.time).replace("T", " ").slice(0, 16)}</td><td>${shown(x.bot)}</td>` +
-        `<td>${fmt(Number(x.games_trained))}</td><td>${x.test === "climb" ? "climb (13)" : "one level (14)"}</td><td>${x.limit}</td>` +
-        `<td>${lv(x)}</td><td>${x.test === "climb" ? rating(x) : "-"}</td><td style="white-space: normal; min-width: 230px; max-width: 420px">` +
-        (x.games || []).map((g, gi) => { const k = g.pts === 1 ? "win" : g.pts === 0 ? "loss" : "draw";
-          return `<button class="gchip ${k}" data-t="${ti}" data-g="${gi}" title="Game ${gi + 1}: ${k === "win" ? "won" : k === "loss" ? "lost" : "drawn"} as ${g.bw ? "White" : "Black"} against Stockfish ${g.lv}">${k[0].toUpperCase()} &#x25B6;&#xFE0E;</button>`; }).join("") +
-        `</td></tr>`).reverse().join("") + "</table></div>";
+      `<div class="tablewrap"><table class="rungs qtests"><tr><th>When</th><th>Bot</th><th>Test</th><th>Score at each level</th><th>Rating</th><th>Games</th></tr>` +
+      shownQ.map(([x, ti]) => `<tr><td>${String(x.time).replace("T", " ").slice(5, 16)}</td>` +
+        `<td title="${fmt(Number(x.games_trained))} games trained">${shown(x.bot)} <span class="dim">${kg(Number(x.games_trained))}</span></td>` +
+        `<td title="${x.test === "climb" ? "option 13: climb" : "option 14: one level"}">${x.test === "climb" ? "13" : "14"} &middot; ${x.limit}</td>` +
+        `<td>${lv(x)}</td><td>${rating(x)}</td><td class="qgames">${qgames(x, ti)}</td></tr>`).join("") + "</table></div>" +
+      (rowsQ.length > 8 ? `<p><button class="gchip" onclick="quickAll = !quickAll; render()">${quickAll ? "Show the latest 8 only" : `Show all ${rowsQ.length} tests`}</button></p>` : "");
   }
 
   // Best game against any rung (owner, 14 Oct 2026): the "Win rate against every rung" table, but from the quick
@@ -779,17 +805,29 @@ function render() {
         "</table></div>" : `<p class="empty">No round finished yet.</p>`);
     const sf = groupData.stockfish || [];
     const sfRungs = rungs.filter(r => sf.some(x => x.rung === r));
-    const gscard = toBottom(card("c-group-sf", "Group training: Stockfish climbs",
-      "The four bots' Stockfish climbs during group training: the best win rate in any one match against each rung (50 games). Gold = 100%, green = passed (at least half of the games that weren't draws won), red = played, not passed yet. Hover for the record.", []));
-    gscard.querySelector(".plot").innerHTML = sf.length ?
-      `<div class="tablewrap"><table class="rungs"><tr><th></th>${sfRungs.map(r => `<th>${rungName(r)}</th>`).join("")}</tr>` +
-      gb.map(b => `<tr><td>${shown(b)}</td>${sfRungs.map(r => {
-        const m = sf.filter(x => x.bot === b && x.rung === r);
-        if (!m.length) return `<td class="none">-</td>`;
-        const best = Math.max(...m.map(x => Number(x.win_pct))), passed = m.some(x => x.passed);
-        const w = m.reduce((s, x) => s + x.wins, 0), d = m.reduce((s, x) => s + x.draws, 0), l = m.reduce((s, x) => s + x.losses, 0);
-        return `<td class="${best >= 100 ? "gold" : passed ? "pass" : "fail"}" title="${rungName(r)} in group training: ${m.length} match${m.length > 1 ? "es" : ""}, won ${w}, drew ${d}, lost ${l}${passed ? "; passed" : ""}">${Math.round(best)}%</td>`;
-      }).join("")}</tr>`).join("") + "</table></div>" : `<p class="empty">No Stockfish climb yet (the first after about ${fmt(pr.next_stockfish_at || 5000)} group games each).</p>`;
+    // (owner, 21 Oct 2026) Each check: one 100-game match against sf2320 -> a rating with a 95% margin. Earlier
+    // checks were climbs: their sf2320 games are used the same way.
+    const eloOf = (w, d, l, level) => {
+      const n = w + d + l; if (!n) return null;
+      const m = (w + d / 2) / n, s = Math.min(Math.max(m, 0.5 / n), 1 - 0.5 / n);
+      const v = (w * (1 - m) ** 2 + d * (0.5 - m) ** 2 + l * m * m) / n;
+      return {r: Math.round(level + 400 * Math.log10(s / (1 - s))), pm: Math.round(1.96 * Math.sqrt(Math.max(v, 1e-6) / n) * 400 / (Math.LN10 * s * (1 - s))), pct: 100 * m, n};
+    };
+    const checks = [...new Set(sf.map(x => x.cycle))].sort((a, b) => a - b);
+    const gscard = toBottom(card("c-group-sf", "Group training: Stockfish checks (against Stockfish 2320)",
+      "Each check: 100 games against Stockfish 2320 (the same openings every time, both colours), turned into a rating with its 95% margin - e.g. 2355 ±61 means probably between 2294 and 2416. Earlier checks were ladder climbs: only their games against 2320 are used. Hover for the record.", []));
+    gscard.querySelector(".plot").innerHTML = checks.length ?
+      `<div class="tablewrap"><table class="rungs"><tr><th>After round</th><th>When</th>${gb.map(b => `<th>${shown(b)}</th>`).join("")}</tr>` +
+      checks.slice().reverse().map(c => {
+        const at = sf.filter(x => x.cycle === c && x.rung === "sf2320");
+        return `<tr><td>${c}${at.some(x => x.check) ? "" : " (climb)"}</td><td>${((at[0] || sf.find(x => x.cycle === c)).time || "").slice(5)}</td>` +
+          gb.map(b => { const m = at.filter(x => x.bot === b);
+            const w = m.reduce((s, x) => s + x.wins, 0), d = m.reduce((s, x) => s + x.draws, 0), l = m.reduce((s, x) => s + x.losses, 0);
+            const e = eloOf(w, d, l, 2320);
+            return e ? `<td style="${shade(e.pct)}" title="${e.n} games against Stockfish 2320: won ${w}, drew ${d}, lost ${l} (${e.pct.toFixed(1)}%)">${e.r} <span style="opacity:.6">±${e.pm}</span></td>` : `<td class="none">-</td>`;
+          }).join("") + "</tr>";
+      }).join("") + "</table></div>"
+      : `<p class="empty">No Stockfish check yet (the first after about ${fmt(pr.next_stockfish_at || 5000)} group games each).</p>`;
   }
 
   const er = status.elo_tests || [];
