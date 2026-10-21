@@ -1466,70 +1466,142 @@
    "losses": 27,
    "win_pct": 22.0,
    "passed": false
+  },
+  {
+   "cycle": 27,
+   "time": "2026-10-21 04:46",
+   "bot": "ai21",
+   "games_trained": 51666,
+   "rung": "sf2320",
+   "wins": 16,
+   "draws": 10,
+   "losses": 24,
+   "win_pct": 32.0,
+   "passed": false
+  },
+  {
+   "cycle": 27,
+   "time": "2026-10-21 04:46",
+   "bot": "ai21",
+   "games_trained": 51666,
+   "rung": "sf2320",
+   "wins": 19,
+   "draws": 9,
+   "losses": 22,
+   "win_pct": 38.0,
+   "passed": false
+  },
+  {
+   "cycle": 27,
+   "time": "2026-10-21 04:47",
+   "bot": "ai24",
+   "games_trained": 51461,
+   "rung": "sf2320",
+   "wins": 13,
+   "draws": 12,
+   "losses": 25,
+   "win_pct": 26.0,
+   "passed": false
+  },
+  {
+   "cycle": 27,
+   "time": "2026-10-21 04:47",
+   "bot": "ai24",
+   "games_trained": 51461,
+   "rung": "sf2320",
+   "wins": 19,
+   "draws": 10,
+   "losses": 21,
+   "win_pct": 38.0,
+   "passed": false
+  },
+  {
+   "cycle": 27,
+   "time": "2026-10-21 04:48",
+   "bot": "ai25",
+   "games_trained": 51248,
+   "rung": "sf2120",
+   "wins": 25,
+   "draws": 7,
+   "losses": 18,
+   "win_pct": 50.0,
+   "passed": true
+  },
+  {
+   "cycle": 27,
+   "time": "2026-10-21 04:49",
+   "bot": "ai25",
+   "games_trained": 51248,
+   "rung": "sf2320",
+   "wins": 25,
+   "draws": 12,
+   "losses": 13,
+   "win_pct": 50.0,
+   "passed": true
+  },
+  {
+   "cycle": 27,
+   "time": "2026-10-21 04:49",
+   "bot": "ai25",
+   "games_trained": 51248,
+   "rung": "sf2520",
+   "wins": 14,
+   "draws": 12,
+   "losses": 24,
+   "win_pct": 28.0,
+   "passed": false
+  },
+  {
+   "cycle": 27,
+   "time": "2026-10-21 04:50",
+   "bot": "ai25",
+   "games_trained": 51248,
+   "rung": "sf2520",
+   "wins": 9,
+   "draws": 12,
+   "losses": 29,
+   "win_pct": 18.0,
+   "passed": false
   }
  ],
  "progress": {
-  "round": 27,
-  "text": "ai21: Stockfish climb",
-  "started": "04:45",
-  "blocks_left": 0,
+  "round": 28,
+  "text": "round 28: games (3 pairs left; last finished ai20 vs ai25)",
+  "started": "04:55",
+  "blocks_left": 3,
   "games": {
-   "ai20": 16200,
-   "ai21": 16200,
-   "ai24": 16200,
-   "ai25": 16200
+   "ai20": 16800,
+   "ai21": 16400,
+   "ai24": 16400,
+   "ai25": 16400
   },
   "blocks": [
    {
     "a": "ai20",
     "b": "ai21",
-    "w": 105,
-    "d": 21,
-    "l": 74,
-    "t": 1792553610.6292932
+    "w": 84,
+    "d": 24,
+    "l": 92,
+    "t": 1792554737.841155
    },
    {
     "a": "ai20",
     "b": "ai24",
-    "w": 81,
-    "d": 25,
-    "l": 94,
-    "t": 1792553706.7837093
+    "w": 98,
+    "d": 16,
+    "l": 86,
+    "t": 1792554847.8163216
    },
    {
     "a": "ai20",
     "b": "ai25",
-    "w": 109,
-    "d": 35,
-    "l": 56,
-    "t": 1792553819.813109
-   },
-   {
-    "a": "ai21",
-    "b": "ai24",
-    "w": 77,
-    "d": 13,
-    "l": 110,
-    "t": 1792553923.1158638
-   },
-   {
-    "a": "ai21",
-    "b": "ai25",
-    "w": 103,
-    "d": 21,
-    "l": 76,
-    "t": 1792554040.3355005
-   },
-   {
-    "a": "ai24",
-    "b": "ai25",
-    "w": 121,
-    "d": 22,
-    "l": 57,
-    "t": 1792554126.5214622
+    "w": 111,
+    "d": 17,
+    "l": 72,
+    "t": 1792554958.6548553
    }
   ],
-  "next_stockfish_at": 15800
+  "next_stockfish_at": 21200
  },
- "updated": "2026-10-21 04:45"
+ "updated": "2026-10-21 04:55"
 }
