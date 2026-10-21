@@ -422,70 +422,166 @@
    "losses": 20,
    "win_pct": 28.0,
    "passed": false
+  },
+  {
+   "cycle": 9,
+   "time": "2026-10-21 00:53",
+   "bot": "ai21",
+   "games_trained": 51666,
+   "rung": "sf2320",
+   "wins": 20,
+   "draws": 16,
+   "losses": 14,
+   "win_pct": 40.0,
+   "passed": true
+  },
+  {
+   "cycle": 9,
+   "time": "2026-10-21 00:53",
+   "bot": "ai21",
+   "games_trained": 51666,
+   "rung": "sf2520",
+   "wins": 15,
+   "draws": 10,
+   "losses": 25,
+   "win_pct": 30.0,
+   "passed": false
+  },
+  {
+   "cycle": 9,
+   "time": "2026-10-21 00:54",
+   "bot": "ai21",
+   "games_trained": 51666,
+   "rung": "sf2520",
+   "wins": 12,
+   "draws": 12,
+   "losses": 26,
+   "win_pct": 24.0,
+   "passed": false
+  },
+  {
+   "cycle": 9,
+   "time": "2026-10-21 00:55",
+   "bot": "ai24",
+   "games_trained": 51461,
+   "rung": "sf2120",
+   "wins": 27,
+   "draws": 11,
+   "losses": 12,
+   "win_pct": 54.0,
+   "passed": true
+  },
+  {
+   "cycle": 9,
+   "time": "2026-10-21 00:55",
+   "bot": "ai24",
+   "games_trained": 51461,
+   "rung": "sf2320",
+   "wins": 24,
+   "draws": 9,
+   "losses": 17,
+   "win_pct": 48.0,
+   "passed": true
+  },
+  {
+   "cycle": 9,
+   "time": "2026-10-21 00:56",
+   "bot": "ai24",
+   "games_trained": 51461,
+   "rung": "sf2520",
+   "wins": 11,
+   "draws": 14,
+   "losses": 25,
+   "win_pct": 22.0,
+   "passed": false
+  },
+  {
+   "cycle": 9,
+   "time": "2026-10-21 00:56",
+   "bot": "ai24",
+   "games_trained": 51461,
+   "rung": "sf2520",
+   "wins": 13,
+   "draws": 12,
+   "losses": 25,
+   "win_pct": 26.0,
+   "passed": false
+  },
+  {
+   "cycle": 9,
+   "time": "2026-10-21 00:57",
+   "bot": "ai25",
+   "games_trained": 51248,
+   "rung": "sf2120",
+   "wins": 26,
+   "draws": 11,
+   "losses": 13,
+   "win_pct": 52.0,
+   "passed": true
+  },
+  {
+   "cycle": 9,
+   "time": "2026-10-21 00:57",
+   "bot": "ai25",
+   "games_trained": 51248,
+   "rung": "sf2320",
+   "wins": 19,
+   "draws": 9,
+   "losses": 22,
+   "win_pct": 38.0,
+   "passed": false
+  },
+  {
+   "cycle": 9,
+   "time": "2026-10-21 00:58",
+   "bot": "ai25",
+   "games_trained": 51248,
+   "rung": "sf2320",
+   "wins": 18,
+   "draws": 11,
+   "losses": 21,
+   "win_pct": 36.0,
+   "passed": false
   }
  ],
  "progress": {
-  "round": 9,
-  "text": "ai21: Stockfish climb",
-  "started": "00:52",
-  "blocks_left": 0,
+  "round": 10,
+  "text": "round 10: games (3 pairs left; last finished ai20 vs ai25)",
+  "started": "01:04",
+  "blocks_left": 3,
   "games": {
-   "ai20": 5400,
-   "ai21": 5400,
-   "ai24": 5400,
-   "ai25": 5400
+   "ai20": 6000,
+   "ai21": 5600,
+   "ai24": 5600,
+   "ai25": 5600
   },
   "blocks": [
    {
     "a": "ai20",
     "b": "ai21",
-    "w": 77,
-    "d": 37,
-    "l": 86,
-    "t": 1792539630.5547993
-   },
-   {
-    "a": "ai20",
-    "b": "ai24",
-    "w": 71,
+    "w": 81,
     "d": 28,
-    "l": 101,
-    "t": 1792539738.761186
+    "l": 91,
+    "t": 1792540827.368467
+   },
+   {
+    "a": "ai20",
+    "b": "ai24",
+    "w": 68,
+    "d": 35,
+    "l": 97,
+    "t": 1792540959.524639
    },
    {
     "a": "ai20",
     "b": "ai25",
-    "w": 115,
-    "d": 20,
-    "l": 65,
-    "t": 1792539865.2280252
-   },
-   {
-    "a": "ai21",
-    "b": "ai24",
-    "w": 87,
-    "d": 20,
-    "l": 93,
-    "t": 1792539967.9944732
-   },
-   {
-    "a": "ai21",
-    "b": "ai25",
-    "w": 106,
-    "d": 33,
-    "l": 61,
-    "t": 1792540077.5963163
-   },
-   {
-    "a": "ai24",
-    "b": "ai25",
-    "w": 103,
-    "d": 26,
-    "l": 71,
-    "t": 1792540178.623929
+    "w": 79,
+    "d": 17,
+    "l": 104,
+    "t": 1792541065.3250093
    }
   ],
-  "next_stockfish_at": 5000
+  "next_stockfish_at": 10400
  },
- "updated": "2026-10-21 00:52"
+ "updated": "2026-10-21 01:04"
 }
