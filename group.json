@@ -2844,8 +2844,8 @@
  ],
  "progress": {
   "round": 51,
-  "text": "round 51: games (3 pairs left; last finished ai20 vs ai25)",
-  "started": "10:06",
+  "text": "round 51: games (3 pairs to finish)",
+  "started": "18:17",
   "blocks_left": 3,
   "games": {
    "ai20": 30600,
@@ -2881,5 +2881,5 @@
   ],
   "next_stockfish_at": 32000
  },
- "updated": "2026-10-21 10:06"
+ "updated": "2026-10-21 18:17"
 }
