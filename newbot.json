@@ -37,15 +37,53 @@
    "rating": 2013,
    "rating_low": 1897,
    "rating_high": 2128
+  },
+  {
+   "gen": 2,
+   "time": "2026-10-22 12:00",
+   "hours": 1.9,
+   "positions": 27351766,
+   "held_out_loss": 0.007048,
+   "vs_previous": [
+    301,
+    28,
+    71
+   ],
+   "previous": "gen1.nbn",
+   "stockfish": [
+    [
+     1920,
+     18.5,
+     20
+    ],
+    [
+     2120,
+     16.0,
+     20
+    ],
+    [
+     2320,
+     16.5,
+     20
+    ],
+    [
+     2520,
+     14.5,
+     20
+    ]
+   ],
+   "rating": 2566,
+   "rating_low": 2457,
+   "rating_high": 2674
   }
  ],
  "progress": {
-  "gen": 1,
-  "stage": "train",
-  "text": "generation 1: training - step 1,758/4,958, loss 0.00710, 95,875 positions/s",
-  "time": "11:50",
-  "hours": 1.67,
+  "gen": 2,
+  "stage": "data",
+  "text": "generation 2: games - 5 s: 268 games, 20880 positions (4164 positions/s)",
+  "time": "12:00",
+  "hours": 1.92,
   "hours_total": 2.0
  },
- "updated": "2026-10-22 11:50"
+ "updated": "2026-10-22 12:00"
 }
