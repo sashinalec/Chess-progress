@@ -3,10 +3,10 @@
  "progress": {
   "gen": 0,
   "stage": "data",
-  "text": "generation 0: games - 606 s: 39790 games, 5228626 positions (8622 positions/s)",
-  "time": "10:18",
+  "text": "generation 0: games - 1208 s: 78651 games, 10321407 positions (8544 positions/s)",
+  "time": "10:28",
   "hours": 0.05,
   "hours_total": 2.0
  },
- "updated": "2026-10-22 10:18"
+ "updated": "2026-10-22 10:28"
 }
