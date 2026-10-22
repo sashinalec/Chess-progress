@@ -41,11 +41,11 @@
  ],
  "progress": {
   "gen": 1,
-  "stage": "data",
-  "text": "generation 1: games - 2089 s: 109103 games, 9080109 positions (4346 positions/s)",
-  "time": "11:39",
-  "hours": 0.99,
+  "stage": "train",
+  "text": "generation 1: training - step 1,758/4,958, loss 0.00710, 95,875 positions/s",
+  "time": "11:50",
+  "hours": 1.67,
   "hours_total": 2.0
  },
- "updated": "2026-10-22 11:39"
+ "updated": "2026-10-22 11:50"
 }
