@@ -177,6 +177,7 @@ let growthLog = null;      // a growing bot's network checks (growth.json, 21 Oc
 let quickAll = false;      // the quick-tests card: all tests, or the latest 8 (20 Oct 2026)
 const quickOpen = new Set();   // quick tests whose every game is shown (more than 20 games)
 let groupData = null;      // group training, option 17 (group.json, 20 Oct 2026)
+let newbotData = null;     // Claude's bot, option 18 (newbot.json, 22 Oct 2026)
 let quickTests = null;     // quick Stockfish tests, menu options 13 / 14 (quick_tests.json, 14 Oct 2026)
 let phaseReport = null;    // where each bot gains / loses ground by phase (phase_report.json, 13 Oct 2026)
 let pairH2H = null;        // AI20 vs AI21, 1,000-game matches (pair_h2h.json, 13 Oct 2026)
@@ -845,6 +846,27 @@ function render() {
       points: pts.map(x => [x.games, x.sizes[k] ?? null])})), {yDec: 0, unit: "", empty: "No network check yet."});
   }
 
+  // Claude's bot (option 18, newbot/nb_run.py, 22 Oct 2026): one row per generation, and its Stockfish rating.
+  if (newbotData && Array.isArray(newbotData.generations)) {
+    const bottom = document.getElementById("bottomcards");
+    const gens = newbotData.generations, pr = newbotData.progress || {};
+    const nc = card("c-newbot", "Claude's bot (built from scratch, option 18)",
+      "Same rules as yours: it knows only the piece values, the rules and Syzygy. Each generation: games against itself (generation 0 judges by material only), a new network trained on them, then the new network against the one before and a Stockfish climb at 64,000 positions a move against Stockfish at 0.1 s a move - as your bots are measured. Ratings from 20 games a level are rough (see the range).", []);
+    nc.style.gridColumn = "1 / -1";
+    if (nc.parentElement !== bottom) bottom.appendChild(nc);
+    const shadeP = p => p == null ? "" : `background:color-mix(in srgb, var(${p >= 50 ? "--pass-bg" : "--fail-bg"}) ${Math.round(25 + 75 * Math.min(1, Math.abs(p - 50) / 25))}%, transparent)`;
+    nc.querySelector(".plot").innerHTML =
+      `<p>${pr.text ? `Now: ${pr.text} (${pr.time}); ${pr.hours ?? 0} of ${pr.hours_total ?? "?"} hours.` : "Not started yet."}</p>` +
+      (gens.length ? `<div class="tablewrap"><table class="rungs"><tr><th>Generation</th><th>When</th><th>Hours</th><th>Positions</th><th>Held-out loss</th><th>Against the one before</th><th>Stockfish (points / games)</th><th>Rating</th></tr>` +
+        gens.slice().reverse().map(g => {
+          const v = g.vs_previous, n = v ? v[0] + v[1] + v[2] : 0, p = n ? 100 * (v[0] + v[1] / 2) / n : null;
+          return `<tr><td>${g.gen}</td><td>${(g.time || "").slice(5)}</td><td>${g.hours}</td><td>${fmt(g.positions || 0)}</td><td>${g.held_out_loss ?? "-"}</td>` +
+            `<td style="${shadeP(p)}" title="against ${g.previous}: won ${v ? v[0] : "-"}, drew ${v ? v[1] : "-"}, lost ${v ? v[2] : "-"}">${p == null ? "-" : p.toFixed(1) + "%"}</td>` +
+            `<td>${(g.stockfish || []).map(([lv, pt, n]) => `${lv}: <b>${pt}/${n}</b>`).join(" &middot; ") || "-"}</td>` +
+            `<td>${g.rating == null ? "-" : `${g.rating} <span style="opacity:.6">(${g.rating_low}-${g.rating_high})</span>`}</td></tr>`;
+        }).join("") + "</table></div>" : `<p class="empty">No generation finished yet.</p>`);
+  }
+
   const er = status.elo_tests || [];
   lineChart(card("c-elo", "Stockfish rating tests", "Menu option 5. Dots are estimates, bars the 95% range.", botNames),
     bots.map((b, i) => {
@@ -972,7 +994,7 @@ document.addEventListener("keydown", e => {
 setInterval(() => { if (gv && gv.play && gv.at < gv.uci.length) { gv.at++; if (gv.at === gv.uci.length) gv.play = false; gvShow(); } }, 1000);
 async function load() {
   try {
-    const [s, h, gl, la, pr, hh, qt, pd, gd] = await Promise.all([
+    const [s, h, gl, la, pr, hh, qt, pd, gd, nbd] = await Promise.all([
       fetch(`${run}/status.json`, {cache: "no-store"}).then(r => r.ok ? r.json() : null),
       fetch(`${run}/history.json`, {cache: "no-store"}).then(r => r.ok ? r.json() : []).catch(() => []),
       fetch(`${run}/growth.json`, {cache: "no-store"}).then(r => r.ok ? r.json() : null).catch(() => null),
@@ -982,10 +1004,11 @@ async function load() {
       fetch("quick_tests.json", {cache: "no-store"}).then(r => r.ok ? r.json() : null).catch(() => null),
       fetch("pool.json", {cache: "no-store"}).then(r => r.ok ? r.json() : null).catch(() => null),
       fetch("group.json", {cache: "no-store"}).then(r => r.ok ? r.json() : null).catch(() => null),
+      fetch("newbot.json", {cache: "no-store"}).then(r => r.ok ? r.json() : null).catch(() => null),
     ]);
     if (s) {
       const first = !status;
-      status = s; history = h || []; growthLog = gl; if (la) ladderAll = la; if (pr) phaseReport = pr; if (hh) pairH2H = hh; if (qt) quickTests = qt; if (pd) poolData = pd; if (gd) groupData = gd; render();
+      status = s; history = h || []; growthLog = gl; if (la) ladderAll = la; if (pr) phaseReport = pr; if (hh) pairH2H = hh; if (qt) quickTests = qt; if (pd) poolData = pd; if (gd) groupData = gd; if (nbd) newbotData = nbd; render();
       // First time: the chart cards were added one by one, so draw again
       // once the page layout has settled (each chart measures its width).
       if (first) requestAnimationFrame(render);
