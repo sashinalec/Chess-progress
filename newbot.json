@@ -42,10 +42,10 @@
  "progress": {
   "gen": 1,
   "stage": "data",
-  "text": "generation 1: games - 1488 s: 77277 games, 6424256 positions (4317 positions/s)",
-  "time": "11:29",
+  "text": "generation 1: games - 2089 s: 109103 games, 9080109 positions (4346 positions/s)",
+  "time": "11:39",
   "hours": 0.99,
   "hours_total": 2.0
  },
- "updated": "2026-10-22 11:29"
+ "updated": "2026-10-22 11:39"
 }
