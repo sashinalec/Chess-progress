@@ -856,6 +856,7 @@ function render() {
     if (nc.parentElement !== bottom) bottom.appendChild(nc);
     const shadeP = p => p == null ? "" : `background:color-mix(in srgb, var(${p >= 50 ? "--pass-bg" : "--fail-bg"}) ${Math.round(25 + 75 * Math.min(1, Math.abs(p - 50) / 25))}%, transparent)`;
     nc.querySelector(".plot").innerHTML =
+      `<p><a href="newbot.html">Open Claude's bot's own dashboard</a></p>` +
       `<p>${pr.text ? `Now: ${pr.text} (${pr.time}); ${pr.hours ?? 0} of ${pr.hours_total ?? "?"} hours.` : "Not started yet."}</p>` +
       (gens.length ? `<div class="tablewrap"><table class="rungs"><tr><th>Generation</th><th>When</th><th>Hours</th><th>Positions</th><th>Held-out loss</th><th>Against the one before</th><th>Stockfish (points / games)</th><th>Rating</th></tr>` +
         gens.slice().reverse().map(g => {
