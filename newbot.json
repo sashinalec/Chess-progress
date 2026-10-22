@@ -2,11 +2,11 @@
  "generations": [],
  "progress": {
   "gen": 0,
-  "stage": "data",
-  "text": "generation 0: games - 1208 s: 78651 games, 10321407 positions (8544 positions/s)",
-  "time": "10:28",
-  "hours": 0.05,
+  "stage": "train",
+  "text": "generation 0: training - step 305/8,096, loss 0.00599, 83,083 positions/s",
+  "time": "10:39",
+  "hours": 0.55,
   "hours_total": 2.0
  },
- "updated": "2026-10-22 10:28"
+ "updated": "2026-10-22 10:39"
 }
