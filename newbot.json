@@ -79,11 +79,11 @@
  ],
  "progress": {
   "gen": 2,
-  "stage": "data",
-  "text": "generation 2: games - 5 s: 268 games, 20880 positions (4164 positions/s)",
-  "time": "12:00",
-  "hours": 1.92,
+  "stage": "train",
+  "text": "finished",
+  "time": "12:05",
+  "hours": 2.0,
   "hours_total": 2.0
  },
- "updated": "2026-10-22 12:00"
+ "updated": "2026-10-22 12:05"
 }
