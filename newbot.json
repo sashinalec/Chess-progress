@@ -3,10 +3,10 @@
  "progress": {
   "gen": 0,
   "stage": "train",
-  "text": "generation 0: training - step 305/8,096, loss 0.00599, 83,083 positions/s",
-  "time": "10:39",
+  "text": "generation 0: training - step 3,405/8,096, loss 0.00489, 84,357 positions/s",
+  "time": "10:49",
   "hours": 0.55,
   "hours_total": 2.0
  },
- "updated": "2026-10-22 10:39"
+ "updated": "2026-10-22 10:49"
 }
