@@ -518,8 +518,11 @@ function render() {
     .sort((a, b) => botNumber(a) - botNumber(b) || (a.endsWith("@added") - b.endsWith("@added")) || (a < b ? -1 : 1));
   const record = {};
   ladderRows.forEach(r => {
-    const g = record[rowKey(r) + "|" + r.rung] ??= {matches: 0, revisits: 0, w: 0, d: 0, l: 0, passed: null, best: 0};
+    const g = record[rowKey(r) + "|" + r.rung] ??= {matches: 0, revisits: 0, w: 0, d: 0, l: 0, passed: null, best: 0, bestDec: 0};
     g.matches++; g.w += Number(r.wins); g.d += Number(r.draws); g.l += Number(r.losses);
+    // (owner, 23 Oct 2026) the second table: the best share of the games that weren't draws that it won, in one match
+    const decided = Number(r.wins) + Number(r.losses);
+    if (decided) g.bestDec = Math.max(g.bestDec, 100 * Number(r.wins) / decided);
     if (r.promoted === undefined && !r.nodes) g.revisits++;
     g.best = Math.max(g.best, Number(r.win_pct));
     if (r.nodes) (g.sizes ??= new Set()).add(`${fmt(Number(r.nodes))} ${r.unit === "simulations" ? "simulations" : "nodes"}`);
@@ -550,6 +553,26 @@ function render() {
     `<div class="tablewrap"><table class="rungs"><tr><th></th>${rungs.map(r => `<th>${rungName(r)}</th>`).join("")}</tr>` +
     tableBots.map(b => `<tr><td>${rowLabel(b)}</td>${rungs.map(r => box(b, r)).join("")}</tr>`).join("") + "</table></div>" +
     `<div class="key"><span style="--c:var(--gold-bg)">100%</span><span style="--c:var(--pass-bg)">passed</span><span style="--c:var(--fail-bg)">played, not passed yet</span>` +
+    `<span style="--c:var(--none-bg)">not played yet</span></div>`;
+
+  // (owner, 23 Oct 2026) The same table with the other percentage: of the games that weren't draws, the share it
+  // won (best single match) - the number the ladder's pass rule uses. Same colours as the table above.
+  const dcard = card("c-ladder-table-decisive", "Won of the games that weren't draws, against every rung",
+    "The same table as above, but each box is the best share of the decisive games (wins and losses, draws left out) that the bot won in any one match against that rung - the number a rung is passed on (at least 50%). Colours as above. Hover over a box for the full record.", []);
+  dcard.style.gridColumn = "1 / -1";
+  const boxDec = (bot, rung) => {
+    const g = record[bot + "|" + rung];
+    if (!g) return `<td class="none" title="${rungName(rung)}: not played yet">-</td>`;
+    const tip = `${rungName(rung)}: best match ${Math.round(g.bestDec)}% of the games that weren't draws won. All matches together: won ${g.w}, drew ${g.d}, lost ${g.l}; ` +
+      `${g.w + g.l ? Math.round(100 * g.w / (g.w + g.l)) : 0}% of the games that weren't draws` +
+      (g.passed ? `; passed at ${fmt(Number(g.passed))} games` : "; not passed yet");
+    const cls = g.best >= 100 ? "gold" : g.passed ? "pass" : "fail";
+    return `<td class="${cls}" title="${tip}">${Math.round(g.bestDec)}%</td>`;
+  };
+  dcard.querySelector(".plot").innerHTML =
+    `<div class="tablewrap"><table class="rungs"><tr><th></th>${rungs.map(r => `<th>${rungName(r)}</th>`).join("")}</tr>` +
+    tableBots.map(b => `<tr><td>${rowLabel(b)}</td>${rungs.map(r => boxDec(b, r)).join("")}</tr>`).join("") + "</table></div>" +
+    `<div class="key"><span style="--c:var(--gold-bg)">100% of all games won</span><span style="--c:var(--pass-bg)">passed</span><span style="--c:var(--fail-bg)">played, not passed yet</span>` +
     `<span style="--c:var(--none-bg)">not played yet</span></div>`;
 
 
@@ -900,7 +923,7 @@ function render() {
   if (!charts.dataset.ordered) {
     ["c-policy", "c-value", "c-results", "c-endings", "c-length", "c-speed",
      "c-bench", ...extraIds, "c-ladder", "c-ladder-current", "c-ladder-level",
-     "c-ladder-table", "c-phase", "c-h2h", ...netIds, "c-elo", "c-quick"].forEach(id => {
+     "c-ladder-table", "c-ladder-table-decisive", "c-phase", "c-h2h", ...netIds, "c-elo", "c-quick"].forEach(id => {
       const c = document.getElementById(id);
       if (c) charts.appendChild(c);
     });
