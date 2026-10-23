@@ -51,6 +51,8 @@ h1 { font-size: 20px; margin: 0; }
 .tile .label { color: var(--ink-2); font-size: 12px; }
 .tile .value { font-size: 22px; font-weight: 600; }
 .tile .note { color: var(--muted); font-size: 12px; }
+.gbar { height: 6px; border-radius: 3px; background: var(--grid); overflow: hidden; margin: 4px 0 2px; }
+.gbar i { display: block; height: 100%; background: var(--s1); }
 .warn { display: none; background: var(--surface); border: 1px solid var(--ring); border-left: 4px solid var(--warning);
         border-radius: 8px; padding: 8px 12px; margin-bottom: 12px; }
 .warn b::before { content: "\26A0  "; }
@@ -318,6 +320,16 @@ function render() {
       if (pg == null) return [];
       const others = Math.max(0, pg - Math.max(0, status.total_games - 50000));
       return [["Pool games", fmt(others), `against other bots since 50,000 - ${fmt(status.total_games + others)} games in all`]];
+    })(),
+    // (owner, 23 Oct 2026) the generation tracker: how far the current generation is, and its time left
+    ...(() => {
+      const g = status.generation;
+      if (!g) return [];
+      if (g.phase === "learning") return [["Next generation", "learning now", `generation ${g.number} - since ${g.since}`]];
+      const eta = g.eta_min == null ? "estimating the time left" : g.eta_min >= 90 ? `about ${(g.eta_min / 60).toFixed(1)} h left`
+        : `about ${Math.max(1, Math.round(g.eta_min))} min left`;
+      return [["Next generation", `${g.pct}%<div class="gbar"><i style="width:${Math.min(100, g.pct)}%"></i></div>`,
+               `generation ${g.number}: ${eta} - ${fmt(g.done)} of ${fmt(g.target)} ${g.unit}`]];
     })(),
     ["Speed", status.games_per_hour_10min ? fmt(status.games_per_hour_10min) : "-", "games per hour (last 10 min)"],
     ["Running for", dur(status.running_seconds || 0), "this session"],
