@@ -296,6 +296,12 @@ function card(id, title, desc, names) {
 
 function render() {
   if (!status) return;
+  // (23 Oct 2026) generation bots play their matches at the end of every generation (their interval is a placeholder)
+  const genM = n => n >= 1e8;
+  const atEvery = n => genM(n) ? "At the end of every generation" : `Every ${fmt(n)} games`;
+  const atEveryLower = n => genM(n) ? "at the end of every generation" : `every ${fmt(n)} games`;
+  const firstAt = n => genM(n) ? "at the end of the bot's next generation" : `after ${fmt(n)} games`;
+  const nextAt = n => genM(n) ? "at the end of this generation" : `at most ${fmt(n)} games away`;
   const S = [css("--s1"), css("--s2"), css("--s3")];
   const bots = status.bots || [];
   const two = status.white !== status.black;
@@ -422,9 +428,9 @@ function render() {
     : bots.map((b, i) => ({name: b + " wins", color: S[i],
         points: bm.filter(r => r.bot === b).map(r => [Number(r.games_trained), Number(r.win_pct)])}));
   lineChart(card("c-bench", `Against ${opp}`,
-    `Every ${fmt(status.benchmark_every || 1000)} games: ${bm.length ? bm[bm.length - 1].games : 40} games against this fixed opponent (random openings, both colours, same search size). Share of games won, drawn and lost.`,
+    `${atEvery(status.benchmark_every || 1000)}: ${bm.length ? bm[bm.length - 1].games : 40} games against this fixed opponent (random openings, both colours, same search size). Share of games won, drawn and lost.`,
     bmSeries.map(s => [s.name, s.color])),
-    bmSeries, {zero: true, max: 100, unit: "%", yDec: 0, empty: `The first match is played after ${fmt(status.benchmark_every || 1000)} games.`});
+    bmSeries, {zero: true, max: 100, unit: "%", yDec: 0, empty: `The first match is played ${firstAt(status.benchmark_every || 1000)}.`});
 
   // Extra benchmark opponents for this bot (training_safety.BENCHMARK_EXTRA, e.g. ai9 against ai8 and
   // an older ai7): one chart each, right after the main benchmark chart, drawn the same way.
@@ -436,9 +442,9 @@ function render() {
     const id = "c-bench-" + x.name;
     extraIds.push(id);
     lineChart(card(id, `Against ${x.opponent}`,
-      `Another fixed opponent, played at the same moments as the match above: every ${fmt(status.benchmark_every || 2000)} games, ${xr.length ? xr[xr.length - 1].games : 40} games (random openings, both colours, same search size). Share of games won, drawn and lost.`,
+      `Another fixed opponent, played at the same moments as the match above: ${atEveryLower(status.benchmark_every || 2000)}, ${xr.length ? xr[xr.length - 1].games : 40} games (random openings, both colours, same search size). Share of games won, drawn and lost.`,
       xs.map(q => [q.name, q.color])),
-      xs, {zero: true, max: 100, unit: "%", yDec: 0, empty: `The first match is played at the next ${fmt(status.benchmark_every || 2000)} games trained.`});
+      xs, {zero: true, max: 100, unit: "%", yDec: 0, empty: `The first match is played ${firstAt(status.benchmark_every || 2000)}.`});
   });
   // (11 Oct 2026, night) A page left open across a restart kept the charts of opponents the run no longer
   // plays (ai6's old ai7/ai8/ai9 ones): those go now.
@@ -457,9 +463,9 @@ function render() {
   // The running trainer reports its threshold (older trainers didn't: they used 75%).
   const promote = Math.round(100 * (status.ladder_promote ?? 0.75));
   lineChart(card("c-ladder", `Against the Stockfish ladder (now: ${now})`,
-    `Every ${fmt(status.ladder_every || 1000)} games: 40 games against the current rung (random moves, then Stockfish 1320 with fewer and fewer random moves, then Stockfish). Moves up a rung when it wins ${promote}% of the games that weren't draws; never down.`,
+    `${atEvery(status.ladder_every || 1000)}: 40 games against the current rung (random moves, then Stockfish 1320 with fewer and fewer random moves, then Stockfish). Moves up a rung when it wins ${promote}% of the games that weren't draws; never down.`,
     ldSeries.map(s => [s.name, s.color])),
-    ldSeries, {zero: true, max: 100, unit: "%", yDec: 0, empty: `The first match is played at the next ${fmt(status.ladder_every || 2000)} games trained.`});
+    ldSeries, {zero: true, max: 100, unit: "%", yDec: 0, empty: `The first match is played ${firstAt(status.ladder_every || 2000)}.`});
   const num = v => (v === "" || v == null) ? null : Number(v);
   const lvSeries = bots.flatMap((b, i) => [
     {name: (bots.length > 1 ? b + " " : "") + "rung reached (its rating)", color: S[i],
@@ -469,7 +475,7 @@ function render() {
   lineChart(card("c-ladder-level", "Stockfish ladder: level reached",
     "Line: the rating of the rung being played (measured on the rating list, where Stockfish 1320 counts as 1320). Dots: a rough rating estimate from each 40-game match.",
     lvSeries.filter(s => !s.dots).map(s => [s.name, s.color])),
-    lvSeries, {yDec: 0, empty: `The first match is played at the next ${fmt(status.ladder_every || 2000)} games trained.`});
+    lvSeries, {yDec: 0, empty: `The first match is played ${firstAt(status.ladder_every || 2000)}.`});
 
   // The same matches, but only those against the CURRENT rung: starts afresh at every promotion.
   const atRung = r => r.rung === ((status.ladder_now || {})[r.bot] || "random");
@@ -482,7 +488,7 @@ function render() {
     "Only the matches against the rung it is on now: the chart starts afresh every time it moves up.",
     curSeries.map(s => [s.name, s.color])),
     curSeries, {zero: true, max: 100, unit: "%", yDec: 0,
-                empty: `No match against this rung yet: it has just moved up (the next match is at most ${fmt(status.ladder_every || 2000)} games away).`});
+                empty: `No match against this rung yet: it has just moved up (the next match is ${nextAt(status.ladder_every || 2000)}).`});
 
   // Win rate against every rung: one column per rung, one row per bot.
   // Green = passed, red = played but not passed yet, grey = not played yet. Hover for the full record.
@@ -848,7 +854,7 @@ function render() {
   if (Array.isArray(growthLog) && growthLog.length) {
     const last = growthLog[growthLog.length - 1];
     const gc = card("c-growth", "Network size (the bot chooses it)",
-      `Every 100 games each hidden layer (and the value head, up to 64) gains a neuron if none of its neurons is dead, or loses a dead one. Now: ${last.sizes.map((n, i) => `${(last.names || [])[i] || "layer " + (i + 1)} ${n}`).join(", ")} (at ${fmt(last.games)} games). Latest check: ${(last.changes || []).join("; ")}.`,
+      `${status.growth_rule || "Every 100 games each hidden layer (and the value head, up to 64) gains a neuron if none of its neurons is dead, or loses a dead one."} Now: ${last.sizes.map((n, i) => `${(last.names || [])[i] || "layer " + (i + 1)} ${n}`).join(", ")} (at ${fmt(last.games)} games). Latest check: ${(last.changes || []).join("; ")}.`,
       last.sizes.map((_, i) => [(last.names || [])[i] || `layer ${i + 1}`, i < S.length ? S[i] : css("--s1")]));
     const step = Math.max(1, Math.floor(growthLog.length / 400));
     const pts = growthLog.filter((_, i) => i % step === 0 || i === growthLog.length - 1);
