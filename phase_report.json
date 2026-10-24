@@ -808,5 +808,125 @@
     ]
    }
   }
+ },
+ "ai37": {
+  "updated": "2026-10-24 06:59",
+  "groups": {
+   "Stockfish ladder": {
+    "opening": {
+     "games": 200,
+     "mean": -2.5,
+     "gained_1": 18,
+     "lost_1": 59
+    },
+    "middlegame": {
+     "games": 191,
+     "mean": -1.25,
+     "gained_1": 25,
+     "lost_1": 48
+    },
+    "endgame": {
+     "games": 124,
+     "mean": 1.19,
+     "gained_1": 33,
+     "lost_1": 23
+    },
+    "_games": 200,
+    "_games_trained": [
+     431044,
+     993266
+    ]
+   }
+  }
+ },
+ "ai38": {
+  "updated": "2026-10-24 06:59",
+  "groups": {
+   "Stockfish ladder": {
+    "opening": {
+     "games": 200,
+     "mean": -2.61,
+     "gained_1": 20,
+     "lost_1": 58
+    },
+    "middlegame": {
+     "games": 193,
+     "mean": -1.0,
+     "gained_1": 23,
+     "lost_1": 41
+    },
+    "endgame": {
+     "games": 116,
+     "mean": 0.77,
+     "gained_1": 33,
+     "lost_1": 27
+    },
+    "_games": 200,
+    "_games_trained": [
+     428509,
+     998576
+    ]
+   }
+  }
+ },
+ "ai39": {
+  "updated": "2026-10-24 07:00",
+  "groups": {
+   "Stockfish ladder": {
+    "opening": {
+     "games": 200,
+     "mean": -1.35,
+     "gained_1": 32,
+     "lost_1": 50
+    },
+    "middlegame": {
+     "games": 195,
+     "mean": 0.75,
+     "gained_1": 43,
+     "lost_1": 34
+    },
+    "endgame": {
+     "games": 115,
+     "mean": 2.21,
+     "gained_1": 44,
+     "lost_1": 12
+    },
+    "_games": 200,
+    "_games_trained": [
+     240512,
+     622353
+    ]
+   }
+  }
+ },
+ "ai40": {
+  "updated": "2026-10-24 07:01",
+  "groups": {
+   "Stockfish ladder": {
+    "opening": {
+     "games": 200,
+     "mean": -0.8,
+     "gained_1": 36,
+     "lost_1": 42
+    },
+    "middlegame": {
+     "games": 199,
+     "mean": 1.04,
+     "gained_1": 45,
+     "lost_1": 30
+    },
+    "endgame": {
+     "games": 112,
+     "mean": 2.01,
+     "gained_1": 47,
+     "lost_1": 20
+    },
+    "_games": 200,
+    "_games_trained": [
+     435650,
+     621298
+    ]
+   }
+  }
  }
 }
