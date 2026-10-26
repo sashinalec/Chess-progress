@@ -119,7 +119,8 @@ const $ = id => document.getElementById(id);
 const store = { get(k, d) { try { const v = localStorage.getItem(k); return v === null ? d : JSON.parse(v); } catch (e) { return d; } },
                 set(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) {} } };
 let bots = [], bot = null, settings = store.get("settings", { kind: "time", amount: 1, colour: "w" });
-const ANIM_SECONDS = 0.15;                       // (owner) how long a piece takes to slide
+const ANIM_SECONDS = 1.0;                        // (owner) how long a piece takes to glide to its square
+let animUntil = 0;                               // when the glide on the board ends
 let anim = null, drag = null, pieceEl = [];      // the next render's slide; the drag going on; pieces by square
 let worker = null, loadedFile = null, pos = null, moves = [], sans = [], youWhite = true, flipped = false,
     selected = -1, thinking = false, gameOver = "", lastInfo = null, pendingPromo = null, newGame = true;
@@ -252,9 +253,10 @@ function onWorker(e) {
   const d = e.data;
   if (d.type === "info") { lastInfo = d; renderThink(); }
   else if (d.type === "best") {
-    thinking = false;
     lastInfo = Object.assign(lastInfo || {}, { depth: d.depth, nodes: d.nodes, score: d.score });
-    playUci(d.move); afterMove();
+    // a quick reply waits until the last move has finished gliding
+    setTimeout(() => { thinking = false; playUci(d.move); afterMove(); }, Math.max(0, animUntil - performance.now()));
+    return;
   } else if (d.type === "error") { thinking = false; $("status").textContent = "The bot hit a problem: " + d.message; }
 }
 
@@ -308,6 +310,7 @@ function slide(f, t) {
   if (!el) return;
   const col = s => flipped ? 7 - (s & 7) : (s & 7), row = s => flipped ? (s >> 3) : 7 - (s >> 3);
   el.classList.add("moving");
+  animUntil = performance.now() + ANIM_SECONDS * 1000;
   el.style.transition = "none";
   el.style.transform = `translate(${(col(f) - col(t)) * 100}%, ${(row(f) - row(t)) * 100}%)`;
   el.getBoundingClientRect();                      // (start from there)
