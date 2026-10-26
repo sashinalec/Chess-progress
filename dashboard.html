@@ -332,6 +332,7 @@ function render() {
       const g = status.generation;
       if (!g) return [];
       if (g.phase === "learning") return [["Next generation", "learning now", `generation ${g.number} - since ${g.since}`]];
+      if (g.phase === "reanalysing") return [["Next generation", "reanalysing", `generation ${g.number}: re-searching earlier positions - since ${g.since}`]];
       const eta = g.eta_min == null ? "estimating the time left" : g.eta_min >= 90 ? `about ${(g.eta_min / 60).toFixed(1)} h left`
         : `about ${Math.max(1, Math.round(g.eta_min))} min left`;
       return [["Next generation", `${g.pct}%<div class="gbar"><i style="width:${Math.min(100, g.pct)}%"></i></div>`,
