@@ -63,6 +63,11 @@ input[type=password], input[type=text] { width: 100%; font: inherit; padding: 9p
 .coord.f { right: 3px; bottom: 1px; } .coord.r { left: 3px; top: 1px; }
 .sq.l .coord { color: var(--dark-sq); } .sq.d .coord { color: var(--light-sq); }
 #status { margin: 10px 0 2px; font-weight: 600; min-height: 1.4em; }
+.caps { display: flex; align-items: center; min-height: 30px; margin: 4px 0; }
+.caps .who { font-weight: 600; font-size: .92rem; margin-right: 10px; white-space: nowrap; }
+.caps .grp { display: inline-flex; margin-right: 6px; }
+.caps .grp .pc { font-size: 20px; line-height: 1; margin-right: -6px; }
+.caps .adv { margin-left: 8px; font-size: .9rem; font-weight: 600; color: var(--muted); }
 #think { color: var(--muted); font-size: .88rem; min-height: 1.3em; }
 #moves { font-size: .92rem; color: var(--muted); max-height: 140px; overflow: auto; word-spacing: 2px; }
 #promo { display: none; gap: 8px; margin: 8px 0; }
@@ -93,6 +98,8 @@ input[type=password], input[type=text] { width: 100%; font: inherit; padding: 9p
       <button class="chip" data-k="time">Time</button><button class="chip" data-k="nodes">Positions</button>
     </div>
     <div class="row" id="amount"></div>
+    <p class="sub" id="nodesNote">In the browser a position takes longer to judge with a big network: 64k positions is
+      about 0.3 s a move for the small newer bots, but several seconds for the big older ones (AI6, AI25, AI26).</p>
     <label class="h">You play</label>
     <div class="row" id="colour">
       <button class="chip" data-c="w">White</button><button class="chip" data-c="b">Black</button><button class="chip" data-c="r">Random</button>
@@ -104,7 +111,9 @@ input[type=password], input[type=text] { width: 100%; font: inherit; padding: 9p
   </section>
 
   <section id="game" class="hide">
+    <div class="caps" id="capTop"></div>
     <div id="board"></div>
+    <div class="caps" id="capBot"></div>
     <div id="promo"></div>
     <div id="status"></div>
     <div id="think"></div>
@@ -115,8 +124,8 @@ input[type=password], input[type=text] { width: 100%; font: inherit; padding: 9p
     <div class="card"><div id="moves"></div></div>
   </section>
 </main>
-<p class="sub" id="version" style="text-align:center;margin-top:24px">Page version 5 · 26 Oct, sort by Elo</p>
-<script src="engine.js?v=5"></script>
+<p class="sub" id="version" style="text-align:center;margin-top:24px">Page version 6 · 26 Oct, older bots and points</p>
+<script src="engine.js?v=6"></script>
 <script>
 "use strict";
 const C = Chess;
@@ -181,6 +190,7 @@ function openSetup(b) {
 }
 function renderSetup() {
   for (const el of $("kind").children) el.classList.toggle("on", el.dataset.k === settings.kind);
+  $("nodesNote").classList.toggle("hide", settings.kind !== "nodes");
   for (const el of $("colour").children) el.classList.toggle("on", el.dataset.c === settings.colour);
   const am = $("amount"); am.innerHTML = "";
   if (!AMOUNTS[settings.kind].some(a => a[0] === settings.amount)) settings.amount = settings.kind === "time" ? 1 : 64000;
@@ -200,12 +210,12 @@ function loadBot(pass) {
   return new Promise((resolve, reject) => {
     if (worker && loadedFile === bot.file) return resolve();
     if (worker) worker.terminate();
-    worker = new Worker("worker.js?v=5");
+    worker = new Worker("worker.js?v=6");
     worker.onmessage = e => {
       if (e.data.type === "loaded") { loadedFile = bot.file; worker.onmessage = onWorker; resolve(); }
       else if (e.data.type === "error") { worker.terminate(); worker = null; reject(e.data.message); }
     };
-    worker.postMessage({ type: "load", url: bot.file, passcode: pass });
+    worker.postMessage({ type: "load", url: bot.file, passcode: pass, search: bot.search });
   });
 }
 
@@ -315,7 +325,33 @@ function render() {
     board.appendChild(el);
   }
   if (anim) { for (const [f, t] of anim) slide(f, t); anim = null; }
+  renderCaps();
   renderText();
+}
+
+// (owner, 26 Oct 2026) as on chess.com: beside each player the pieces it has taken, and +N for the one ahead on
+// material (pawn 1, knight / bishop 3, rook 5, queen 9). A promoted piece counts as material, not as a capture.
+function renderCaps() {
+  const START = [8, 2, 2, 2, 1], VAL = [1, 3, 3, 5, 9];
+  const count = [[0, 0, 0, 0, 0, 0], [0, 0, 0, 0, 0, 0]];
+  for (let q = 0; q < 64; q++) { const p = pos.b[q]; if (p) count[C.colourOf(p)][C.typeOf(p)]++; }
+  const mat = c => VAL.reduce((t, v, k) => t + v * count[c][k], 0);
+  const diff = mat(C.WHITE) - mat(C.BLACK);
+  const row = (el, c) => {                         // colour c's row: the other side's pieces it has taken
+    const you = (c === C.WHITE) === youWhite;
+    let html = `<span class="who">${you ? "You" : bot.name}</span>`;
+    for (const t of [0, 1, 2, 3, 4]) {
+      const n = Math.max(0, START[t] - count[c ^ 1][t]);
+      if (!n) continue;
+      html += `<span class="grp">` + `<span class="pc ${c === C.WHITE ? "b" : "w"}">${GLYPH[t]}</span>`.repeat(n) + `</span>`;
+    }
+    const lead = c === C.WHITE ? diff : -diff;
+    if (lead > 0) html += `<span class="adv">+${lead}</span>`;
+    el.innerHTML = html;
+  };
+  const top = flipped ? C.WHITE : C.BLACK;
+  row($("capTop"), top);
+  row($("capBot"), top ^ 1);
 }
 
 function renderText() {

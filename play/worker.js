@@ -1,6 +1,6 @@
 /* The bot's thinking, off the page's main thread. Messages in: {type: "load", url, passcode} and
    {type: "go", moves: [uci...], nodes, seconds}. Out: "loaded" / "error" / "info" / "best". */
-importScripts("engine.js?v=5");
+importScripts("engine.js?v=6");
 let searcher = null;
 
 async function decrypt(buf, passcode) {
@@ -36,8 +36,8 @@ onmessage = async e => {
       let plain;
       try { plain = await decrypt(new Uint8Array(await r.arrayBuffer()), msg.passcode); }
       catch (err) { throw new Error("wrong passcode"); }
-      const net = new Chess.Net(plain);
-      searcher = new Chess.Searcher(net);
+      const net = Chess.loadNet(plain);
+      searcher = new Chess.Searcher(net, msg.search);
       postMessage({ type: "loaded", kr: net.kr, width: net.O });
     } else if (msg.type === "go") {
       if (!searcher) throw new Error("no bot loaded");

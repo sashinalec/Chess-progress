@@ -324,7 +324,9 @@ function san(pos, m) {
   return s + (mate ? "#" : check ? "+" : "");
 }
 
-// ---- the network ("CHW7" / "CHW8" / "CHW9")
+// ---- the networks: "CHW1" / "CHW3" (LayerNorm, one value head), "CHW5" (LayerNorm, phase value heads), "CHW7" /
+// "CHW8" / "CHW9" (clipped, both sides, king-relative) - and "CHW6" (separate networks by phase, NetParts below)
+const CHW1 = 0x31574843, CHW3 = 0x33574843, CHW5 = 0x35574843, CHW6 = 0x36574843, CHW7 = 0x37574843, CHW8 = 0x38574843, CHW9 = 0x39574843;
 class Net {
   constructor(buf) {
     const dv = new DataView(buf);
@@ -332,30 +334,30 @@ class Net {
     const i32 = () => { const v = dv.getInt32(pos, true); pos += 4; return v; };
     const f32s = n => { const a = new Float32Array(n); for (let i = 0; i < n; i++) a[i] = dv.getFloat32(pos + 4 * i, true); pos += 4 * n; return a; };
     const magic = i32();
-    if (magic !== 0x37574843 && magic !== 0x38574843 && magic !== 0x39574843) throw new Error("not a clipped network (CHW7/8/9)");
-    this.dual = magic !== 0x37574843; this.kr = magic === 0x39574843;
+    if (![CHW1, CHW3, CHW5, CHW7, CHW8, CHW9].includes(magic)) throw new Error("this kind of network can't be played here");
+    this.crelu = magic >= CHW7; this.dual = magic === CHW8 || magic === CHW9; this.kr = magic === CHW9;
     const nh = i32();
-    this.slope = f32s(1)[0];
+    this.slope = magic === CHW1 ? 0 : f32s(1)[0];
     this.L = [];
     for (let i = 0; i < nh; i++) {
-      const li = i32(), lo = i32(), W = f32s(li * lo), b = f32s(lo);
-      pos += 8 * lo;                                // scale / offset (1 and 0 in a clipped network)
-      this.L.push({ in: li, out: lo, W, b });
+      const li = i32(), lo = i32(), W = f32s(li * lo), b = f32s(lo), gamma = f32s(lo), beta = f32s(lo);
+      this.L.push({ in: li, out: lo, W, b, gamma, beta });     // (gamma / beta: 1 and 0 in a clipped network)
     }
     const l0 = this.L[0], O = l0.out, T = new Float32Array(l0.in * O);       // layer 0 as rows [input][neuron]
     for (let o = 0; o < O; o++) for (let k = 0; k < l0.in; k++) T[k * O + o] = l0.W[o * l0.in + k];
     l0.W = T; this.O = O;
     const po = i32(), pi = i32(); pos += 4 * (po * pi + po);                   // the move head (not used)
-    const nheads = i32();
-    this.cuts = []; for (let k = 0; k + 1 < nheads; k++) this.cuts.push(i32());
+    const nheads = magic === CHW1 || magic === CHW3 ? 1 : i32();
+    this.cuts = []; if (nheads > 1) for (let k = 0; k + 1 < nheads; k++) this.cuts.push(i32());
     this.heads = [];
     for (let k = 0; k < nheads; k++) {
       const hid = i32(), vin = i32();
       this.heads.push({ hid, vin, W1: f32s(hid * vin), b1: f32s(hid), W2: f32s(hid), b2: f32s(1)[0] });
     }
+    this.stride = 2 * this.O;                      // the search's first-layer sums for one position
     this.hmRow = this.kr ? 6148 : 772;
     this.feat = this.L[nh - 1].out * (this.dual && nh === 1 ? 2 : 1);
-    let widest = 2 * O; for (const l of this.L) widest = Math.max(widest, l.out);
+    let widest = 2 * O; for (const l of this.L) widest = Math.max(widest, l.out, l.in);
     this.x = new Float32Array(widest); this.y = new Float32Array(widest); this.hv = new Float32Array(512);
   }
   kview(pos, view) {
@@ -407,6 +409,7 @@ class Net {
     const O = this.O, hm = Math.min(pos.hm, 100) / 100, W = this.L[0].W, hr = this.hmRow * O;
     let x = this.x, y = this.y;
     const a = off + pos.stm * O, b = off + (pos.stm ^ 1) * O;
+    if (!this.crelu) return this.valueNorm(pos, acc, a, hm);
     for (let o = 0; o < O; o++) { const v = acc[a + o] + hm * W[hr + o]; x[o] = v < 0 ? 0 : v > 1 ? 1 : v; }
     if (this.dual) for (let o = 0; o < O; o++) { const v = acc[b + o] + hm * W[hr + o]; x[O + o] = v < 0 ? 0 : v > 1 ? 1 : v; }
     for (let li = 1; li < this.L.length; li++) {
@@ -419,6 +422,9 @@ class Net {
       }
       const t = x; x = y; y = t;
     }
+    return this.head(pos, x);
+  }
+  head(pos, x) {
     let k = 0;
     while (k < this.cuts.length && pos.count < this.cuts[k]) k++;
     const hd = this.heads[k], f = hd.vin;
@@ -431,15 +437,72 @@ class Net {
     }
     return Math.tanh(v);
   }
+  // LayerNorm networks (engine: layer_norm_relu_lanes): normalise, scale, shift, (leaky) ReLU, layer by layer.
+  norm(x, n, gamma, beta) {
+    let mean = 0, v = 0;
+    for (let o = 0; o < n; o++) mean += x[o];
+    mean /= n;
+    for (let o = 0; o < n; o++) { const d = x[o] - mean; v += d * d; }
+    const inv = 1 / Math.sqrt(v / n + 1e-5), sl = this.slope;
+    for (let o = 0; o < n; o++) { const t = (x[o] - mean) * inv * gamma[o] + beta[o]; x[o] = t > 0 ? t : t * sl; }
+  }
+  valueNorm(pos, acc, a, hm) {
+    const O = this.O, W = this.L[0].W, hr = this.hmRow * O;
+    let x = this.x, y = this.y;
+    for (let o = 0; o < O; o++) x[o] = acc[a + o] + hm * W[hr + o];
+    this.norm(x, O, this.L[0].gamma, this.L[0].beta);
+    for (let li = 1; li < this.L.length; li++) {
+      const l = this.L[li];
+      for (let o = 0; o < l.out; o++) {
+        let s2 = l.b[o];
+        const base = o * l.in;
+        for (let k = 0; k < l.in; k++) s2 += l.W[base + k] * x[k];
+        y[o] = s2;
+      }
+      this.norm(y, l.out, l.gamma, l.beta);
+      const t = x; x = y; y = t;
+    }
+    return this.head(pos, x);
+  }
 }
+
+// "CHW6" (AI25 / AI26): separate networks for the opening, middlegame and endgame, chosen by the number of pieces.
+class NetParts {
+  constructor(buf) {
+    const dv = new DataView(buf);
+    let pos = 4;
+    const np = dv.getInt32(pos, true); pos += 4;
+    this.cuts = []; for (let k = 0; k + 1 < np; k++) { this.cuts.push(dv.getInt32(pos, true)); pos += 4; }
+    this.parts = [];
+    for (let k = 0; k < np; k++) {
+      const len = dv.getInt32(pos, true); pos += 4;
+      this.parts.push(new Net(buf.slice(pos, pos + len))); pos += len;
+    }
+    this.O = this.parts[0].O; this.kr = false;
+    this.stride = this.parts.reduce((t, p) => t + p.stride, 0);
+  }
+  kview() { return 0; }
+  accFull(pos, acc, off) { for (const p of this.parts) { p.accFull(pos, acc, off); off += p.stride; } }
+  accChild(pos, acc, pOff, cOff, kvb) { for (const p of this.parts) { p.accChild(pos, acc, pOff, cOff, kvb); pOff += p.stride; cOff += p.stride; } }
+  value(pos, acc, off) {
+    let k = 0;
+    while (k < this.cuts.length && pos.count < this.cuts[k]) k++;
+    for (let i = 0; i < k; i++) off += this.parts[i].stride;
+    return this.parts[k].value(pos, acc, off);
+  }
+}
+function loadNet(buf) { return new DataView(buf).getInt32(0, true) === CHW6 ? new NetParts(buf) : new Net(buf); }
 
 // ---- the search (engine_v2 alpha-beta, --ab-v2: reverse futility, futility, late-move pruning)
 const MATE = 2.0, INF = 10.0, MAXPLY = 96, MW = 0.01;
 const TT_BITS = 20, TT_SIZE = 1 << TT_BITS, TT_MASK = TT_SIZE - 1;
 class Searcher {
-  constructor(net) {
+  // opts: v2 (reverse futility, futility, late-move pruning - engine --ab-v2; off for AI6), contempt (AI26: a draw
+  // counts this much against the side 2+ pawns of material ahead, for the one behind)
+  constructor(net, opts) {
     this.net = net;
-    this.acc = new Float32Array((MAXPLY + 4) * 2 * net.O);
+    this.v2 = !opts || opts.v2 !== false; this.contempt = (opts && opts.contempt) || 0;
+    this.acc = new Float32Array((MAXPLY + 4) * net.stride);
     this.ttL = new Uint32Array(TT_SIZE); this.ttH = new Uint32Array(TT_SIZE); this.ttS = new Float32Array(TT_SIZE);
     this.ttM = new Int32Array(TT_SIZE); this.ttD = new Int8Array(TT_SIZE); this.ttF = new Int8Array(TT_SIZE);
     this.moves = []; this.scores = [];
@@ -463,14 +526,14 @@ class Searcher {
     const net = this.net;
     this.kvb[0] = net.kview(pos, WHITE); this.kvb[1] = net.kview(pos, BLACK);
     pos.make(m);
-    const O2 = 2 * net.O;
+    const O2 = net.stride;
     net.accChild(pos, this.acc, ply * O2, (ply + 1) * O2, this.kvb);
     this.path.push(pos.hl, pos.hh);
   }
   unmake(pos) { pos.unmake(); this.path.length -= 2; }
   evaluate(pos, ply) {
     const dm = pos.materialWhite() - this.rootMat;
-    return this.net.value(pos, this.acc, ply * 2 * this.net.O) + MW * (pos.stm === WHITE ? dm : -dm);
+    return this.net.value(pos, this.acc, ply * this.net.stride) + MW * (pos.stm === WHITE ? dm : -dm);
   }
   repeated(pos) {
     const n = this.path.length / 2, lim = Math.min(pos.hm, n - 1);
@@ -554,7 +617,11 @@ class Searcher {
     this.pvLen[ply] = 0;
     if (ply > 0) {
       if (pos.insufficient()) return 0;
-      if (pos.hm >= 100 || this.repeated(pos)) return 0;
+      if (pos.hm >= 100 || this.repeated(pos)) {
+        if (!this.contempt) return 0;
+        const lead = pos.stm === WHITE ? pos.materialWhite() : -pos.materialWhite();
+        return lead >= 2 ? -this.contempt : lead <= -2 ? this.contempt : 0;
+      }
     }
     const check = pos.inCheck();
     if (check && ply < MAXPLY) depth++;
@@ -573,13 +640,13 @@ class Searcher {
       }
     }
     let staticEval = 0, haveStatic = false;
-    if (!pvNode && !check && ply > 0) {
+    if (this.v2 && !pvNode && !check && ply > 0) {
       staticEval = this.evaluate(pos, ply); haveStatic = true;
       if (depth <= 4 && Math.abs(beta) < MATE - 0.5 && staticEval - 0.12 * depth >= beta) return staticEval;
     }
     if (nullOk && !pvNode && !check && ply > 0 && depth >= 3 && beta < MATE - 0.5 && pos.npm[pos.stm] > 0 &&
         (haveStatic ? staticEval : this.evaluate(pos, ply)) >= beta) {
-      const O2 = 2 * this.net.O;
+      const O2 = this.net.stride;
       this.acc.copyWithin((ply + 1) * O2, ply * O2, (ply + 1) * O2);
       pos.makeNull(); this.path.push(pos.hl, pos.hh);
       this.stMove[ply] = 0;
@@ -676,6 +743,6 @@ class Searcher {
   }
 }
 
-G.Chess = { Position, Net, Searcher, san, uci, sqName, mFrom, mTo, mPromo, mFlag, WHITE, BLACK, typeOf, colourOf,
+G.Chess = { Position, Net, NetParts, loadNet, Searcher, san, uci, sqName, mFrom, mTo, mPromo, mFlag, WHITE, BLACK, typeOf, colourOf,
             PAWN, KNIGHT, BISHOP, ROOK, QUEEN, KING, START: "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1" };
 })(typeof self !== "undefined" ? self : this);

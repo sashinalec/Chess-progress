@@ -1,6 +1,325 @@
 {
- "built": "2026-10-26 09:17",
+ "built": "2026-10-26 11:11",
  "bots": [
+  {
+   "id": "ai6",
+   "name": "AI6",
+   "games": 50013,
+   "sizes": [
+    512,
+    64
+   ],
+   "head": null,
+   "heads": 0,
+   "king_relative": false,
+   "file": "w/ai6_2f7f1c1d7bb1.bin",
+   "kb": 2778,
+   "note": "",
+   "elo": 2329,
+   "elo_date": "2026-10-12",
+   "search": {
+    "v2": false,
+    "contempt": 0
+   }
+  },
+  {
+   "id": "ai10",
+   "name": "AI10",
+   "games": 25000,
+   "sizes": [
+    64,
+    16
+   ],
+   "head": null,
+   "heads": 0,
+   "king_relative": false,
+   "file": "w/ai10_dedcd6817003.bin",
+   "kb": 485,
+   "note": "",
+   "elo": 2412,
+   "elo_date": "2026-10-13",
+   "search": {
+    "v2": true,
+    "contempt": 0
+   }
+  },
+  {
+   "id": "ai11",
+   "name": "AI11",
+   "games": 25000,
+   "sizes": [
+    128,
+    32
+   ],
+   "head": null,
+   "heads": 0,
+   "king_relative": false,
+   "file": "w/ai11_cf07d8bed886.bin",
+   "kb": 961,
+   "note": "",
+   "elo": 2279,
+   "elo_date": "2026-10-13",
+   "search": {
+    "v2": true,
+    "contempt": 0
+   }
+  },
+  {
+   "id": "ai12",
+   "name": "AI12",
+   "games": 25000,
+   "sizes": [
+    256,
+    32
+   ],
+   "head": null,
+   "heads": 0,
+   "king_relative": false,
+   "file": "w/ai12_a88946e349cd.bin",
+   "kb": 1365,
+   "note": "",
+   "elo": 2341,
+   "elo_date": "2026-10-13",
+   "search": {
+    "v2": true,
+    "contempt": 0
+   }
+  },
+  {
+   "id": "ai15",
+   "name": "AI15",
+   "games": 25002,
+   "sizes": [
+    64,
+    16,
+    8
+   ],
+   "head": null,
+   "heads": 0,
+   "king_relative": false,
+   "file": "w/ai15_f9adf9de5603.bin",
+   "kb": 351,
+   "note": "",
+   "elo": 2305,
+   "elo_date": "2026-10-13",
+   "search": {
+    "v2": true,
+    "contempt": 0
+   }
+  },
+  {
+   "id": "ai16",
+   "name": "AI16",
+   "games": 25000,
+   "sizes": [
+    128,
+    64,
+    16
+   ],
+   "head": null,
+   "heads": 0,
+   "king_relative": false,
+   "file": "w/ai16_4ef5067d632d.bin",
+   "kb": 712,
+   "note": "",
+   "elo": 2305,
+   "elo_date": "2026-10-13",
+   "search": {
+    "v2": true,
+    "contempt": 0
+   }
+  },
+  {
+   "id": "ai17",
+   "name": "AI17",
+   "games": 7833,
+   "sizes": [
+    256,
+    32,
+    16
+   ],
+   "head": null,
+   "heads": 0,
+   "king_relative": false,
+   "file": "w/ai17_72648dfa0f0c.bin",
+   "kb": 1098,
+   "note": "",
+   "elo": 2031,
+   "elo_date": "2026-10-13",
+   "search": {
+    "v2": true,
+    "contempt": 0
+   }
+  },
+  {
+   "id": "ai20",
+   "name": "AI20",
+   "games": 51669,
+   "sizes": [
+    256,
+    32
+   ],
+   "head": 32,
+   "heads": 3,
+   "king_relative": false,
+   "file": "w/ai20_5398f39a85bb.bin",
+   "kb": 1374,
+   "note": "",
+   "elo": 2347,
+   "elo_date": "2026-10-16",
+   "search": {
+    "v2": true,
+    "contempt": 0
+   }
+  },
+  {
+   "id": "ai21",
+   "name": "AI21",
+   "games": 51666,
+   "sizes": [
+    128,
+    64,
+    16
+   ],
+   "head": 32,
+   "heads": 3,
+   "king_relative": false,
+   "file": "w/ai21_26d168bf04d2.bin",
+   "kb": 717,
+   "note": "",
+   "elo": 2405,
+   "elo_date": "2026-10-16",
+   "search": {
+    "v2": true,
+    "contempt": 0
+   }
+  },
+  {
+   "id": "ai23",
+   "name": "AI23",
+   "games": 51668,
+   "sizes": [
+    256,
+    32
+   ],
+   "head": 32,
+   "heads": 3,
+   "king_relative": false,
+   "file": "w/ai23_09cde24efa82.bin",
+   "kb": 1374,
+   "note": "",
+   "elo": 2329,
+   "elo_date": "2026-10-16",
+   "search": {
+    "v2": true,
+    "contempt": 0
+   }
+  },
+  {
+   "id": "ai24",
+   "name": "AI24",
+   "games": 51461,
+   "sizes": [
+    256,
+    32
+   ],
+   "head": 32,
+   "heads": 3,
+   "king_relative": false,
+   "file": "w/ai24_4964033d5461.bin",
+   "kb": 1374,
+   "note": "",
+   "elo": 2278,
+   "elo_date": "2026-10-16",
+   "search": {
+    "v2": true,
+    "contempt": 0
+   }
+  },
+  {
+   "id": "ai25",
+   "name": "AI25",
+   "games": 51248,
+   "sizes": [
+    256,
+    32
+   ],
+   "head": null,
+   "heads": 0,
+   "king_relative": false,
+   "file": "w/ai25_9a22a6af44e5.bin",
+   "kb": 4096,
+   "note": "",
+   "elo": 2212,
+   "elo_date": "2026-10-17",
+   "search": {
+    "v2": true,
+    "contempt": 0
+   }
+  },
+  {
+   "id": "ai26",
+   "name": "AI26",
+   "games": 51251,
+   "sizes": [
+    256,
+    32
+   ],
+   "head": null,
+   "heads": 0,
+   "king_relative": false,
+   "file": "w/ai26_8d1357662a12.bin",
+   "kb": 4096,
+   "note": "",
+   "elo": 2220,
+   "elo_date": "2026-10-17",
+   "search": {
+    "v2": true,
+    "contempt": 0.1
+   }
+  },
+  {
+   "id": "ai27",
+   "name": "AI27",
+   "games": 30812,
+   "sizes": [
+    256,
+    32
+   ],
+   "head": 32,
+   "heads": 3,
+   "king_relative": false,
+   "file": "w/ai27_6d481475f0f4.bin",
+   "kb": 1374,
+   "note": "",
+   "elo": 2300,
+   "elo_date": "2026-10-20",
+   "search": {
+    "v2": true,
+    "contempt": 0
+   }
+  },
+  {
+   "id": "ai28",
+   "name": "AI28",
+   "games": 62253,
+   "sizes": [
+    256,
+    32
+   ],
+   "head": 32,
+   "heads": 3,
+   "king_relative": false,
+   "file": "w/ai28_0d624571d144.bin",
+   "kb": 1374,
+   "note": "",
+   "elo": 2250,
+   "elo_date": "2026-10-20",
+   "search": {
+    "v2": true,
+    "contempt": 0
+   }
+  },
   {
    "id": "ai29",
    "name": "AI29",
@@ -17,7 +336,11 @@
    "kb": 2351,
    "note": "",
    "elo": 2362,
-   "elo_date": "2026-10-22"
+   "elo_date": "2026-10-22",
+   "search": {
+    "v2": true,
+    "contempt": 0
+   }
   },
   {
    "id": "ai30",
@@ -35,7 +358,11 @@
    "kb": 1374,
    "note": "",
    "elo": 2393,
-   "elo_date": "2026-10-22"
+   "elo_date": "2026-10-22",
+   "search": {
+    "v2": true,
+    "contempt": 0
+   }
   },
   {
    "id": "ai31",
@@ -53,7 +380,11 @@
    "kb": 2027,
    "note": "",
    "elo": 1840,
-   "elo_date": "2026-10-22"
+   "elo_date": "2026-10-22",
+   "search": {
+    "v2": true,
+    "contempt": 0
+   }
   },
   {
    "id": "ai32",
@@ -71,7 +402,11 @@
    "kb": 2156,
    "note": "",
    "elo": 1885,
-   "elo_date": "2026-10-22"
+   "elo_date": "2026-10-22",
+   "search": {
+    "v2": true,
+    "contempt": 0
+   }
   },
   {
    "id": "ai33",
@@ -88,7 +423,11 @@
    "kb": 1385,
    "note": "",
    "elo": 2476,
-   "elo_date": "2026-10-22"
+   "elo_date": "2026-10-22",
+   "search": {
+    "v2": true,
+    "contempt": 0
+   }
   },
   {
    "id": "ai36",
@@ -105,7 +444,11 @@
    "kb": 573,
    "note": "",
    "elo": 2085,
-   "elo_date": "2026-10-22"
+   "elo_date": "2026-10-22",
+   "search": {
+    "v2": true,
+    "contempt": 0
+   }
   },
   {
    "id": "ai37",
@@ -122,7 +465,11 @@
    "kb": 350,
    "note": "about 2635 at 0.1 s a move (Stockfish test, 24 Oct)",
    "elo": 2562,
-   "elo_date": "2026-10-23"
+   "elo_date": "2026-10-23",
+   "search": {
+    "v2": true,
+    "contempt": 0
+   }
   },
   {
    "id": "ai38",
@@ -139,7 +486,11 @@
    "kb": 690,
    "note": "about 2713 at 0.1 s a move; about 2950 at 5 s a move (Stockfish tests, 24-25 Oct)",
    "elo": 2517,
-   "elo_date": "2026-10-23"
+   "elo_date": "2026-10-23",
+   "search": {
+    "v2": true,
+    "contempt": 0
+   }
   },
   {
    "id": "ai39",
@@ -156,7 +507,11 @@
    "kb": 1331,
    "note": "",
    "elo": 2485,
-   "elo_date": "2026-10-24"
+   "elo_date": "2026-10-24",
+   "search": {
+    "v2": true,
+    "contempt": 0
+   }
   },
   {
    "id": "ai40",
@@ -173,7 +528,11 @@
    "kb": 1395,
    "note": "",
    "elo": 2573,
-   "elo_date": "2026-10-24"
+   "elo_date": "2026-10-24",
+   "search": {
+    "v2": true,
+    "contempt": 0
+   }
   }
  ]
 }
