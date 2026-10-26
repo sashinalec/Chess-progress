@@ -345,25 +345,27 @@ function tryMove(from, to, noAnim) {             // true if from-to is a move (p
   return false;
 }
 
-// Tap a piece then a square, or drag a piece to a square (finger or mouse).
-$("board").addEventListener("pointerdown", e => {
-  const s = squareAt(e.clientX, e.clientY);
-  if (s < 0 || !yourTurn()) return;
-  e.preventDefault();
-  if (selected >= 0 && s !== selected && tryMove(selected, s, false)) return;
+// Tap a piece then a square, or drag a piece to a square. Fingers use touch events (iPhone Safari takes a finger
+// drag for a page scroll and cancels pointer events, whatever touch-action says; a touch event it lets the page stop);
+// a mouse or pen uses pointer events.
+function pressStart(x, y, id) {
+  const s = squareAt(x, y);
+  if (s < 0 || !yourTurn()) return false;
+  if (selected >= 0 && s !== selected && tryMove(selected, s, false)) return true;
   const p = pos.b[s];
-  if (!(p && C.colourOf(p) === pos.stm)) { selected = -1; showSelection(); return; }
+  if (!(p && C.colourOf(p) === pos.stm)) { selected = -1; showSelection(); return true; }
   const was = selected === s;
   selected = s; showSelection();
-  try { $("board").setPointerCapture(e.pointerId); } catch (err) {}    // the finger's moves come to the board
-  drag = { from: s, was, x0: e.clientX, y0: e.clientY, moved: false, ghost: null, id: e.pointerId };
-});
-window.addEventListener("pointermove", e => {
-  if (!drag || e.pointerId !== drag.id) return;
-  if (!drag.moved && Math.hypot(e.clientX - drag.x0, e.clientY - drag.y0) < 6) return;
+  drag = { from: s, was, x0: x, y0: y, moved: false, ghost: null, id };
+  return true;
+}
+function pressMove(x, y) {
+  if (!drag.moved && Math.hypot(x - drag.x0, y - drag.y0) < 6) return;
   if (!drag.moved) {
+    const src = pieceEl[drag.from];
+    if (!src) return;
     drag.moved = true;
-    const src = pieceEl[drag.from], size = src.parentElement.getBoundingClientRect().width;
+    const size = src.parentElement.getBoundingClientRect().width;
     const g = src.cloneNode(true);
     g.id = "ghost"; g.className = src.className; g.style.width = g.style.height = size + "px";
     g.style.fontSize = getComputedStyle(src.parentElement).fontSize;
@@ -371,21 +373,51 @@ window.addEventListener("pointermove", e => {
     drag.ghost = g; drag.size = size;
     src.classList.add("lifted");
   }
-  drag.ghost.style.left = (e.clientX - drag.size / 2) + "px";
-  drag.ghost.style.top = (e.clientY - drag.size / 2) + "px";
-});
-function endDrag(e) {
-  if (!drag || e.pointerId !== drag.id) return;
+  drag.ghost.style.left = (x - drag.size / 2) + "px";
+  drag.ghost.style.top = (y - drag.size / 2) + "px";
+}
+function pressEnd(x, y, cancelled) {
   const d = drag; drag = null;
   if (d.ghost) d.ghost.remove();
   if (d.moved) {
-    const to = squareAt(e.clientX, e.clientY);
+    const to = cancelled ? -1 : squareAt(x, y);
     if (to >= 0 && to !== d.from && yourTurn() && tryMove(d.from, to, true)) return;
     pieceEl[d.from] && pieceEl[d.from].classList.remove("lifted");   // not a move: the piece goes back
-  } else if (d.was) { selected = -1; showSelection(); }   // a tap on the selected piece: unselect it
+  } else if (d.was && !cancelled) { selected = -1; showSelection(); }   // a tap on the selected piece: unselect it
 }
-window.addEventListener("pointerup", endDrag);
-window.addEventListener("pointercancel", endDrag);
+
+// fingers
+const touchOf = (list, id) => { for (const t of list) if (t.identifier === id) return t; return null; };
+$("board").addEventListener("touchstart", e => {
+  if (drag || e.touches.length > 1) return;
+  const t = e.changedTouches[0];
+  if (pressStart(t.clientX, t.clientY, "t" + t.identifier)) e.preventDefault();   // no scroll, no magnifier, no mouse copy
+}, { passive: false });
+document.addEventListener("touchmove", e => {
+  if (!drag || drag.id[0] !== "t") return;
+  const t = touchOf(e.changedTouches, +drag.id.slice(1));
+  if (!t) return;
+  e.preventDefault();
+  pressMove(t.clientX, t.clientY);
+}, { passive: false });
+for (const type of ["touchend", "touchcancel"])
+  document.addEventListener(type, e => {
+    if (!drag || drag.id[0] !== "t") return;
+    const t = touchOf(e.changedTouches, +drag.id.slice(1));
+    if (t) pressEnd(t.clientX, t.clientY, type === "touchcancel");
+  }, { passive: false });
+
+// mouse / pen
+$("board").addEventListener("pointerdown", e => {
+  if (e.pointerType === "touch" || drag) return;
+  if (pressStart(e.clientX, e.clientY, "p" + e.pointerId)) {
+    e.preventDefault();
+    try { $("board").setPointerCapture(e.pointerId); } catch (err) {}
+  }
+});
+window.addEventListener("pointermove", e => { if (drag && drag.id === "p" + e.pointerId) pressMove(e.clientX, e.clientY); });
+for (const type of ["pointerup", "pointercancel"])
+  window.addEventListener(type, e => { if (drag && drag.id === "p" + e.pointerId) pressEnd(e.clientX, e.clientY, type === "pointercancel"); });
 
 function askPromo(cand, noAnim) {
   pendingPromo = cand;
