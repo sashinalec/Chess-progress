@@ -38,7 +38,7 @@ input[type=password], input[type=text] { width: 100%; font: inherit; padding: 9p
 .btn.sec { background: transparent; color: var(--accent); border: 1px solid var(--line); }
 .btns { display: flex; flex-wrap: wrap; gap: 8px; margin: 10px 0; }
 .err { color: #d33; margin: 6px 0; min-height: 1.2em; }
-#board { width: 100%; aspect-ratio: 1; display: grid; grid-template-columns: repeat(8, minmax(0, 1fr));
+#board { width: 100%; aspect-ratio: 1; display: grid; touch-action: none; grid-template-columns: repeat(8, minmax(0, 1fr));
   grid-template-rows: repeat(8, minmax(0, 1fr)); border-radius: 6px;
   overflow: hidden; user-select: none; touch-action: manipulation; box-shadow: 0 1px 4px rgba(0,0,0,.25); }
 .sq { position: relative; display: flex; align-items: center; justify-content: center; font-size: min(10vw, 52px); line-height: 1; cursor: pointer; }
@@ -49,6 +49,11 @@ input[type=password], input[type=text] { width: 100%; font: inherit; padding: 9p
 .sq.dot::after { content: ""; position: absolute; width: 28%; height: 28%; border-radius: 50%; background: var(--dot); }
 .sq.cap::after { content: ""; position: absolute; inset: 6%; border-radius: 50%; border: 4px solid var(--dot); }
 .pc { position: relative; z-index: 1; }
+.sq > .pc { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; }
+.sq > .pc.moving { z-index: 5; }
+.sq > .pc.lifted { opacity: .25; }
+#ghost { position: fixed; z-index: 50; pointer-events: none; display: flex; align-items: center; justify-content: center;
+  line-height: 1; transform: scale(1.12); }
 .pc.w { color: #fff; text-shadow: 0 0 1px #000, 0 0 1px #000, 0 1px 1px #000; }
 .pc.b { color: #111; text-shadow: 0 0 1px #fff3; }
 .coord { position: absolute; font-size: 10px; font-weight: 600; opacity: .7; z-index: 1; }
@@ -111,6 +116,8 @@ const $ = id => document.getElementById(id);
 const store = { get(k, d) { try { const v = localStorage.getItem(k); return v === null ? d : JSON.parse(v); } catch (e) { return d; } },
                 set(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) {} } };
 let bots = [], bot = null, settings = store.get("settings", { kind: "time", amount: 1, colour: "w" });
+const ANIM_SECONDS = 0.15;                       // (owner) how long a piece takes to slide
+let anim = null, drag = null, pieceEl = [];      // the next render's slide; the drag going on; pieces by square
 let worker = null, loadedFile = null, pos = null, moves = [], sans = [], youWhite = true, flipped = false,
     selected = -1, thinking = false, gameOver = "", lastInfo = null, pendingPromo = null, newGame = true;
 
@@ -195,9 +202,14 @@ async function startGame(saved) {
 
 function save() { store.set("game", gameOver ? null : { bot: bot.id, settings, youWhite, moves, pass: $("pass").value.trim() }); }
 
-function playUci(u, quiet) {
+function playUci(u, quiet, noAnim) {
   const m = pos.legal().find(x => C.uci(x) === u);
   if (!m) return false;
+  if (!quiet && !noAnim) {
+    const f = C.mFrom(m), t = C.mTo(m);
+    anim = [[f, t]];
+    if (C.mFlag(m) === 2) anim.push(t > f ? [t + 1, t - 1] : [t - 2, t + 1]);     // castling: the rook too
+  }
   sans.push(C.san(pos, m));
   pos.make(m); moves.push(u);
   if (!quiet) save();
@@ -269,12 +281,14 @@ function render() {
     const t = legal.find(m => C.mTo(m) === s);
     if (t !== undefined) el.classList.add(pos.b[s] ? "cap" : "dot");
     const p = pos.b[s];
-    if (p) { const sp = document.createElement("span"); sp.className = "pc " + (C.colourOf(p) ? "b" : "w"); sp.textContent = GLYPH[C.typeOf(p)]; el.appendChild(sp); }
+    pieceEl[s] = null;
+    if (p) { const sp = document.createElement("span"); sp.className = "pc " + (C.colourOf(p) ? "b" : "w"); sp.textContent = GLYPH[C.typeOf(p)]; el.appendChild(sp); pieceEl[s] = sp; }
     if ((i >> 3) === 7) { const c = document.createElement("span"); c.className = "coord f"; c.textContent = "abcdefgh"[f]; el.appendChild(c); }
     if ((i & 7) === 0) { const c = document.createElement("span"); c.className = "coord r"; c.textContent = r + 1; el.appendChild(c); }
-    el.onclick = () => tap(s);
+    el.dataset.s = s;
     board.appendChild(el);
   }
+  if (anim) { for (const [f, t] of anim) slide(f, t); anim = null; }
   const you = youWhite ? "White" : "Black";
   $("status").textContent = gameOver ? gameOver : thinking ? `${bot.name} is thinking…` :
     `Your move (${you})` + (pos.inCheck() ? " - check" : "");
@@ -285,27 +299,80 @@ function render() {
   $("moves").scrollTop = 1e6;
 }
 
-function tap(s) {
-  if (thinking || gameOver || pendingPromo) return;
-  if ((pos.stm === C.WHITE) !== youWhite) return;
-  const p = pos.b[s];
-  if (selected >= 0) {
-    const cand = pos.legal().filter(m => C.mFrom(m) === selected && C.mTo(m) === s);
-    if (cand.length === 1) { playUci(C.uci(cand[0])); selected = -1; afterMove(); return; }
-    if (cand.length > 1) { askPromo(cand); return; }
-  }
-  selected = p && C.colourOf(p) === pos.stm && s !== selected ? s : -1;
-  render();
+// A piece slides from square f to t (it is already drawn on t).
+function slide(f, t) {
+  const el = pieceEl[t];
+  if (!el) return;
+  const col = s => flipped ? 7 - (s & 7) : (s & 7), row = s => flipped ? (s >> 3) : 7 - (s >> 3);
+  el.classList.add("moving");
+  el.style.transition = "none";
+  el.style.transform = `translate(${(col(f) - col(t)) * 100}%, ${(row(f) - row(t)) * 100}%)`;
+  el.getBoundingClientRect();                      // (start from there)
+  requestAnimationFrame(() => {
+    el.style.transition = `transform ${ANIM_SECONDS}s ease`;
+    el.style.transform = "";
+    setTimeout(() => el.classList.remove("moving"), ANIM_SECONDS * 1000 + 30);
+  });
 }
 
-function askPromo(cand) {
+function yourTurn() { return !thinking && !gameOver && !pendingPromo && (pos.stm === C.WHITE) === youWhite; }
+function squareAt(x, y) { const el = document.elementFromPoint(x, y); const sq = el && el.closest && el.closest("#board .sq"); return sq ? +sq.dataset.s : -1; }
+function tryMove(from, to, noAnim) {             // true if from-to is a move (played, or a promotion being chosen)
+  const cand = pos.legal().filter(m => C.mFrom(m) === from && C.mTo(m) === to);
+  if (cand.length === 1) { selected = -1; playUci(C.uci(cand[0]), false, noAnim); afterMove(); return true; }
+  if (cand.length > 1) { askPromo(cand, noAnim); return true; }
+  return false;
+}
+
+// Tap a piece then a square, or drag a piece to a square (finger or mouse).
+$("board").addEventListener("pointerdown", e => {
+  const s = squareAt(e.clientX, e.clientY);
+  if (s < 0 || !yourTurn()) return;
+  e.preventDefault();
+  if (selected >= 0 && s !== selected && tryMove(selected, s, false)) return;
+  const p = pos.b[s];
+  if (!(p && C.colourOf(p) === pos.stm)) { selected = -1; render(); return; }
+  const was = selected === s;
+  selected = s; render();
+  drag = { from: s, was, x0: e.clientX, y0: e.clientY, moved: false, ghost: null, id: e.pointerId };
+});
+window.addEventListener("pointermove", e => {
+  if (!drag || e.pointerId !== drag.id) return;
+  if (!drag.moved && Math.hypot(e.clientX - drag.x0, e.clientY - drag.y0) < 6) return;
+  if (!drag.moved) {
+    drag.moved = true;
+    const src = pieceEl[drag.from], size = src.parentElement.getBoundingClientRect().width;
+    const g = src.cloneNode(true);
+    g.id = "ghost"; g.className = src.className; g.style.width = g.style.height = size + "px";
+    g.style.fontSize = getComputedStyle(src.parentElement).fontSize;
+    document.body.appendChild(g);
+    drag.ghost = g; drag.size = size;
+    src.classList.add("lifted");
+  }
+  drag.ghost.style.left = (e.clientX - drag.size / 2) + "px";
+  drag.ghost.style.top = (e.clientY - drag.size / 2) + "px";
+});
+function endDrag(e) {
+  if (!drag || e.pointerId !== drag.id) return;
+  const d = drag; drag = null;
+  if (d.ghost) d.ghost.remove();
+  if (d.moved) {
+    const to = squareAt(e.clientX, e.clientY);
+    if (to >= 0 && to !== d.from && yourTurn() && tryMove(d.from, to, true)) return;
+    render();                                      // not a move: the piece goes back
+  } else if (d.was) { selected = -1; render(); }  // a tap on the selected piece: unselect it
+}
+window.addEventListener("pointerup", endDrag);
+window.addEventListener("pointercancel", endDrag);
+
+function askPromo(cand, noAnim) {
   pendingPromo = cand;
   const box = $("promo"); box.innerHTML = ""; box.style.display = "flex";
   for (const t of [C.QUEEN, C.ROOK, C.BISHOP, C.KNIGHT]) {
     const b = document.createElement("button");
     b.innerHTML = `<span class="pc ${pos.stm ? "b" : "w"}">${GLYPH[t]}</span>`;
     b.onclick = () => { box.style.display = "none"; pendingPromo = null; selected = -1;
-                        playUci(C.uci(cand.find(m => C.mPromo(m) === t))); afterMove(); };
+                        playUci(C.uci(cand.find(m => C.mPromo(m) === t)), false, noAnim); afterMove(); };
     box.appendChild(b);
   }
 }
