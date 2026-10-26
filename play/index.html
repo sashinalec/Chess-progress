@@ -1,0 +1,327 @@
+<!doctype html>
+<html lang="en-GB">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Play Sashin's Bots</title>
+<style>
+:root {
+  --bg: #f4f2ee; --card: #ffffff; --text: #1d1d1f; --muted: #6b6b70; --line: #e2dfd8; --accent: #2f6fdf;
+  --light-sq: #ecdab9; --dark-sq: #ae8a68; --sel: rgba(47, 111, 223, .45); --last: rgba(246, 210, 74, .55);
+  --dot: rgba(20, 20, 20, .28); --check: rgba(220, 50, 50, .6);
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #17181b; --card: #222327; --text: #ececee; --muted: #9a9aa2; --line: #34353a; --accent: #6f9cff;
+    --light-sq: #c9b18f; --dark-sq: #8b6a4d;
+  }
+}
+* { box-sizing: border-box; }
+html, body { margin: 0; background: var(--bg); color: var(--text);
+  font: 16px/1.4 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; -webkit-tap-highlight-color: transparent; }
+main { max-width: 560px; margin: 0 auto; padding: 16px 16px 40px; }
+h1 { font-size: 1.35rem; margin: 4px 0 2px; }
+.sub { color: var(--muted); margin: 0 0 14px; font-size: .92rem; }
+.card { background: var(--card); border: 1px solid var(--line); border-radius: 12px; padding: 12px 14px; margin: 0 0 10px; }
+.bot { display: block; width: 100%; text-align: left; cursor: pointer; font: inherit; color: inherit; }
+.bot b { font-size: 1.05rem; }
+.bot .meta, .bot .note { color: var(--muted); font-size: .88rem; }
+.bot:active { transform: scale(.99); }
+.row { display: flex; flex-wrap: wrap; gap: 8px; margin: 6px 0 12px; }
+.chip { border: 1px solid var(--line); background: var(--card); color: var(--text); border-radius: 999px;
+  padding: 7px 13px; font: inherit; font-size: .92rem; cursor: pointer; }
+.chip.on { background: var(--accent); border-color: var(--accent); color: #fff; }
+label.h { display: block; font-weight: 600; margin-top: 6px; }
+input[type=password], input[type=text] { width: 100%; font: inherit; padding: 9px 11px; border-radius: 10px;
+  border: 1px solid var(--line); background: var(--card); color: var(--text); }
+.btn { font: inherit; border: 0; border-radius: 10px; padding: 10px 16px; background: var(--accent); color: #fff; cursor: pointer; }
+.btn.sec { background: transparent; color: var(--accent); border: 1px solid var(--line); }
+.btns { display: flex; flex-wrap: wrap; gap: 8px; margin: 10px 0; }
+.err { color: #d33; margin: 6px 0; min-height: 1.2em; }
+#board { width: 100%; aspect-ratio: 1; display: grid; grid-template-columns: repeat(8, minmax(0, 1fr));
+  grid-template-rows: repeat(8, minmax(0, 1fr)); border-radius: 6px;
+  overflow: hidden; user-select: none; touch-action: manipulation; box-shadow: 0 1px 4px rgba(0,0,0,.25); }
+.sq { position: relative; display: flex; align-items: center; justify-content: center; font-size: min(10vw, 52px); line-height: 1; cursor: pointer; }
+.sq.l { background: var(--light-sq); } .sq.d { background: var(--dark-sq); }
+.sq.last::before, .sq.sel::before, .sq.chk::before { content: ""; position: absolute; inset: 0; }
+.sq.last::before { background: var(--last); } .sq.sel::before { background: var(--sel); }
+.sq.chk::before { background: radial-gradient(circle, var(--check) 30%, transparent 75%); }
+.sq.dot::after { content: ""; position: absolute; width: 28%; height: 28%; border-radius: 50%; background: var(--dot); }
+.sq.cap::after { content: ""; position: absolute; inset: 6%; border-radius: 50%; border: 4px solid var(--dot); }
+.pc { position: relative; z-index: 1; }
+.pc.w { color: #fff; text-shadow: 0 0 1px #000, 0 0 1px #000, 0 1px 1px #000; }
+.pc.b { color: #111; text-shadow: 0 0 1px #fff3; }
+.coord { position: absolute; font-size: 10px; font-weight: 600; opacity: .7; z-index: 1; }
+.coord.f { right: 3px; bottom: 1px; } .coord.r { left: 3px; top: 1px; }
+.sq.l .coord { color: var(--dark-sq); } .sq.d .coord { color: var(--light-sq); }
+#status { margin: 10px 0 2px; font-weight: 600; min-height: 1.4em; }
+#think { color: var(--muted); font-size: .88rem; min-height: 1.3em; }
+#moves { font-size: .92rem; color: var(--muted); max-height: 140px; overflow: auto; word-spacing: 2px; }
+#promo { display: none; gap: 8px; margin: 8px 0; }
+#promo button { font-size: 30px; width: 54px; height: 54px; border-radius: 10px; border: 1px solid var(--line); background: var(--card); cursor: pointer; }
+.hide { display: none; }
+</style>
+</head>
+<body>
+<main>
+  <section id="pick">
+    <h1>Play Sashin's Bots</h1>
+    <p class="sub">Pick a bot. It plays in your browser, with the same search as at home (no endgame tables).</p>
+    <div id="list">Loading the bots…</div>
+  </section>
+
+  <section id="setup" class="hide">
+    <h1 id="setupName"></h1>
+    <p class="sub" id="setupInfo"></p>
+    <label class="h">Thinking per move</label>
+    <div class="row" id="kind">
+      <button class="chip" data-k="time">Time</button><button class="chip" data-k="nodes">Positions</button>
+    </div>
+    <div class="row" id="amount"></div>
+    <label class="h">You play</label>
+    <div class="row" id="colour">
+      <button class="chip" data-c="w">White</button><button class="chip" data-c="b">Black</button><button class="chip" data-c="r">Random</button>
+    </div>
+    <label class="h" for="pass">Passcode</label>
+    <input id="pass" type="password" autocomplete="off" autocapitalize="characters" placeholder="passcode">
+    <div class="err" id="setupErr"></div>
+    <div class="btns"><button class="btn" id="start">Play</button><button class="btn sec" id="back1">Other bots</button></div>
+  </section>
+
+  <section id="game" class="hide">
+    <div id="board"></div>
+    <div id="promo"></div>
+    <div id="status"></div>
+    <div id="think"></div>
+    <div class="btns">
+      <button class="btn sec" id="undo">Take back</button><button class="btn sec" id="flip">Flip</button>
+      <button class="btn sec" id="again">New game</button><button class="btn sec" id="back2">Other bots</button>
+    </div>
+    <div class="card"><div id="moves"></div></div>
+  </section>
+</main>
+<script src="engine.js"></script>
+<script>
+"use strict";
+const C = Chess;
+const GLYPH = ["♟", "♞", "♝", "♜", "♛", "♚"].map(g => g + "︎");
+const AMOUNTS = { time: [[0.1, "0.1 s"], [0.5, "0.5 s"], [1, "1 s"], [2, "2 s"], [5, "5 s"], [10, "10 s"]],
+                  nodes: [[5000, "5k"], [16000, "16k"], [64000, "64k"], [250000, "250k"], [1000000, "1M"]] };
+const $ = id => document.getElementById(id);
+const store = { get(k, d) { try { const v = localStorage.getItem(k); return v === null ? d : JSON.parse(v); } catch (e) { return d; } },
+                set(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) {} } };
+let bots = [], bot = null, settings = store.get("settings", { kind: "time", amount: 1, colour: "w" });
+let worker = null, loadedFile = null, pos = null, moves = [], sans = [], youWhite = true, flipped = false,
+    selected = -1, thinking = false, gameOver = "", lastInfo = null, pendingPromo = null, newGame = true;
+
+function show(id) { for (const s of ["pick", "setup", "game"]) $(s).classList.toggle("hide", s !== id); window.scrollTo(0, 0); }
+
+fetch("bots.json", { cache: "no-cache" }).then(r => r.json()).then(d => {
+  bots = d.bots;
+  $("list").innerHTML = "";
+  for (const b of bots.slice().reverse()) {
+    const el = document.createElement("button");
+    el.className = "card bot";
+    el.innerHTML = `<b>${b.name}</b><div class="meta">network ${b.sizes.join(", ")}${b.head ? ", value head " + b.head : ""}` +
+      `${b.heads > 1 ? " (" + b.heads + " heads)" : ""}${b.king_relative ? ", king-relative inputs" : ""} · ` +
+      `${b.games.toLocaleString("en-GB")} games trained</div>` + (b.note ? `<div class="note">${b.note}</div>` : "");
+    el.onclick = () => openSetup(b);
+    $("list").appendChild(el);
+  }
+  const saved = store.get("game", null);
+  if (saved && bots.find(b => b.id === saved.bot)) resumeOffer(saved);
+}).catch(() => { $("list").textContent = "Could not load the list of bots."; });
+
+function resumeOffer(saved) {
+  const el = document.createElement("div");
+  el.className = "card";
+  el.innerHTML = `<b>Unfinished game against ${saved.bot.toUpperCase()}</b><div class="btns"><button class="btn" id="resume">Carry on</button></div>`;
+  $("list").prepend(el);
+  $("resume").onclick = () => { openSetup(bots.find(b => b.id === saved.bot)); settings = saved.settings; renderSetup(); $("pass").value = saved.bot.toUpperCase() === saved.pass ? saved.pass : ""; startGame(saved); };
+}
+
+function openSetup(b) {
+  bot = b;
+  $("setupName").textContent = b.name;
+  $("setupInfo").textContent = `network ${b.sizes.join(", ")} · ${b.games.toLocaleString("en-GB")} games trained` + (b.note ? ` · ${b.note}` : "");
+  $("setupErr").textContent = "";
+  renderSetup();
+  show("setup");
+}
+function renderSetup() {
+  for (const el of $("kind").children) el.classList.toggle("on", el.dataset.k === settings.kind);
+  for (const el of $("colour").children) el.classList.toggle("on", el.dataset.c === settings.colour);
+  const am = $("amount"); am.innerHTML = "";
+  if (!AMOUNTS[settings.kind].some(a => a[0] === settings.amount)) settings.amount = settings.kind === "time" ? 1 : 64000;
+  for (const [v, label] of AMOUNTS[settings.kind]) {
+    const el = document.createElement("button");
+    el.className = "chip" + (v === settings.amount ? " on" : ""); el.textContent = label;
+    el.onclick = () => { settings.amount = v; renderSetup(); };
+    am.appendChild(el);
+  }
+}
+for (const el of $("kind").children) el.onclick = () => { settings.kind = el.dataset.k; renderSetup(); };
+for (const el of $("colour").children) el.onclick = () => { settings.colour = el.dataset.c; renderSetup(); };
+$("back1").onclick = $("back2").onclick = () => { if (worker) { worker.terminate(); worker = null; loadedFile = null; } show("pick"); };
+$("start").onclick = () => startGame(null);
+
+function loadBot(pass) {
+  return new Promise((resolve, reject) => {
+    if (worker && loadedFile === bot.file) return resolve();
+    if (worker) worker.terminate();
+    worker = new Worker("worker.js");
+    worker.onmessage = e => {
+      if (e.data.type === "loaded") { loadedFile = bot.file; worker.onmessage = onWorker; resolve(); }
+      else if (e.data.type === "error") { worker.terminate(); worker = null; reject(e.data.message); }
+    };
+    worker.postMessage({ type: "load", url: bot.file, passcode: pass });
+  });
+}
+
+async function startGame(saved) {
+  const pass = $("pass").value.trim();
+  $("setupErr").textContent = "Unlocking " + bot.name + "…";
+  try { await loadBot(pass); } catch (msg) { $("setupErr").textContent = msg === "wrong passcode" ? "That passcode doesn't unlock " + bot.name + "." : msg; return; }
+  $("setupErr").textContent = "";
+  store.set("settings", settings);
+  pos = new C.Position(); pos.setFen(C.START);
+  moves = []; sans = []; gameOver = ""; selected = -1; newGame = true;
+  youWhite = saved ? saved.youWhite : settings.colour === "w" ? true : settings.colour === "b" ? false : Math.random() < .5;
+  flipped = !youWhite;
+  if (saved) for (const u of saved.moves) playUci(u, true);
+  show("game");
+  afterMove();
+}
+
+function save() { store.set("game", gameOver ? null : { bot: bot.id, settings, youWhite, moves, pass: $("pass").value.trim() }); }
+
+function playUci(u, quiet) {
+  const m = pos.legal().find(x => C.uci(x) === u);
+  if (!m) return false;
+  sans.push(C.san(pos, m));
+  pos.make(m); moves.push(u);
+  if (!quiet) save();
+  return true;
+}
+
+function result() {
+  const legal = pos.legal();
+  if (!legal.length) return pos.inCheck() ? (pos.stm === C.WHITE ? "Black" : "White") + " wins by checkmate" : "Draw by stalemate";
+  if (pos.hm >= 100) return "Draw by the 50-move rule";
+  if (pos.insufficient()) return "Draw: not enough material";
+  // threefold: replay and count
+  const p = new C.Position(); p.setFen(C.START); const seen = {};
+  const key = q => q.fen().split(" ").slice(0, 4).join(" ");
+  seen[key(p)] = 1;
+  for (const u of moves) { p.make(p.legal().find(x => C.uci(x) === u)); const k = key(p); seen[k] = (seen[k] || 0) + 1; if (seen[k] >= 3) return "Draw by threefold repetition"; }
+  return "";
+}
+
+function afterMove() {
+  gameOver = result();
+  render();
+  save();
+  if (gameOver) return;
+  const botToMove = (pos.stm === C.WHITE) !== youWhite;
+  if (botToMove) think();
+}
+
+function think() {
+  thinking = true; lastInfo = null; render();
+  worker.postMessage({ type: "go", moves, newGame, nodes: settings.kind === "nodes" ? settings.amount : 0,
+                       seconds: settings.kind === "time" ? settings.amount : 0 });
+  newGame = false;
+}
+
+function onWorker(e) {
+  const d = e.data;
+  if (d.type === "info") { lastInfo = d; renderThink(); }
+  else if (d.type === "best") {
+    thinking = false;
+    lastInfo = Object.assign(lastInfo || {}, { depth: d.depth, nodes: d.nodes, score: d.score });
+    playUci(d.move); afterMove();
+  } else if (d.type === "error") { thinking = false; $("status").textContent = "The bot hit a problem: " + d.message; }
+}
+
+function scoreText(v) {
+  if (v > 1.5) return "the bot sees a mate for itself";
+  if (v < -1.5) return "the bot sees a mate for you";
+  return `bot's view ${v >= 0 ? "+" : ""}${v.toFixed(2)} (${Math.round(50 + 50 * Math.max(-1, Math.min(1, v)))}% for it)`;
+}
+function renderThink() {
+  const i = lastInfo;
+  $("think").textContent = i ? `depth ${i.depth} · ${(i.nodes || 0).toLocaleString("en-GB")} positions · ${scoreText(i.score)}` : "";
+}
+
+function render() {
+  const board = $("board"); board.innerHTML = "";
+  const legal = selected >= 0 && !thinking ? pos.legal().filter(m => C.mFrom(m) === selected) : [];
+  const lastU = moves[moves.length - 1];
+  const lastSq = lastU ? [lastU.slice(0, 2), lastU.slice(2, 4)] : [];
+  const checkSq = pos.inCheck() ? pos.king[pos.stm] : -1;
+  for (let i = 0; i < 64; i++) {
+    const r = flipped ? (i >> 3) : 7 - (i >> 3), f = flipped ? 7 - (i & 7) : (i & 7), s = r * 8 + f;
+    const el = document.createElement("div");
+    el.className = "sq " + ((r + f) % 2 ? "l" : "d");
+    if (lastSq.includes(C.sqName(s))) el.classList.add("last");
+    if (s === selected) el.classList.add("sel");
+    if (s === checkSq) el.classList.add("chk");
+    const t = legal.find(m => C.mTo(m) === s);
+    if (t !== undefined) el.classList.add(pos.b[s] ? "cap" : "dot");
+    const p = pos.b[s];
+    if (p) { const sp = document.createElement("span"); sp.className = "pc " + (C.colourOf(p) ? "b" : "w"); sp.textContent = GLYPH[C.typeOf(p)]; el.appendChild(sp); }
+    if ((i >> 3) === 7) { const c = document.createElement("span"); c.className = "coord f"; c.textContent = "abcdefgh"[f]; el.appendChild(c); }
+    if ((i & 7) === 0) { const c = document.createElement("span"); c.className = "coord r"; c.textContent = r + 1; el.appendChild(c); }
+    el.onclick = () => tap(s);
+    board.appendChild(el);
+  }
+  const you = youWhite ? "White" : "Black";
+  $("status").textContent = gameOver ? gameOver : thinking ? `${bot.name} is thinking…` :
+    `Your move (${you})` + (pos.inCheck() ? " - check" : "");
+  renderThink();
+  let txt = "";
+  for (let i = 0; i < sans.length; i++) txt += (i % 2 === 0 ? (i / 2 + 1) + ". " : "") + sans[i] + " ";
+  $("moves").textContent = txt || `${bot.name}, ${settings.kind === "time" ? settings.amount + " s" : settings.amount.toLocaleString("en-GB") + " positions"} a move. You are ${you}.`;
+  $("moves").scrollTop = 1e6;
+}
+
+function tap(s) {
+  if (thinking || gameOver || pendingPromo) return;
+  if ((pos.stm === C.WHITE) !== youWhite) return;
+  const p = pos.b[s];
+  if (selected >= 0) {
+    const cand = pos.legal().filter(m => C.mFrom(m) === selected && C.mTo(m) === s);
+    if (cand.length === 1) { playUci(C.uci(cand[0])); selected = -1; afterMove(); return; }
+    if (cand.length > 1) { askPromo(cand); return; }
+  }
+  selected = p && C.colourOf(p) === pos.stm && s !== selected ? s : -1;
+  render();
+}
+
+function askPromo(cand) {
+  pendingPromo = cand;
+  const box = $("promo"); box.innerHTML = ""; box.style.display = "flex";
+  for (const t of [C.QUEEN, C.ROOK, C.BISHOP, C.KNIGHT]) {
+    const b = document.createElement("button");
+    b.innerHTML = `<span class="pc ${pos.stm ? "b" : "w"}">${GLYPH[t]}</span>`;
+    b.onclick = () => { box.style.display = "none"; pendingPromo = null; selected = -1;
+                        playUci(C.uci(cand.find(m => C.mPromo(m) === t))); afterMove(); };
+    box.appendChild(b);
+  }
+}
+
+$("flip").onclick = () => { flipped = !flipped; render(); };
+$("undo").onclick = () => {
+  if (thinking || !moves.length) return;
+  let n = (pos.stm === C.WHITE) === youWhite ? 2 : 1;      // back to your move
+  if (gameOver && (pos.stm === C.WHITE) !== youWhite) n = 1;
+  const keep = moves.slice(0, Math.max(0, moves.length - n));
+  pos = new C.Position(); pos.setFen(C.START); moves = []; sans = []; gameOver = ""; selected = -1;
+  for (const u of keep) playUci(u, true);
+  save(); render();
+  if ((pos.stm === C.WHITE) !== youWhite) think();
+};
+$("again").onclick = () => { if (thinking) return; store.set("game", null); startGame(null); };
+</script>
+</body>
+</html>

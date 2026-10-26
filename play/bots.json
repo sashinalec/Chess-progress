@@ -1,0 +1,159 @@
+{
+ "built": "2026-10-26 09:02",
+ "bots": [
+  {
+   "id": "ai29",
+   "name": "AI29",
+   "games": 76285,
+   "sizes": [
+    197,
+    72,
+    98
+   ],
+   "head": 28,
+   "heads": 1,
+   "king_relative": false,
+   "file": "w/ai29_338d3e535f22.bin",
+   "kb": 2351,
+   "note": ""
+  },
+  {
+   "id": "ai30",
+   "name": "AI30",
+   "games": 170505,
+   "sizes": [
+    128,
+    59,
+    55
+   ],
+   "head": 20,
+   "heads": 1,
+   "king_relative": false,
+   "file": "w/ai30_01f44983d900.bin",
+   "kb": 1374,
+   "note": ""
+  },
+  {
+   "id": "ai31",
+   "name": "AI31",
+   "games": 63001,
+   "sizes": [
+    239,
+    60,
+    72
+   ],
+   "head": 20,
+   "heads": 1,
+   "king_relative": false,
+   "file": "w/ai31_63314982db61.bin",
+   "kb": 2027,
+   "note": ""
+  },
+  {
+   "id": "ai32",
+   "name": "AI32",
+   "games": 59184,
+   "sizes": [
+    246,
+    80,
+    72
+   ],
+   "head": 32,
+   "heads": 1,
+   "king_relative": false,
+   "file": "w/ai32_f212451dc7a7.bin",
+   "kb": 2156,
+   "note": ""
+  },
+  {
+   "id": "ai33",
+   "name": "AI33",
+   "games": 207649,
+   "sizes": [
+    264,
+    30
+   ],
+   "head": 26,
+   "heads": 1,
+   "king_relative": false,
+   "file": "w/ai33_04ee575a1f10.bin",
+   "kb": 1385,
+   "note": ""
+  },
+  {
+   "id": "ai36",
+   "name": "AI36",
+   "games": 32540,
+   "sizes": [
+    80,
+    18
+   ],
+   "head": 12,
+   "heads": 1,
+   "king_relative": false,
+   "file": "w/ai36_b14735a7efa8.bin",
+   "kb": 573,
+   "note": ""
+  },
+  {
+   "id": "ai37",
+   "name": "AI37",
+   "games": 994456,
+   "sizes": [
+    64,
+    8
+   ],
+   "head": 16,
+   "heads": 1,
+   "king_relative": false,
+   "file": "w/ai37_7e3a25b94f0d.bin",
+   "kb": 350,
+   "note": "about 2635 at 0.1 s a move (Stockfish test, 24 Oct)"
+  },
+  {
+   "id": "ai38",
+   "name": "AI38",
+   "games": 999116,
+   "sizes": [
+    128,
+    16
+   ],
+   "head": 16,
+   "heads": 1,
+   "king_relative": false,
+   "file": "w/ai38_d53d7a6a8a22.bin",
+   "kb": 690,
+   "note": "about 2713 at 0.1 s a move; about 2950 at 5 s a move (Stockfish tests, 24-25 Oct)"
+  },
+  {
+   "id": "ai39",
+   "name": "AI39",
+   "games": 749546,
+   "sizes": [
+    142,
+    49
+   ],
+   "head": 39,
+   "heads": 1,
+   "king_relative": false,
+   "file": "w/ai39_344800e8d8c5.bin",
+   "kb": 1331,
+   "note": ""
+  },
+  {
+   "id": "ai40",
+   "name": "AI40",
+   "games": 695762,
+   "sizes": [
+    256,
+    32
+   ],
+   "head": 16,
+   "heads": 1,
+   "king_relative": false,
+   "file": "w/ai40_961a975154b4.bin",
+   "kb": 1395,
+   "note": ""
+  }
+ ]
+}
