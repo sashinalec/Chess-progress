@@ -39,7 +39,8 @@ input[type=password], input[type=text] { width: 100%; font: inherit; padding: 9p
 .btn.sec { background: transparent; color: var(--accent); border: 1px solid var(--line); }
 .btns { display: flex; flex-wrap: wrap; gap: 8px; margin: 10px 0; }
 .err { color: #d33; margin: 6px 0; min-height: 1.2em; }
-#board { width: 100%; aspect-ratio: 1; display: grid; touch-action: none; grid-template-columns: repeat(8, minmax(0, 1fr));
+#board { width: 100%; aspect-ratio: 1; display: grid; touch-action: none; -webkit-user-select: none;
+  -webkit-touch-callout: none; grid-template-columns: repeat(8, minmax(0, 1fr));
   grid-template-rows: repeat(8, minmax(0, 1fr)); border-radius: 6px;
   overflow: hidden; user-select: none; touch-action: manipulation; box-shadow: 0 1px 4px rgba(0,0,0,.25); }
 .sq { position: relative; display: flex; align-items: center; justify-content: center; font-size: min(10vw, 52px); line-height: 1; cursor: pointer; }
@@ -121,7 +122,7 @@ const store = { get(k, d) { try { const v = localStorage.getItem(k); return v ==
 let bots = [], bot = null, settings = store.get("settings", { kind: "time", amount: 1, colour: "w" });
 const ANIM_SECONDS = 1.0;                        // (owner) how long a piece takes to glide to its square
 let animUntil = 0;                               // when the glide on the board ends
-let anim = null, drag = null, pieceEl = [];      // the next render's slide; the drag going on; pieces by square
+let anim = null, drag = null, pieceEl = [], squareEl = [];      // the next render's slide; the drag going on; pieces by square
 let worker = null, loadedFile = null, pos = null, moves = [], sans = [], youWhite = true, flipped = false,
     selected = -1, thinking = false, gameOver = "", lastInfo = null, pendingPromo = null, newGame = true;
 
@@ -243,7 +244,7 @@ function afterMove() {
 }
 
 function think() {
-  thinking = true; lastInfo = null; render();
+  thinking = true; lastInfo = null; renderText();
   worker.postMessage({ type: "go", moves, newGame, nodes: settings.kind === "nodes" ? settings.amount : 0,
                        seconds: settings.kind === "time" ? settings.amount : 0 });
   newGame = false;
@@ -291,9 +292,14 @@ function render() {
     if ((i >> 3) === 7) { const c = document.createElement("span"); c.className = "coord f"; c.textContent = "abcdefgh"[f]; el.appendChild(c); }
     if ((i & 7) === 0) { const c = document.createElement("span"); c.className = "coord r"; c.textContent = r + 1; el.appendChild(c); }
     el.dataset.s = s;
+    squareEl[s] = el;
     board.appendChild(el);
   }
   if (anim) { for (const [f, t] of anim) slide(f, t); anim = null; }
+  renderText();
+}
+
+function renderText() {
   const you = youWhite ? "White" : "Black";
   $("status").textContent = gameOver ? gameOver : thinking ? `${bot.name} is thinking…` :
     `Your move (${you})` + (pos.inCheck() ? " - check" : "");
@@ -311,14 +317,23 @@ function slide(f, t) {
   const col = s => flipped ? 7 - (s & 7) : (s & 7), row = s => flipped ? (s >> 3) : 7 - (s >> 3);
   el.classList.add("moving");
   animUntil = performance.now() + ANIM_SECONDS * 1000;
-  el.style.transition = "none";
-  el.style.transform = `translate(${(col(f) - col(t)) * 100}%, ${(row(f) - row(t)) * 100}%)`;
-  el.getBoundingClientRect();                      // (start from there)
-  requestAnimationFrame(() => {
-    el.style.transition = `transform ${ANIM_SECONDS}s ease`;
-    el.style.transform = "";
-    setTimeout(() => el.classList.remove("moving"), ANIM_SECONDS * 1000 + 30);
-  });
+  const a = el.animate([{ transform: `translate(${(col(f) - col(t)) * 100}%, ${(row(f) - row(t)) * 100}%)` },
+                        { transform: "translate(0, 0)" }], { duration: ANIM_SECONDS * 1000, easing: "ease" });
+  a.onfinish = a.oncancel = () => el.classList.remove("moving");
+}
+
+// The selected piece and its targets, changed in place: the squares stay the same elements, so a finger that is
+// dragging keeps its square, and a glide that is going on is not cut short.
+function showSelection() {
+  const legal = selected >= 0 && !thinking ? pos.legal().filter(m => C.mFrom(m) === selected) : [];
+  for (let s = 0; s < 64; s++) {
+    const el = squareEl[s];
+    if (!el) continue;
+    el.classList.toggle("sel", s === selected);
+    const t = legal.some(m => C.mTo(m) === s);
+    el.classList.toggle("cap", t && !!pos.b[s]);
+    el.classList.toggle("dot", t && !pos.b[s]);
+  }
 }
 
 function yourTurn() { return !thinking && !gameOver && !pendingPromo && (pos.stm === C.WHITE) === youWhite; }
@@ -337,9 +352,10 @@ $("board").addEventListener("pointerdown", e => {
   e.preventDefault();
   if (selected >= 0 && s !== selected && tryMove(selected, s, false)) return;
   const p = pos.b[s];
-  if (!(p && C.colourOf(p) === pos.stm)) { selected = -1; render(); return; }
+  if (!(p && C.colourOf(p) === pos.stm)) { selected = -1; showSelection(); return; }
   const was = selected === s;
-  selected = s; render();
+  selected = s; showSelection();
+  try { $("board").setPointerCapture(e.pointerId); } catch (err) {}    // the finger's moves come to the board
   drag = { from: s, was, x0: e.clientX, y0: e.clientY, moved: false, ghost: null, id: e.pointerId };
 });
 window.addEventListener("pointermove", e => {
@@ -365,8 +381,8 @@ function endDrag(e) {
   if (d.moved) {
     const to = squareAt(e.clientX, e.clientY);
     if (to >= 0 && to !== d.from && yourTurn() && tryMove(d.from, to, true)) return;
-    render();                                      // not a move: the piece goes back
-  } else if (d.was) { selected = -1; render(); }  // a tap on the selected piece: unselect it
+    pieceEl[d.from] && pieceEl[d.from].classList.remove("lifted");   // not a move: the piece goes back
+  } else if (d.was) { selected = -1; showSelection(); }   // a tap on the selected piece: unselect it
 }
 window.addEventListener("pointerup", endDrag);
 window.addEventListener("pointercancel", endDrag);
