@@ -1,5 +1,5 @@
 {
- "built": "2026-10-26 09:02",
+ "built": "2026-10-26 09:17",
  "bots": [
   {
    "id": "ai29",
@@ -15,7 +15,9 @@
    "king_relative": false,
    "file": "w/ai29_338d3e535f22.bin",
    "kb": 2351,
-   "note": ""
+   "note": "",
+   "elo": 2362,
+   "elo_date": "2026-10-22"
   },
   {
    "id": "ai30",
@@ -31,7 +33,9 @@
    "king_relative": false,
    "file": "w/ai30_01f44983d900.bin",
    "kb": 1374,
-   "note": ""
+   "note": "",
+   "elo": 2393,
+   "elo_date": "2026-10-22"
   },
   {
    "id": "ai31",
@@ -47,7 +51,9 @@
    "king_relative": false,
    "file": "w/ai31_63314982db61.bin",
    "kb": 2027,
-   "note": ""
+   "note": "",
+   "elo": 1840,
+   "elo_date": "2026-10-22"
   },
   {
    "id": "ai32",
@@ -63,7 +69,9 @@
    "king_relative": false,
    "file": "w/ai32_f212451dc7a7.bin",
    "kb": 2156,
-   "note": ""
+   "note": "",
+   "elo": 1885,
+   "elo_date": "2026-10-22"
   },
   {
    "id": "ai33",
@@ -78,7 +86,9 @@
    "king_relative": false,
    "file": "w/ai33_04ee575a1f10.bin",
    "kb": 1385,
-   "note": ""
+   "note": "",
+   "elo": 2476,
+   "elo_date": "2026-10-22"
   },
   {
    "id": "ai36",
@@ -93,7 +103,9 @@
    "king_relative": false,
    "file": "w/ai36_b14735a7efa8.bin",
    "kb": 573,
-   "note": ""
+   "note": "",
+   "elo": 2085,
+   "elo_date": "2026-10-22"
   },
   {
    "id": "ai37",
@@ -108,7 +120,9 @@
    "king_relative": false,
    "file": "w/ai37_7e3a25b94f0d.bin",
    "kb": 350,
-   "note": "about 2635 at 0.1 s a move (Stockfish test, 24 Oct)"
+   "note": "about 2635 at 0.1 s a move (Stockfish test, 24 Oct)",
+   "elo": 2562,
+   "elo_date": "2026-10-23"
   },
   {
    "id": "ai38",
@@ -123,7 +137,9 @@
    "king_relative": false,
    "file": "w/ai38_d53d7a6a8a22.bin",
    "kb": 690,
-   "note": "about 2713 at 0.1 s a move; about 2950 at 5 s a move (Stockfish tests, 24-25 Oct)"
+   "note": "about 2713 at 0.1 s a move; about 2950 at 5 s a move (Stockfish tests, 24-25 Oct)",
+   "elo": 2517,
+   "elo_date": "2026-10-23"
   },
   {
    "id": "ai39",
@@ -138,7 +154,9 @@
    "king_relative": false,
    "file": "w/ai39_344800e8d8c5.bin",
    "kb": 1331,
-   "note": ""
+   "note": "",
+   "elo": 2485,
+   "elo_date": "2026-10-24"
   },
   {
    "id": "ai40",
@@ -153,7 +171,9 @@
    "king_relative": false,
    "file": "w/ai40_961a975154b4.bin",
    "kb": 1395,
-   "note": ""
+   "note": "",
+   "elo": 2573,
+   "elo_date": "2026-10-24"
   }
  ]
 }

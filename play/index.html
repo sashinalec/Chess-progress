@@ -25,6 +25,7 @@ h1 { font-size: 1.35rem; margin: 4px 0 2px; }
 .card { background: var(--card); border: 1px solid var(--line); border-radius: 12px; padding: 12px 14px; margin: 0 0 10px; }
 .bot { display: block; width: 100%; text-align: left; cursor: pointer; font: inherit; color: inherit; }
 .bot b { font-size: 1.05rem; }
+.elo { margin-left: 8px; font-size: .9rem; font-weight: 600; color: var(--accent); }
 .bot .meta, .bot .note { color: var(--muted); font-size: .88rem; }
 .bot:active { transform: scale(.99); }
 .row { display: flex; flex-wrap: wrap; gap: 8px; margin: 6px 0 12px; }
@@ -71,7 +72,9 @@ input[type=password], input[type=text] { width: 100%; font: inherit; padding: 9p
 <main>
   <section id="pick">
     <h1>Play Sashin's Bots</h1>
-    <p class="sub">Pick a bot. It plays in your browser, with the same search as at home (no endgame tables).</p>
+    <p class="sub">Pick a bot. It plays in your browser, with the same search as at home (no endgame tables).
+      Elo = its latest Stockfish-ladder estimate at home (64,000 positions a move, 40 games, so give or take about 60);
+      in the browser it searches more slowly, so expect it to play somewhat weaker.</p>
     <div id="list">Loading the bots…</div>
   </section>
 
@@ -129,7 +132,7 @@ fetch("bots.json", { cache: "no-cache" }).then(r => r.json()).then(d => {
   for (const b of bots.slice().reverse()) {
     const el = document.createElement("button");
     el.className = "card bot";
-    el.innerHTML = `<b>${b.name}</b><div class="meta">network ${b.sizes.join(", ")}${b.head ? ", value head " + b.head : ""}` +
+    el.innerHTML = `<b>${b.name}</b>${b.elo ? `<span class="elo">≈ ${b.elo} Elo</span>` : ""}<div class="meta">network ${b.sizes.join(", ")}${b.head ? ", value head " + b.head : ""}` +
       `${b.heads > 1 ? " (" + b.heads + " heads)" : ""}${b.king_relative ? ", king-relative inputs" : ""} · ` +
       `${b.games.toLocaleString("en-GB")} games trained</div>` + (b.note ? `<div class="note">${b.note}</div>` : "");
     el.onclick = () => openSetup(b);
@@ -149,7 +152,7 @@ function resumeOffer(saved) {
 
 function openSetup(b) {
   bot = b;
-  $("setupName").textContent = b.name;
+  $("setupName").textContent = b.name + (b.elo ? ` · ≈ ${b.elo} Elo` : "");
   $("setupInfo").textContent = `network ${b.sizes.join(", ")} · ${b.games.toLocaleString("en-GB")} games trained` + (b.note ? ` · ${b.note}` : "");
   $("setupErr").textContent = "";
   renderSetup();
