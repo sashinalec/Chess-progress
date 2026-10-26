@@ -77,6 +77,11 @@ input[type=password], input[type=text] { width: 100%; font: inherit; padding: 9p
     <p class="sub">Pick a bot. It plays in your browser, with the same search as at home (no endgame tables).
       Elo = its latest Stockfish-ladder estimate at home (64,000 positions a move, 40 games, so give or take about 60);
       in the browser it searches more slowly, so expect it to play somewhat weaker.</p>
+    <div class="row" id="sort">
+      <button class="chip" data-o="new">Newest first</button><button class="chip" data-o="hi">Elo: high to low</button>
+      <button class="chip" data-o="lo">Elo: low to high</button>
+    </div>
+    <div id="resumeBox"></div>
     <div id="list">Loading the bots…</div>
   </section>
 
@@ -110,8 +115,8 @@ input[type=password], input[type=text] { width: 100%; font: inherit; padding: 9p
     <div class="card"><div id="moves"></div></div>
   </section>
 </main>
-<p class="sub" id="version" style="text-align:center;margin-top:24px">Page version 4 · 26 Oct, iPhone drag fix</p>
-<script src="engine.js?v=4"></script>
+<p class="sub" id="version" style="text-align:center;margin-top:24px">Page version 5 · 26 Oct, sort by Elo</p>
+<script src="engine.js?v=5"></script>
 <script>
 "use strict";
 const C = Chess;
@@ -132,8 +137,22 @@ function show(id) { for (const s of ["pick", "setup", "game"]) $(s).classList.to
 
 fetch("bots.json", { cache: "no-cache" }).then(r => r.json()).then(d => {
   bots = d.bots;
+  renderList();
+  const saved = store.get("game", null);
+  if (saved && bots.find(b => b.id === saved.bot)) resumeOffer(saved);
+}).catch(() => { $("list").textContent = "Could not load the list of bots."; });
+
+// (owner, 26 Oct 2026) the list in the order chosen: newest first, or by Elo (bots without one at the end)
+let sortOrder = store.get("sort", "new");
+for (const el of $("sort").children) el.onclick = () => { sortOrder = el.dataset.o; store.set("sort", sortOrder); renderList(); };
+function renderList() {
+  for (const el of $("sort").children) el.classList.toggle("on", el.dataset.o === sortOrder);
+  const num = b => +b.id.slice(2);
+  const list = bots.slice().sort((a, b) => sortOrder === "new" || a.elo == null || b.elo == null
+    ? (sortOrder !== "new" && (a.elo == null) !== (b.elo == null) ? (a.elo == null ? 1 : -1) : num(b) - num(a))
+    : sortOrder === "hi" ? b.elo - a.elo : a.elo - b.elo);
   $("list").innerHTML = "";
-  for (const b of bots.slice().reverse()) {
+  for (const b of list) {
     const el = document.createElement("button");
     el.className = "card bot";
     el.innerHTML = `<b>${b.name}</b>${b.elo ? `<span class="elo">≈ ${b.elo} Elo</span>` : ""}<div class="meta">network ${b.sizes.join(", ")}${b.head ? ", value head " + b.head : ""}` +
@@ -142,15 +161,13 @@ fetch("bots.json", { cache: "no-cache" }).then(r => r.json()).then(d => {
     el.onclick = () => openSetup(b);
     $("list").appendChild(el);
   }
-  const saved = store.get("game", null);
-  if (saved && bots.find(b => b.id === saved.bot)) resumeOffer(saved);
-}).catch(() => { $("list").textContent = "Could not load the list of bots."; });
+}
 
 function resumeOffer(saved) {
   const el = document.createElement("div");
   el.className = "card";
   el.innerHTML = `<b>Unfinished game against ${saved.bot.toUpperCase()}</b><div class="btns"><button class="btn" id="resume">Carry on</button></div>`;
-  $("list").prepend(el);
+  $("resumeBox").appendChild(el);
   $("resume").onclick = () => { openSetup(bots.find(b => b.id === saved.bot)); settings = saved.settings; renderSetup(); $("pass").value = saved.bot.toUpperCase() === saved.pass ? saved.pass : ""; startGame(saved); };
 }
 
@@ -183,7 +200,7 @@ function loadBot(pass) {
   return new Promise((resolve, reject) => {
     if (worker && loadedFile === bot.file) return resolve();
     if (worker) worker.terminate();
-    worker = new Worker("worker.js?v=4");
+    worker = new Worker("worker.js?v=5");
     worker.onmessage = e => {
       if (e.data.type === "loaded") { loadedFile = bot.file; worker.onmessage = onWorker; resolve(); }
       else if (e.data.type === "error") { worker.terminate(); worker = null; reject(e.data.message); }
