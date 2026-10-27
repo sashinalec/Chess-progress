@@ -37,6 +37,8 @@ body { margin: 0; background: var(--page); color: var(--ink);
        font: 14px/1.45 system-ui, -apple-system, "Segoe UI", sans-serif; }
 main { max-width: 1280px; margin: 0 auto; padding: 16px; }
 header { display: flex; flex-wrap: wrap; align-items: baseline; gap: 8px 16px; margin-bottom: 12px; }
+.sitelink { display: block; text-align: right; margin: 0 0 8px; font-weight: 600; font-size: 13px; }
+.sitelink a { color: var(--s1); text-decoration: none; }
 h1 { font-size: 20px; margin: 0; }
 .pill { font-size: 12px; padding: 2px 10px; border-radius: 999px; border: 1px solid var(--ring); color: var(--ink-2); }
 .pill.on::before { content: "\25CF "; color: var(--good); }
@@ -133,6 +135,8 @@ table.qtests .dim { opacity: 0.6; font-size: 11px; }
 </head>
 <body>
 <main>
+  <!-- (owner, 27 Oct 2026) a link to the other website at the top of each -->
+  <div class="sitelink"><a href="https://sashinalec.github.io/Chess-progress/play/">&#9654; Play the bots</a></div>
   <nav class="runtabs" id="runtabs" hidden></nav>
   <header>
     <h1 id="title">Training dashboard</h1>
