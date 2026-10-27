@@ -1,5 +1,5 @@
 {
- "built": "2026-10-26 11:11",
+ "built": "2026-10-27 07:38",
  "bots": [
   {
    "id": "ai6",
@@ -495,19 +495,19 @@
   {
    "id": "ai39",
    "name": "AI39",
-   "games": 749546,
+   "games": 980151,
    "sizes": [
-    142,
-    49
+    126,
+    58
    ],
-   "head": 39,
+   "head": 25,
    "heads": 1,
    "king_relative": false,
-   "file": "w/ai39_344800e8d8c5.bin",
-   "kb": 1331,
+   "file": "w/ai39_bd8def54481e.bin",
+   "kb": 1434,
    "note": "",
-   "elo": 2485,
-   "elo_date": "2026-10-24",
+   "elo": 2541,
+   "elo_date": "2026-10-27",
    "search": {
     "v2": true,
     "contempt": 0
@@ -516,7 +516,7 @@
   {
    "id": "ai40",
    "name": "AI40",
-   "games": 695762,
+   "games": 984216,
    "sizes": [
     256,
     32
@@ -524,11 +524,32 @@
    "head": 16,
    "heads": 1,
    "king_relative": false,
-   "file": "w/ai40_961a975154b4.bin",
+   "file": "w/ai40_80d434aabfae.bin",
    "kb": 1395,
    "note": "",
-   "elo": 2573,
-   "elo_date": "2026-10-24",
+   "elo": 2603,
+   "elo_date": "2026-10-27",
+   "search": {
+    "v2": true,
+    "contempt": 0
+   }
+  },
+  {
+   "id": "ai41",
+   "name": "AI41",
+   "games": 56683,
+   "sizes": [
+    128,
+    16
+   ],
+   "head": 16,
+   "heads": 2,
+   "king_relative": true,
+   "file": "w/ai41_cc6f3e87b77d.bin",
+   "kb": 3379,
+   "note": "king-relative inputs, opening work, reanalysis (the week project)",
+   "elo": 2231,
+   "elo_date": "2026-10-27",
    "search": {
     "v2": true,
     "contempt": 0

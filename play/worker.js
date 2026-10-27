@@ -1,6 +1,6 @@
 /* The bot's thinking, off the page's main thread. Messages in: {type: "load", url, passcode} and
    {type: "go", moves: [uci...], nodes, seconds}. Out: "loaded" / "error" / "info" / "best". */
-importScripts("engine.js?v=6");
+importScripts("engine.js?v=7");
 let searcher = null;
 
 async function decrypt(buf, passcode) {
