@@ -1,5 +1,5 @@
 {
- "built": "2026-10-27 07:38",
+ "built": "2026-10-27 13:30",
  "bots": [
   {
    "id": "ai6",
@@ -533,6 +533,121 @@
     "v2": true,
     "contempt": 0
    }
+  },
+  {
+   "id": "ai40r5",
+   "name": "AI40 \u00b7 5% random",
+   "games": 984216,
+   "sizes": [
+    256,
+    32
+   ],
+   "head": 16,
+   "heads": 1,
+   "king_relative": false,
+   "file": "w/ai40_80d434aabfae.bin",
+   "kb": 1395,
+   "note": "AI40's network, but 5% of its moves are a random legal move - an easier level (Elo from a home test at 0.1 s a move; passcode AI40)",
+   "elo": 2170,
+   "elo_date": "2026-10-26",
+   "search": {
+    "v2": true,
+    "contempt": 0
+   },
+   "base": "ai40",
+   "random": 0.05
+  },
+  {
+   "id": "ai40r10",
+   "name": "AI40 \u00b7 10% random",
+   "games": 984216,
+   "sizes": [
+    256,
+    32
+   ],
+   "head": 16,
+   "heads": 1,
+   "king_relative": false,
+   "file": "w/ai40_80d434aabfae.bin",
+   "kb": 1395,
+   "note": "AI40's network, but 10% of its moves are a random legal move - an easier level (Elo from a home test at 0.1 s a move; passcode AI40)",
+   "elo": 1990,
+   "elo_date": "2026-10-26",
+   "search": {
+    "v2": true,
+    "contempt": 0
+   },
+   "base": "ai40",
+   "random": 0.1
+  },
+  {
+   "id": "ai40r20",
+   "name": "AI40 \u00b7 20% random",
+   "games": 984216,
+   "sizes": [
+    256,
+    32
+   ],
+   "head": 16,
+   "heads": 1,
+   "king_relative": false,
+   "file": "w/ai40_80d434aabfae.bin",
+   "kb": 1395,
+   "note": "AI40's network, but 20% of its moves are a random legal move - an easier level (Elo from a home test at 0.1 s a move; passcode AI40)",
+   "elo": 1530,
+   "elo_date": "2026-10-26",
+   "search": {
+    "v2": true,
+    "contempt": 0
+   },
+   "base": "ai40",
+   "random": 0.2
+  },
+  {
+   "id": "ai40r30",
+   "name": "AI40 \u00b7 30% random",
+   "games": 984216,
+   "sizes": [
+    256,
+    32
+   ],
+   "head": 16,
+   "heads": 1,
+   "king_relative": false,
+   "file": "w/ai40_80d434aabfae.bin",
+   "kb": 1395,
+   "note": "AI40's network, but 30% of its moves are a random legal move - an easier level (Elo from a home test at 0.1 s a move; passcode AI40)",
+   "elo": 1190,
+   "elo_date": "2026-10-26",
+   "search": {
+    "v2": true,
+    "contempt": 0
+   },
+   "base": "ai40",
+   "random": 0.3
+  },
+  {
+   "id": "ai40r50",
+   "name": "AI40 \u00b7 50% random",
+   "games": 984216,
+   "sizes": [
+    256,
+    32
+   ],
+   "head": 16,
+   "heads": 1,
+   "king_relative": false,
+   "file": "w/ai40_80d434aabfae.bin",
+   "kb": 1395,
+   "note": "AI40's network, but 50% of its moves are a random legal move - an easier level (Elo from a home test at 0.1 s a move; passcode AI40)",
+   "elo": 680,
+   "elo_date": "2026-10-26",
+   "search": {
+    "v2": true,
+    "contempt": 0
+   },
+   "base": "ai40",
+   "random": 0.5
   },
   {
    "id": "ai41",

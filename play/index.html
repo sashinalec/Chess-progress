@@ -128,8 +128,8 @@ input[type=password], input[type=text] { width: 100%; font: inherit; padding: 9p
     <div class="card"><div id="moves"></div></div>
   </section>
 </main>
-<p class="sub" id="version" style="text-align:center;margin-top:24px">Page version 8 · 27 Oct, link to the training progress</p>
-<script src="engine.js?v=8"></script>
+<p class="sub" id="version" style="text-align:center;margin-top:24px">Page version 9 · 27 Oct, easier AI40 levels</p>
+<script src="engine.js?v=9"></script>
 <script>
 "use strict";
 const C = Chess;
@@ -160,7 +160,7 @@ let sortOrder = store.get("sort", "new");
 for (const el of $("sort").children) el.onclick = () => { sortOrder = el.dataset.o; store.set("sort", sortOrder); renderList(); };
 function renderList() {
   for (const el of $("sort").children) el.classList.toggle("on", el.dataset.o === sortOrder);
-  const num = b => +b.id.slice(2);
+  const num = b => parseInt(b.id.slice(2)) - (b.random || 0);   // AI40's random levels just after AI40, easiest last
   const list = bots.slice().sort((a, b) => sortOrder === "new" || a.elo == null || b.elo == null
     ? (sortOrder !== "new" && (a.elo == null) !== (b.elo == null) ? (a.elo == null ? 1 : -1) : num(b) - num(a))
     : sortOrder === "hi" ? b.elo - a.elo : a.elo - b.elo);
@@ -179,9 +179,10 @@ function renderList() {
 function resumeOffer(saved) {
   const el = document.createElement("div");
   el.className = "card";
-  el.innerHTML = `<b>Unfinished game against ${saved.bot.toUpperCase()}</b><div class="btns"><button class="btn" id="resume">Carry on</button></div>`;
+  const b = bots.find(x => x.id === saved.bot);
+  el.innerHTML = `<b>Unfinished game against ${b.name}</b><div class="btns"><button class="btn" id="resume">Carry on</button></div>`;
   $("resumeBox").appendChild(el);
-  $("resume").onclick = () => { openSetup(bots.find(b => b.id === saved.bot)); settings = saved.settings; renderSetup(); $("pass").value = saved.bot.toUpperCase() === saved.pass ? saved.pass : ""; startGame(saved); };
+  $("resume").onclick = () => { openSetup(b); settings = saved.settings; renderSetup(); $("pass").value = (b.base || b.id).toUpperCase() === saved.pass ? saved.pass : ""; startGame(saved); };
 }
 
 function openSetup(b) {
@@ -214,7 +215,7 @@ function loadBot(pass) {
   return new Promise((resolve, reject) => {
     if (worker && loadedFile === bot.file) return resolve();
     if (worker) worker.terminate();
-    worker = new Worker("worker.js?v=8");
+    worker = new Worker("worker.js?v=9");
     worker.onmessage = e => {
       if (e.data.type === "loaded") { loadedFile = bot.file; worker.onmessage = onWorker; resolve(); }
       else if (e.data.type === "error") { worker.terminate(); worker = null; reject(e.data.message); }
@@ -278,6 +279,12 @@ function afterMove() {
 
 function think() {
   thinking = true; lastInfo = null; renderText();
+  if (bot.random && Math.random() < bot.random) {         // a random legal move instead of the search's
+    const legal = pos.legal(), m = C.uci(legal[Math.floor(Math.random() * legal.length)]);
+    lastInfo = null;
+    setTimeout(() => { thinking = false; playUci(m); afterMove(); }, Math.max(400, animUntil - performance.now()));
+    return;
+  }
   worker.postMessage({ type: "go", moves, newGame, nodes: settings.kind === "nodes" ? settings.amount : 0,
                        seconds: settings.kind === "time" ? settings.amount : 0 });
   newGame = false;
