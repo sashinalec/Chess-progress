@@ -1,5 +1,5 @@
 {
- "built": "2026-10-27 13:30",
+ "built": "2026-10-28 08:20",
  "bots": [
   {
    "id": "ai6",
@@ -652,7 +652,7 @@
   {
    "id": "ai41",
    "name": "AI41",
-   "games": 56683,
+   "games": 626911,
    "sizes": [
     128,
     16
@@ -660,11 +660,11 @@
    "head": 16,
    "heads": 2,
    "king_relative": true,
-   "file": "w/ai41_cc6f3e87b77d.bin",
+   "file": "w/ai41_9a715e4205be.bin",
    "kb": 3379,
    "note": "king-relative inputs, opening work, reanalysis (the week project)",
-   "elo": 2231,
-   "elo_date": "2026-10-27",
+   "elo": 2485,
+   "elo_date": "2026-10-28",
    "search": {
     "v2": true,
     "contempt": 0
