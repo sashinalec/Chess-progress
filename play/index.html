@@ -178,7 +178,7 @@ input[type=password], input[type=text] { width: 100%; font: inherit; padding: 9p
     <div class="card"><div id="moves"></div></div>
   </section>
 </main>
-<p class="sub" id="version" style="text-align:center;margin-top:24px">Page version 11 · 29 Oct, guest games come back</p>
+<p class="sub" id="version" style="text-align:center;margin-top:24px">Page version 12 · 29 Oct, guest games show the bot's search</p>
 <script src="engine.js?v=10"></script>
 <script src="guestcode.js?v=11"></script>
 <script>
@@ -223,12 +223,24 @@ function showGuests() {
     el.className = "card bot";
     el.innerHTML = `<b>${GuestCode.format(x.code)} · ${x.bot_name}</b><span class="elo">${x.result}</span>` +
       `<div class="meta">${x.finished} · guest played ${x.guest} · ${x.limit} a move · ${x.outcome} (${x.why}) · ` +
-      `${Math.ceil(x.san.length / 2)} moves</div>`;
+      `${Math.ceil(x.san.length / 2)} moves` + (x.positions ? ` · ${searchText(x)}` : "") + `</div>`;
     el.onclick = () => { view = { x, ply: x.uci.length }; $("viewer").classList.remove("hide"); drawView(); $("viewer").scrollIntoView(); };
     list.appendChild(el);
   }
   $("viewer").classList.add("hide");
   show("guests");
+}
+// (owner, 29 Oct 2026) How hard the bot searched on the guest's device, against its Stockfish rating test at home.
+const kText = n => n >= 10000 ? Math.round(n / 1000) + "k" : n.toLocaleString("en-GB");
+const searchText = x => `the bot searched about ${kText(x.positions)} positions a move (depth ${x.depth}, ${x.seconds} s) on ${x.device}` +
+  (x.share_of_test ? `, ${Math.round(100 * x.share_of_test)}% of what it had in its rating test` : "");
+function botMoveSearch(x, ply) {            // [positions, depth, ms] of the bot's move that made ply, or null
+  if (!x.search || !ply || (ply % 2 === 1) !== (x.guest === "black")) return null;
+  const first = x.random_opening ? 4 : 0;   // the random opening's moves weren't searched
+  if (ply <= first) return null;
+  let k = 0;
+  for (let p = first + 1; p < ply; p++) if ((p % 2 === 1) === (x.guest === "black")) k++;
+  return x.search[k] || null;
 }
 let view = null;
 function drawView() {
@@ -246,6 +258,9 @@ function drawView() {
   }
   $("vinfo").textContent = `${GuestCode.format(x.code)} · ${x.bot_name} · guest ${x.guest} · ${x.result}, ${x.outcome} (${x.why}) · ` +
     (ply ? `after move ${Math.ceil(ply / 2)}` : "the start");
+  const s = botMoveSearch(x, ply);
+  if (s) $("vinfo").textContent += s[0] ? ` · the bot searched ${kText(s[0])} positions for this move (depth ${s[1]}, ${(s[2] / 1000).toFixed(1)} s)`
+                                        : " · this move was the easier level's random move";
   $("vmoves").innerHTML = x.san.map((m, i) => (i % 2 === 0 ? (i / 2 + 1) + ". " : "") + `<span data-p="${i + 1}"${i + 1 === ply ? ' class="on"' : ""}>${m}</span>`).join(" ");
   for (const el of $("vmoves").children) el.onclick = () => { view.ply = +el.dataset.p; drawView(); };
 }

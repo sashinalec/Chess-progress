@@ -95,7 +95,7 @@ input[type=text] { width: 100%; font: inherit; font-size: 1.6rem; letter-spacing
     <div class="card"><div id="moves"></div></div>
   </section>
 </main>
-<p class="sub" style="text-align:center;margin-top:24px">Page version 2 · 29 Oct, results sent back</p>
+<p class="sub" style="text-align:center;margin-top:24px">Page version 3 · 29 Oct, results sent back</p>
 <script src="../play/engine.js?v=10"></script>
 <script src="../play/guestcode.js?v=11"></script>
 <script>
@@ -110,7 +110,8 @@ const ANIM_SECONDS = 1.0;
 let animUntil = 0;
 let anim = null, drag = null, pieceEl = [], squareEl = [];
 let g = null, bot = null, worker = null, pos = null, moves = [], sans = [], youWhite = true, flipped = false,
-    selected = -1, thinking = false, gameOver = "", pendingPromo = null, newGame = true, sent = false;
+    selected = -1, thinking = false, gameOver = "", pendingPromo = null, newGame = true, sent = false,
+    stats = [], thinkStart = 0;          // (owner, 29 Oct 2026) each bot move: [positions searched, depth, ms]
 
 function show(id) { for (const s of ["enter", "game"]) $(s).classList.toggle("hide", s !== id); window.scrollTo(0, 0); }
 
@@ -161,6 +162,7 @@ function start() {
   const first = g.random ? GuestCode.opening(g.seed).uci : [];
   pos = new C.Position(); pos.setFen(C.START);
   moves = []; sans = []; gameOver = ""; selected = -1; newGame = true; sent = !!(saved && saved.sent);
+  stats = saved && saved.stats ? saved.stats : [];
   youWhite = g.white; flipped = !youWhite;
   for (const u of saved ? saved.moves : first) playUci(u, true);
   $("info").textContent = (bot.elo ? `Bot ≈ ${bot.elo} Elo · ` : "") + `${GuestCode.limitText(g)} a move · you play ${youWhite ? "White" : "Black"}` +
@@ -170,12 +172,14 @@ function start() {
   afterMove();
 }
 
-function save() { store.set("guest:" + g.code, { moves, over: gameOver, sent }); }
+function save() { store.set("guest:" + g.code, { moves, over: gameOver, sent, stats }); }
 
 // The finished game to the relay: a title with the code, then the result as shown and the moves from the start.
 function report() {
-  const title = `Guest game ${GuestCode.format(g.code)}`, body = `${gameOver}
-${GuestCode.sanText(sans)}`;
+  // A third line: how hard the bot searched on this device (each bot move; a random easier-level move = [0, 0, 0]).
+  const search = { m: stats, mobile: /Mobi|Android|iPhone|iPad/.test(navigator.userAgent) };
+  const title = `Guest game ${GuestCode.format(g.code)}`,
+        body = [gameOver, GuestCode.sanText(sans), "search " + JSON.stringify(search)].join("\n");
   $("gameErr").textContent = "Sending the result back…";
   fetch(GuestCode.RELAY + "?title=" + encodeURIComponent(title), { method: "POST", body, keepalive: true })
     .then(r => { if (!r.ok) throw new Error(r.status); sent = true; save();
@@ -229,9 +233,11 @@ function think() {
   thinking = true; renderText();
   if (bot.random && Math.random() < bot.random) {         // an easier level: a random legal move instead
     const legal = pos.legal(), m = C.uci(legal[Math.floor(Math.random() * legal.length)]);
+    stats.push([0, 0, 0]);
     setTimeout(() => { thinking = false; playUci(m); afterMove(); }, Math.max(400, animUntil - performance.now()));
     return;
   }
+  thinkStart = performance.now();
   worker.postMessage({ type: "go", moves, newGame, nodes: g.kind === "nodes" ? g.amount : 0, seconds: g.kind === "time" ? g.amount : 0 });
   newGame = false;
 }
@@ -240,6 +246,7 @@ function onWorker(e) {
   const d = e.data;
   if (gameOver) return;                                     // resigned while it was thinking
   if (d.type === "best") {
+    stats.push([d.nodes, d.depth, Math.round(performance.now() - thinkStart)]);
     setTimeout(() => { thinking = false; playUci(d.move); afterMove(); }, Math.max(0, animUntil - performance.now()));
   } else if (d.type === "error") { thinking = false; $("status").textContent = "The bot hit a problem: " + d.message; }
 }
