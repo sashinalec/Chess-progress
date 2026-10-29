@@ -233,7 +233,8 @@ function showGuests() {
 // (owner, 29 Oct 2026) How hard the bot searched on the guest's device, against its Stockfish rating test at home.
 const kText = n => n >= 10000 ? Math.round(n / 1000) + "k" : n.toLocaleString("en-GB");
 const searchText = x => `the bot searched about ${kText(x.positions)} nodes (positions) a move (depth ${x.depth}, ${x.seconds} s) on ${x.device}` +
-  (x.share_of_test ? `, ${Math.round(100 * x.share_of_test)}% of what it had in its rating test` : "");
+  (x.share_of_test ? `, ${Math.round(100 * x.share_of_test)}% of what it had in its rating test` : "") +
+  (x.elo_here ? ` - so it played at about ${x.elo_here}${x.elo_here_beyond ? "+" : ""} Elo (8-core test, 29 Oct)` : "");
 function botMoveSearch(x, ply) {            // [positions, depth, ms] of the bot's move that made ply, or null
   if (!x.search || !ply || (ply % 2 === 1) !== (x.guest === "black")) return null;
   const first = x.random_opening ? 4 : 0;   // the random opening's moves weren't searched
