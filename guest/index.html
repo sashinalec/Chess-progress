@@ -1,0 +1,417 @@
+<!doctype html>
+<html lang="en-GB">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Chess Bot Game</title>
+<!-- (owner, 29 Oct 2026) The guest page: a code from the play page (guestcode.js) opens ONE game against one bot.
+     No bot list, no passcodes, no take-backs, no new games, no evaluation shown, no links to the other sites.
+     Uses the play page's engine, worker and networks (../play/). -->
+<style>
+:root {
+  --bg: #f4f2ee; --card: #ffffff; --text: #1d1d1f; --muted: #6b6b70; --line: #e2dfd8; --accent: #2f6fdf;
+  --light-sq: #ecdab9; --dark-sq: #ae8a68; --sel: rgba(47, 111, 223, .45); --last: rgba(246, 210, 74, .55);
+  --dot: rgba(20, 20, 20, .28); --check: rgba(220, 50, 50, .6);
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #17181b; --card: #222327; --text: #ececee; --muted: #9a9aa2; --line: #34353a; --accent: #6f9cff;
+    --light-sq: #c9b18f; --dark-sq: #8b6a4d;
+  }
+}
+* { box-sizing: border-box; }
+html, body { margin: 0; background: var(--bg); color: var(--text);
+  font: 16px/1.4 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; -webkit-tap-highlight-color: transparent; }
+main { max-width: 560px; margin: 0 auto; padding: 16px 16px 40px; }
+h1 { font-size: 1.35rem; margin: 4px 0 2px; }
+.sub { color: var(--muted); margin: 0 0 14px; font-size: .92rem; }
+.card { background: var(--card); border: 1px solid var(--line); border-radius: 12px; padding: 12px 14px; margin: 0 0 10px; }
+input[type=text] { width: 100%; font: inherit; font-size: 1.6rem; letter-spacing: .14em; text-align: center; text-transform: uppercase;
+  padding: 9px 11px; border-radius: 10px; border: 1px solid var(--line); background: var(--card); color: var(--text); }
+.btn { font: inherit; border: 0; border-radius: 10px; padding: 10px 16px; background: var(--accent); color: #fff; cursor: pointer; }
+.btn.sec { background: transparent; color: var(--accent); border: 1px solid var(--line); }
+.btns { display: flex; flex-wrap: wrap; gap: 8px; margin: 10px 0; }
+.err { color: #d33; margin: 6px 0; min-height: 1.2em; }
+#board { width: 100%; aspect-ratio: 1; display: grid; touch-action: none; -webkit-user-select: none;
+  -webkit-touch-callout: none; grid-template-columns: repeat(8, minmax(0, 1fr));
+  grid-template-rows: repeat(8, minmax(0, 1fr)); border-radius: 6px;
+  overflow: hidden; user-select: none; touch-action: manipulation; box-shadow: 0 1px 4px rgba(0,0,0,.25); }
+.sq { position: relative; display: flex; align-items: center; justify-content: center; font-size: min(10vw, 52px); line-height: 1; cursor: pointer; }
+.sq.l { background: var(--light-sq); } .sq.d { background: var(--dark-sq); }
+.sq.last::before, .sq.sel::before, .sq.chk::before { content: ""; position: absolute; inset: 0; }
+.sq.last::before { background: var(--last); } .sq.sel::before { background: var(--sel); }
+.sq.chk::before { background: radial-gradient(circle, var(--check) 30%, transparent 75%); }
+.sq.dot::after { content: ""; position: absolute; width: 28%; height: 28%; border-radius: 50%; background: var(--dot); }
+.sq.cap::after { content: ""; position: absolute; inset: 6%; border-radius: 50%; border: 4px solid var(--dot); }
+.pc { position: relative; z-index: 1; }
+#board * { touch-action: none; }
+.sq > .pc { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; }
+.sq > .pc.moving { z-index: 5; }
+.sq > .pc.lifted { opacity: .25; }
+#ghost { position: fixed; z-index: 50; pointer-events: none; display: flex; align-items: center; justify-content: center;
+  line-height: 1; transform: scale(1.12); }
+.pc.w { color: #fff; text-shadow: 0 0 1px #000, 0 0 1px #000, 0 1px 1px #000; }
+.pc.b { color: #111; text-shadow: 0 0 1px #fff3; }
+.coord { position: absolute; font-size: 10px; font-weight: 600; opacity: .7; z-index: 1; }
+.coord.f { right: 3px; bottom: 1px; } .coord.r { left: 3px; top: 1px; }
+.sq.l .coord { color: var(--dark-sq); } .sq.d .coord { color: var(--light-sq); }
+#status { margin: 10px 0 2px; font-weight: 600; min-height: 1.4em; }
+.caps { display: flex; align-items: center; min-height: 30px; margin: 4px 0; }
+.caps .who { font-weight: 600; font-size: .92rem; margin-right: 10px; white-space: nowrap; }
+.caps .grp { display: inline-flex; margin-right: 6px; }
+.caps .grp .pc { font-size: 20px; line-height: 1; margin-right: -6px; }
+.caps .adv { margin-left: 8px; font-size: .9rem; font-weight: 600; color: var(--muted); }
+#moves { font-size: .92rem; color: var(--muted); max-height: 140px; overflow: auto; word-spacing: 2px; }
+#promo { display: none; gap: 8px; margin: 8px 0; }
+#promo button { font-size: 30px; width: 54px; height: 54px; border-radius: 10px; border: 1px solid var(--line); background: var(--card); cursor: pointer; }
+.hide { display: none; }
+</style>
+</head>
+<body>
+<main>
+  <section id="enter">
+    <h1>A game against a chess bot</h1>
+    <p class="sub">Type the 6-character code you were sent. It opens one game against the bot, with the settings
+      chosen for you.</p>
+    <input id="code" type="text" autocomplete="off" autocapitalize="characters" spellcheck="false" maxlength="8" placeholder="ABC 123">
+    <div class="err" id="enterErr"></div>
+    <div class="btns"><button class="btn" id="go">Play</button></div>
+  </section>
+
+  <section id="game" class="hide">
+    <p class="sub" id="info" style="margin-bottom:6px"></p>
+    <div class="caps" id="capTop"></div>
+    <div id="board"></div>
+    <div class="caps" id="capBot"></div>
+    <div id="promo"></div>
+    <div id="status"></div>
+    <div class="btns">
+      <button class="btn sec" id="flip">Flip</button><button class="btn sec" id="resign">Resign</button>
+      <button class="btn sec hide" id="copyGame">Copy the game</button>
+    </div>
+    <div class="err" id="gameErr"></div>
+    <div class="card"><div id="moves"></div></div>
+  </section>
+</main>
+<p class="sub" style="text-align:center;margin-top:24px">Page version 1 · 29 Oct</p>
+<script src="../play/engine.js?v=10"></script>
+<script src="../play/guestcode.js?v=10"></script>
+<script>
+"use strict";
+const C = Chess;
+const GLYPH = ["♟", "♞", "♝", "♜", "♛", "♚"].map(g => g + "︎");
+const LABEL = "The bot";
+const $ = id => document.getElementById(id);
+const store = { get(k, d) { try { const v = localStorage.getItem(k); return v === null ? d : JSON.parse(v); } catch (e) { return d; } },
+                set(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) {} } };
+const ANIM_SECONDS = 1.0;
+let animUntil = 0;
+let anim = null, drag = null, pieceEl = [], squareEl = [];
+let g = null, bot = null, worker = null, pos = null, moves = [], sans = [], youWhite = true, flipped = false,
+    selected = -1, thinking = false, gameOver = "", pendingPromo = null, newGame = true;
+
+function show(id) { for (const s of ["enter", "game"]) $(s).classList.toggle("hide", s !== id); window.scrollTo(0, 0); }
+
+const fromLink = new URLSearchParams(location.search).get("code");
+$("code").value = fromLink || store.get("lastCode", "");
+$("go").onclick = open;
+$("code").addEventListener("keydown", e => { if (e.key === "Enter") open(); });
+
+async function open() {
+  const code = GuestCode.read($("code").value);
+  if (!code) { $("enterErr").textContent = "That isn't a code - check the 6 characters."; return; }
+  $("enterErr").textContent = "Getting the bot ready…";
+  let list;
+  try { list = (await (await fetch("../play/bots.json", { cache: "no-cache" })).json()).bots; }
+  catch (e) { $("enterErr").textContent = "Could not reach the bot. Check the connection and try again."; return; }
+  const base = list.find(b => b.id === "ai" + code.bot && !b.random);
+  const levels = list.filter(b => b.base === "ai" + code.bot);
+  bot = code.level ? levels[code.level - 1] : base;
+  if (!bot) { $("enterErr").textContent = "This code's bot is no longer available."; return; }
+  try { await loadBot(); } catch (msg) { $("enterErr").textContent = "The bot could not start: " + msg; return; }
+  $("enterErr").textContent = "";
+  g = code;
+  store.set("lastCode", g.code);
+  start();
+}
+
+function loadBot() {
+  return new Promise((resolve, reject) => {
+    if (worker) worker.terminate();
+    worker = new Worker("../play/worker.js?v=10");
+    worker.onmessage = e => {
+      if (e.data.type === "loaded") { worker.onmessage = onWorker; resolve(); }
+      else if (e.data.type === "error") { worker.terminate(); worker = null; reject(e.data.message); }
+    };
+    worker.postMessage({ type: "load", url: bot.file, passcode: (bot.base || bot.id).toUpperCase(), search: bot.search });
+  });
+}
+
+function start() {
+  const saved = store.get("guest:" + g.code, null);        // this code's game on this device: carry on, or finished
+  const first = g.random ? GuestCode.opening(g.seed).uci : [];
+  pos = new C.Position(); pos.setFen(C.START);
+  moves = []; sans = []; gameOver = ""; selected = -1; newGame = true;
+  youWhite = g.white; flipped = !youWhite;
+  for (const u of saved ? saved.moves : first) playUci(u, true);
+  $("info").textContent = (bot.elo ? `Bot ≈ ${bot.elo} Elo · ` : "") + `${GuestCode.limitText(g)} a move · you play ${youWhite ? "White" : "Black"}` +
+    (g.random ? ` · a random opening: ${GuestCode.sanText(GuestCode.opening(g.seed).san)}` : "");
+  show("game");
+  if (saved && saved.over) { gameOver = saved.over; render(); finished(); return; }
+  afterMove();
+}
+
+function save() { store.set("guest:" + g.code, { moves, over: gameOver }); }
+
+function playUci(u, quiet, noAnim) {
+  const m = pos.legal().find(x => C.uci(x) === u);
+  if (!m) return false;
+  if (!quiet && !noAnim) {
+    const f = C.mFrom(m), t = C.mTo(m);
+    anim = [[f, t]];
+    if (C.mFlag(m) === 2) anim.push(t > f ? [t + 1, t - 1] : [t - 2, t + 1]);     // castling: the rook too
+  }
+  sans.push(C.san(pos, m));
+  pos.make(m); moves.push(u);
+  if (!quiet) save();
+  return true;
+}
+
+function result() {
+  const legal = pos.legal();
+  if (!legal.length) return pos.inCheck() ? (pos.stm === C.WHITE ? "Black" : "White") + " wins by checkmate" : "Draw by stalemate";
+  if (pos.hm >= 100) return "Draw by the 50-move rule";
+  if (pos.insufficient()) return "Draw: not enough material";
+  const p = new C.Position(); p.setFen(C.START); const seen = {};
+  const key = q => q.fen().split(" ").slice(0, 4).join(" ");
+  seen[key(p)] = 1;
+  for (const u of moves) { p.make(p.legal().find(x => C.uci(x) === u)); const k = key(p); seen[k] = (seen[k] || 0) + 1; if (seen[k] >= 3) return "Draw by threefold repetition"; }
+  return "";
+}
+
+function afterMove() {
+  gameOver = result();
+  render();
+  save();
+  if (gameOver) { finished(); return; }
+  if ((pos.stm === C.WHITE) !== youWhite) think();
+}
+
+function finished() {
+  $("resign").classList.add("hide");
+  $("copyGame").classList.remove("hide");
+  if (worker) { worker.terminate(); worker = null; }
+}
+
+function think() {
+  thinking = true; renderText();
+  if (bot.random && Math.random() < bot.random) {         // an easier level: a random legal move instead
+    const legal = pos.legal(), m = C.uci(legal[Math.floor(Math.random() * legal.length)]);
+    setTimeout(() => { thinking = false; playUci(m); afterMove(); }, Math.max(400, animUntil - performance.now()));
+    return;
+  }
+  worker.postMessage({ type: "go", moves, newGame, nodes: g.kind === "nodes" ? g.amount : 0, seconds: g.kind === "time" ? g.amount : 0 });
+  newGame = false;
+}
+
+function onWorker(e) {
+  const d = e.data;
+  if (gameOver) return;                                     // resigned while it was thinking
+  if (d.type === "best") {
+    setTimeout(() => { thinking = false; playUci(d.move); afterMove(); }, Math.max(0, animUntil - performance.now()));
+  } else if (d.type === "error") { thinking = false; $("status").textContent = "The bot hit a problem: " + d.message; }
+}
+
+function render() {
+  const board = $("board"); board.innerHTML = "";
+  const legal = selected >= 0 && !thinking ? pos.legal().filter(m => C.mFrom(m) === selected) : [];
+  const lastU = moves[moves.length - 1];
+  const lastSq = lastU ? [lastU.slice(0, 2), lastU.slice(2, 4)] : [];
+  const checkSq = pos.inCheck() ? pos.king[pos.stm] : -1;
+  for (let i = 0; i < 64; i++) {
+    const r = flipped ? (i >> 3) : 7 - (i >> 3), f = flipped ? 7 - (i & 7) : (i & 7), s = r * 8 + f;
+    const el = document.createElement("div");
+    el.className = "sq " + ((r + f) % 2 ? "l" : "d");
+    if (lastSq.includes(C.sqName(s))) el.classList.add("last");
+    if (s === selected) el.classList.add("sel");
+    if (s === checkSq) el.classList.add("chk");
+    const t = legal.find(m => C.mTo(m) === s);
+    if (t !== undefined) el.classList.add(pos.b[s] ? "cap" : "dot");
+    const p = pos.b[s];
+    pieceEl[s] = null;
+    if (p) { const sp = document.createElement("span"); sp.className = "pc " + (C.colourOf(p) ? "b" : "w"); sp.textContent = GLYPH[C.typeOf(p)]; el.appendChild(sp); pieceEl[s] = sp; }
+    if ((i >> 3) === 7) { const c = document.createElement("span"); c.className = "coord f"; c.textContent = "abcdefgh"[f]; el.appendChild(c); }
+    if ((i & 7) === 0) { const c = document.createElement("span"); c.className = "coord r"; c.textContent = r + 1; el.appendChild(c); }
+    el.dataset.s = s;
+    squareEl[s] = el;
+    board.appendChild(el);
+  }
+  if (anim) { for (const [f, t] of anim) slide(f, t); anim = null; }
+  renderCaps();
+  renderText();
+}
+
+// As on chess.com: beside each player the pieces it has taken, and +N for the one ahead on material.
+function renderCaps() {
+  const START = [8, 2, 2, 2, 1], VAL = [1, 3, 3, 5, 9];
+  const count = [[0, 0, 0, 0, 0, 0], [0, 0, 0, 0, 0, 0]];
+  for (let q = 0; q < 64; q++) { const p = pos.b[q]; if (p) count[C.colourOf(p)][C.typeOf(p)]++; }
+  const mat = c => VAL.reduce((t, v, k) => t + v * count[c][k], 0);
+  const diff = mat(C.WHITE) - mat(C.BLACK);
+  const row = (el, c) => {
+    const you = (c === C.WHITE) === youWhite;
+    let html = `<span class="who">${you ? "You" : LABEL}</span>`;
+    for (const t of [0, 1, 2, 3, 4]) {
+      const n = Math.max(0, START[t] - count[c ^ 1][t]);
+      if (!n) continue;
+      html += `<span class="grp">` + `<span class="pc ${c === C.WHITE ? "b" : "w"}">${GLYPH[t]}</span>`.repeat(n) + `</span>`;
+    }
+    const lead = c === C.WHITE ? diff : -diff;
+    if (lead > 0) html += `<span class="adv">+${lead}</span>`;
+    el.innerHTML = html;
+  };
+  const top = flipped ? C.WHITE : C.BLACK;
+  row($("capTop"), top);
+  row($("capBot"), top ^ 1);
+}
+
+function renderText() {
+  const you = youWhite ? "White" : "Black";
+  $("status").textContent = gameOver ? gameOver : thinking ? `${LABEL} is thinking…` :
+    `Your move (${you})` + (pos.inCheck() ? " - check" : "");
+  let txt = "";
+  for (let i = 0; i < sans.length; i++) txt += (i % 2 === 0 ? (i / 2 + 1) + ". " : "") + sans[i] + " ";
+  $("moves").textContent = txt || `You are ${you}.`;
+  $("moves").scrollTop = 1e6;
+}
+
+function slide(f, t) {
+  const el = pieceEl[t];
+  if (!el) return;
+  const col = s => flipped ? 7 - (s & 7) : (s & 7), row = s => flipped ? (s >> 3) : 7 - (s >> 3);
+  el.classList.add("moving");
+  animUntil = performance.now() + ANIM_SECONDS * 1000;
+  const a = el.animate([{ transform: `translate(${(col(f) - col(t)) * 100}%, ${(row(f) - row(t)) * 100}%)` },
+                        { transform: "translate(0, 0)" }], { duration: ANIM_SECONDS * 1000, easing: "ease" });
+  a.onfinish = a.oncancel = () => el.classList.remove("moving");
+}
+
+function showSelection() {
+  const legal = selected >= 0 && !thinking ? pos.legal().filter(m => C.mFrom(m) === selected) : [];
+  for (let s = 0; s < 64; s++) {
+    const el = squareEl[s];
+    if (!el) continue;
+    el.classList.toggle("sel", s === selected);
+    const t = legal.some(m => C.mTo(m) === s);
+    el.classList.toggle("cap", t && !!pos.b[s]);
+    el.classList.toggle("dot", t && !pos.b[s]);
+  }
+}
+
+function yourTurn() { return !thinking && !gameOver && !pendingPromo && (pos.stm === C.WHITE) === youWhite; }
+function squareAt(x, y) { const el = document.elementFromPoint(x, y); const sq = el && el.closest && el.closest("#board .sq"); return sq ? +sq.dataset.s : -1; }
+function tryMove(from, to, noAnim) {
+  const cand = pos.legal().filter(m => C.mFrom(m) === from && C.mTo(m) === to);
+  if (cand.length === 1) { selected = -1; playUci(C.uci(cand[0]), false, noAnim); afterMove(); return true; }
+  if (cand.length > 1) { askPromo(cand, noAnim); return true; }
+  return false;
+}
+
+// Tap a piece then a square, or drag it (fingers: touch events; mouse / pen: pointer events), as on the play page.
+function pressStart(x, y, id) {
+  const s = squareAt(x, y);
+  if (s < 0 || !yourTurn()) return false;
+  if (selected >= 0 && s !== selected && tryMove(selected, s, false)) return true;
+  const p = pos.b[s];
+  if (!(p && C.colourOf(p) === pos.stm)) { selected = -1; showSelection(); return true; }
+  const was = selected === s;
+  selected = s; showSelection();
+  drag = { from: s, was, x0: x, y0: y, moved: false, ghost: null, id };
+  return true;
+}
+function pressMove(x, y) {
+  if (!drag.moved && Math.hypot(x - drag.x0, y - drag.y0) < 6) return;
+  if (!drag.moved) {
+    const src = pieceEl[drag.from];
+    if (!src) return;
+    drag.moved = true;
+    const size = src.parentElement.getBoundingClientRect().width;
+    const gh = src.cloneNode(true);
+    gh.id = "ghost"; gh.className = src.className; gh.style.width = gh.style.height = size + "px";
+    gh.style.fontSize = getComputedStyle(src.parentElement).fontSize;
+    document.body.appendChild(gh);
+    drag.ghost = gh; drag.size = size;
+    src.classList.add("lifted");
+  }
+  drag.ghost.style.left = (x - drag.size / 2) + "px";
+  drag.ghost.style.top = (y - drag.size / 2) + "px";
+}
+function pressEnd(x, y, cancelled) {
+  const d = drag; drag = null;
+  if (d.ghost) d.ghost.remove();
+  if (d.moved) {
+    const to = cancelled ? -1 : squareAt(x, y);
+    if (to >= 0 && to !== d.from && yourTurn() && tryMove(d.from, to, true)) return;
+    pieceEl[d.from] && pieceEl[d.from].classList.remove("lifted");
+  } else if (d.was && !cancelled) { selected = -1; showSelection(); }
+}
+
+const touchOf = (list, id) => { for (const t of list) if (t.identifier === id) return t; return null; };
+$("board").addEventListener("touchstart", e => {
+  if (drag || e.touches.length > 1) return;
+  const t = e.changedTouches[0];
+  if (pressStart(t.clientX, t.clientY, "t" + t.identifier)) e.preventDefault();
+}, { passive: false });
+document.addEventListener("touchmove", e => {
+  if (!drag || drag.id[0] !== "t") return;
+  const t = touchOf(e.changedTouches, +drag.id.slice(1));
+  if (!t) return;
+  e.preventDefault();
+  pressMove(t.clientX, t.clientY);
+}, { passive: false });
+for (const type of ["touchend", "touchcancel"])
+  document.addEventListener(type, e => {
+    if (!drag || drag.id[0] !== "t") return;
+    const t = touchOf(e.changedTouches, +drag.id.slice(1));
+    if (t) pressEnd(t.clientX, t.clientY, type === "touchcancel");
+  }, { passive: false });
+
+$("board").addEventListener("pointerdown", e => {
+  if (e.pointerType === "touch" || drag) return;
+  if (pressStart(e.clientX, e.clientY, "p" + e.pointerId)) {
+    e.preventDefault();
+    try { $("board").setPointerCapture(e.pointerId); } catch (err) {}
+  }
+});
+window.addEventListener("pointermove", e => { if (drag && drag.id === "p" + e.pointerId) pressMove(e.clientX, e.clientY); });
+for (const type of ["pointerup", "pointercancel"])
+  window.addEventListener(type, e => { if (drag && drag.id === "p" + e.pointerId) pressEnd(e.clientX, e.clientY, type === "pointercancel"); });
+
+function askPromo(cand, noAnim) {
+  pendingPromo = cand;
+  const box = $("promo"); box.innerHTML = ""; box.style.display = "flex";
+  for (const t of [C.QUEEN, C.ROOK, C.BISHOP, C.KNIGHT]) {
+    const b = document.createElement("button");
+    b.innerHTML = `<span class="pc ${pos.stm ? "b" : "w"}">${GLYPH[t]}</span>`;
+    b.onclick = () => { box.style.display = "none"; pendingPromo = null; selected = -1;
+                        playUci(C.uci(cand.find(m => C.mPromo(m) === t)), false, noAnim); afterMove(); };
+    box.appendChild(b);
+  }
+}
+
+$("flip").onclick = () => { flipped = !flipped; render(); };
+$("resign").onclick = () => {
+  if (gameOver || !confirm("Resign this game?")) return;
+  gameOver = `You resigned - ${youWhite ? "Black" : "White"} wins`;
+  thinking = false; save(); render(); finished();
+};
+$("copyGame").onclick = () => {
+  let txt = "";
+  for (let i = 0; i < sans.length; i++) txt += (i % 2 === 0 ? (i / 2 + 1) + ". " : "") + sans[i] + " ";
+  const text = `Code ${GuestCode.format(g.code)}: ${gameOver}\n${txt.trim()}`;
+  navigator.clipboard.writeText(text).then(() => { $("gameErr").textContent = "Copied - send it back to whoever sent you the code."; },
+                                           () => { $("gameErr").textContent = text; });
+};
+</script>
+</body>
+</html>

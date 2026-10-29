@@ -84,7 +84,7 @@ input[type=password], input[type=text] { width: 100%; font: inherit; padding: 9p
   <section id="pick">
     <h1>Play Sashin's Bots</h1>
     <p class="sub">Pick a bot. It plays in your browser, with the same search as at home (no endgame tables).
-      Elo = its latest Stockfish-ladder estimate at home (64,000 positions a move, 40 games, so give or take about 60);
+      Elo = its latest Stockfish-ladder estimate at home (both sides 0.1 s a move since 29 Oct, 40 games, so give or take about 60);
       in the browser it searches more slowly, so expect it to play somewhat weaker.</p>
     <div class="row" id="sort">
       <button class="chip" data-o="new">Newest first</button><button class="chip" data-o="hi">Elo: high to low</button>
@@ -97,6 +97,11 @@ input[type=password], input[type=text] { width: 100%; font: inherit; padding: 9p
   <section id="setup" class="hide">
     <h1 id="setupName"></h1>
     <p class="sub" id="setupInfo"></p>
+    <!-- (owner, 29 Oct 2026) a game for someone else: a 6-character code for the guest page (guestcode.js) -->
+    <label class="h">Who's playing</label>
+    <div class="row" id="who">
+      <button class="chip" data-w="me">Me</button><button class="chip" data-w="guest">Someone else</button>
+    </div>
     <label class="h">Thinking per move</label>
     <div class="row" id="kind">
       <button class="chip" data-k="time">Time</button><button class="chip" data-k="nodes">Positions</button>
@@ -104,14 +109,34 @@ input[type=password], input[type=text] { width: 100%; font: inherit; padding: 9p
     <div class="row" id="amount"></div>
     <p class="sub" id="nodesNote">In the browser a position takes longer to judge with a big network: 64k positions is
       about 0.3 s a move for the small newer bots, but several seconds for the big older ones (AI6, AI25, AI26).</p>
-    <label class="h">You play</label>
+    <label class="h" id="colourLabel">You play</label>
     <div class="row" id="colour">
       <button class="chip" data-c="w">White</button><button class="chip" data-c="b">Black</button><button class="chip" data-c="r">Random</button>
+    </div>
+    <div id="openingBox" class="hide">
+      <label class="h">Start from</label>
+      <div class="row" id="opening">
+        <button class="chip" data-s="normal">The usual start</button><button class="chip" data-s="random">A random opening (2 moves each)</button>
+      </div>
     </div>
     <label class="h" for="pass">Passcode</label>
     <input id="pass" type="password" autocomplete="off" autocapitalize="characters" placeholder="passcode">
     <div class="err" id="setupErr"></div>
     <div class="btns"><button class="btn" id="start">Play</button><button class="btn sec" id="back1">Other bots</button></div>
+  </section>
+
+  <section id="code" class="hide">
+    <h1>A game for someone else</h1>
+    <div class="card">
+      <div id="codeBig" style="font-size:2.3rem;font-weight:700;letter-spacing:.14em;text-align:center;margin:6px 0"></div>
+      <p class="sub" id="codeInfo" style="text-align:center;margin:0"></p>
+    </div>
+    <p class="sub">Send them the code and the guest page, <a id="codeLink"></a>. There they play this one game - they can't
+      see the other bots, take moves back or see what the bot thinks. A code can't be cancelled.</p>
+    <div class="err" id="codeErr"></div>
+    <div class="btns"><button class="btn" id="share">Send…</button><button class="btn sec" id="copy">Copy</button>
+      <button class="btn sec" id="back3">Back</button></div>
+    <div class="card"><b>Codes you've made</b><div id="codeList" class="sub" style="margin:4px 0 0"></div></div>
   </section>
 
   <section id="game" class="hide">
@@ -128,8 +153,9 @@ input[type=password], input[type=text] { width: 100%; font: inherit; padding: 9p
     <div class="card"><div id="moves"></div></div>
   </section>
 </main>
-<p class="sub" id="version" style="text-align:center;margin-top:24px">Page version 9 · 27 Oct, easier AI40 levels</p>
-<script src="engine.js?v=9"></script>
+<p class="sub" id="version" style="text-align:center;margin-top:24px">Page version 10 · 29 Oct, guest codes</p>
+<script src="engine.js?v=10"></script>
+<script src="guestcode.js?v=10"></script>
 <script>
 "use strict";
 const C = Chess;
@@ -146,7 +172,7 @@ let anim = null, drag = null, pieceEl = [], squareEl = [];      // the next rend
 let worker = null, loadedFile = null, pos = null, moves = [], sans = [], youWhite = true, flipped = false,
     selected = -1, thinking = false, gameOver = "", lastInfo = null, pendingPromo = null, newGame = true;
 
-function show(id) { for (const s of ["pick", "setup", "game"]) $(s).classList.toggle("hide", s !== id); window.scrollTo(0, 0); }
+function show(id) { for (const s of ["pick", "setup", "game", "code"]) $(s).classList.toggle("hide", s !== id); window.scrollTo(0, 0); }
 
 fetch("bots.json", { cache: "no-cache" }).then(r => r.json()).then(d => {
   bots = d.bots;
@@ -187,6 +213,7 @@ function resumeOffer(saved) {
 
 function openSetup(b) {
   bot = b;
+  settings.who = "me";                             // a game for someone else is chosen each time
   $("setupName").textContent = b.name + (b.elo ? ` · ≈ ${b.elo} Elo` : "");
   $("setupInfo").textContent = `network ${b.sizes.join(", ")} · ${b.games.toLocaleString("en-GB")} games trained` + (b.note ? ` · ${b.note}` : "");
   $("setupErr").textContent = "";
@@ -194,6 +221,12 @@ function openSetup(b) {
   show("setup");
 }
 function renderSetup() {
+  const guest = settings.who === "guest";
+  for (const el of $("who").children) el.classList.toggle("on", el.dataset.w === (settings.who || "me"));
+  for (const el of $("opening").children) el.classList.toggle("on", el.dataset.s === (settings.opening || "normal"));
+  $("openingBox").classList.toggle("hide", !guest);
+  $("colourLabel").textContent = guest ? "They play" : "You play";
+  $("start").textContent = guest ? "Make a code" : "Play";
   for (const el of $("kind").children) el.classList.toggle("on", el.dataset.k === settings.kind);
   $("nodesNote").classList.toggle("hide", settings.kind !== "nodes");
   for (const el of $("colour").children) el.classList.toggle("on", el.dataset.c === settings.colour);
@@ -208,14 +241,53 @@ function renderSetup() {
 }
 for (const el of $("kind").children) el.onclick = () => { settings.kind = el.dataset.k; renderSetup(); };
 for (const el of $("colour").children) el.onclick = () => { settings.colour = el.dataset.c; renderSetup(); };
+for (const el of $("who").children) el.onclick = () => { settings.who = el.dataset.w; renderSetup(); };
+for (const el of $("opening").children) el.onclick = () => { settings.opening = el.dataset.s; renderSetup(); };
 $("back1").onclick = $("back2").onclick = () => { if (worker) { worker.terminate(); worker = null; loadedFile = null; } show("pick"); };
-$("start").onclick = () => startGame(null);
+$("start").onclick = () => settings.who === "guest" ? makeGuestCode() : startGame(null);
+
+// (owner, 29 Oct 2026) The code holds the whole game (guestcode.js); the passcode is checked first, as for a game.
+const GUEST_URL = new URL("../guest/", location.href).href;
+let lastCode = null;
+async function makeGuestCode() {
+  $("setupErr").textContent = "Checking the passcode…";
+  try { await loadBot($("pass").value.trim()); }
+  catch (msg) { $("setupErr").textContent = msg === "wrong passcode" ? "That passcode doesn't unlock " + bot.name + "." : msg; return; }
+  $("setupErr").textContent = "";
+  store.set("settings", settings);
+  const base = bot.base || bot.id;
+  const o = { bot: parseInt(base.slice(2)), level: bot.random ? bots.filter(b => b.base === base).indexOf(bot) + 1 : 0,
+              white: settings.colour === "w" ? true : settings.colour === "b" ? false : Math.random() < .5,
+              limit: GuestCode.LIMITS.findIndex(([k, a]) => k === settings.kind && a === settings.amount),
+              random: settings.opening === "random", seed: Math.floor(Math.random() * 1024) };
+  let code;
+  try { code = GuestCode.make(o); } catch (err) { $("setupErr").textContent = "No code for this: " + err.message; return; }
+  const g = GuestCode.read(code);
+  const info = `${bot.name} · ${GuestCode.limitText(g)} a move · they play ${g.white ? "White" : "Black"} · ` +
+               (g.random ? "starts after " + GuestCode.sanText(GuestCode.opening(g.seed).san) : "the usual start");
+  lastCode = code;
+  const made = store.get("guestCodes", []);
+  made.unshift({ code, info, made: new Date().toLocaleString("en-GB", { dateStyle: "short", timeStyle: "short" }) });
+  store.set("guestCodes", made.slice(0, 30));
+  $("codeBig").textContent = GuestCode.format(code);
+  $("codeInfo").textContent = info;
+  $("codeLink").textContent = GUEST_URL; $("codeLink").href = GUEST_URL;
+  $("codeErr").textContent = "";
+  $("codeList").innerHTML = made.slice(0, 30).map(m => `<div><b>${GuestCode.format(m.code)}</b> · ${m.made} · ${m.info}</div>`).join("");
+  show("code");
+}
+const shareText = () => `Play a game of chess against my bot: open ${GUEST_URL} and enter the code ${GuestCode.format(lastCode)}`;
+$("copy").onclick = () => navigator.clipboard.writeText(shareText()).then(() => { $("codeErr").textContent = "Copied."; },
+                                                                         () => { $("codeErr").textContent = shareText(); });
+$("share").onclick = () => navigator.share ? navigator.share({ title: "A chess game against my bot", text: shareText() }).catch(() => {})
+                                           : $("copy").onclick();
+$("back3").onclick = () => show("setup");
 
 function loadBot(pass) {
   return new Promise((resolve, reject) => {
     if (worker && loadedFile === bot.file) return resolve();
     if (worker) worker.terminate();
-    worker = new Worker("worker.js?v=9");
+    worker = new Worker("worker.js?v=10");
     worker.onmessage = e => {
       if (e.data.type === "loaded") { loadedFile = bot.file; worker.onmessage = onWorker; resolve(); }
       else if (e.data.type === "error") { worker.terminate(); worker = null; reject(e.data.message); }

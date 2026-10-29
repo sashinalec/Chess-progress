@@ -1,5 +1,5 @@
 {
- "built": "2026-10-28 08:20",
+ "built": "2026-10-29 07:07",
  "bots": [
   {
    "id": "ai6",
@@ -443,8 +443,8 @@
    "file": "w/ai36_b14735a7efa8.bin",
    "kb": 573,
    "note": "",
-   "elo": 2085,
-   "elo_date": "2026-10-22",
+   "elo": 2284,
+   "elo_date": "2026-10-29",
    "search": {
     "v2": true,
     "contempt": 0
@@ -453,7 +453,7 @@
   {
    "id": "ai37",
    "name": "AI37",
-   "games": 994456,
+   "games": 1177172,
    "sizes": [
     64,
     8
@@ -461,11 +461,11 @@
    "head": 16,
    "heads": 1,
    "king_relative": false,
-   "file": "w/ai37_7e3a25b94f0d.bin",
+   "file": "w/ai37_4d1fe523f43e.bin",
    "kb": 350,
    "note": "about 2635 at 0.1 s a move (Stockfish test, 24 Oct)",
-   "elo": 2562,
-   "elo_date": "2026-10-23",
+   "elo": 2573,
+   "elo_date": "2026-10-29",
    "search": {
     "v2": true,
     "contempt": 0
@@ -474,7 +474,7 @@
   {
    "id": "ai38",
    "name": "AI38",
-   "games": 999116,
+   "games": 1107499,
    "sizes": [
     128,
     16
@@ -485,8 +485,8 @@
    "file": "w/ai38_d53d7a6a8a22.bin",
    "kb": 690,
    "note": "about 2713 at 0.1 s a move; about 2950 at 5 s a move (Stockfish tests, 24-25 Oct)",
-   "elo": 2517,
-   "elo_date": "2026-10-23",
+   "elo": 2622,
+   "elo_date": "2026-10-29",
    "search": {
     "v2": true,
     "contempt": 0
@@ -506,8 +506,8 @@
    "file": "w/ai39_bd8def54481e.bin",
    "kb": 1434,
    "note": "",
-   "elo": 2541,
-   "elo_date": "2026-10-27",
+   "elo": 2562,
+   "elo_date": "2026-10-29",
    "search": {
     "v2": true,
     "contempt": 0
@@ -527,8 +527,8 @@
    "file": "w/ai40_80d434aabfae.bin",
    "kb": 1395,
    "note": "",
-   "elo": 2603,
-   "elo_date": "2026-10-27",
+   "elo": 2650,
+   "elo_date": "2026-10-29",
    "search": {
     "v2": true,
     "contempt": 0
@@ -652,7 +652,7 @@
   {
    "id": "ai41",
    "name": "AI41",
-   "games": 626911,
+   "games": 1018827,
    "sizes": [
     128,
     16
@@ -660,11 +660,11 @@
    "head": 16,
    "heads": 2,
    "king_relative": true,
-   "file": "w/ai41_9a715e4205be.bin",
+   "file": "w/ai41_2e145c3e8d96.bin",
    "kb": 3379,
    "note": "king-relative inputs, opening work, reanalysis (the week project)",
-   "elo": 2485,
-   "elo_date": "2026-10-28",
+   "elo": 2612,
+   "elo_date": "2026-10-29",
    "search": {
     "v2": true,
     "contempt": 0
