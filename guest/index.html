@@ -6,7 +6,9 @@
 <title>Chess Bot Game</title>
 <!-- (owner, 29 Oct 2026) The guest page: a code from the play page (guestcode.js) opens ONE game against one bot.
      No bot list, no passcodes, no take-backs, no new games, no evaluation shown, no links to the other sites.
-     Uses the play page's engine, worker and networks (../play/). -->
+     Uses the play page's engine, worker and networks (../play/).
+     (owner, 29 Oct 2026) When the game ends it is posted to the relay (GuestCode.RELAY); the owner's PC collects it
+     and lists it in ../guestgames/games.json, and a code listed there can't be played again (on any device). -->
 <style>
 :root {
   --bg: #f4f2ee; --card: #ffffff; --text: #1d1d1f; --muted: #6b6b70; --line: #e2dfd8; --accent: #2f6fdf;
@@ -93,9 +95,9 @@ input[type=text] { width: 100%; font: inherit; font-size: 1.6rem; letter-spacing
     <div class="card"><div id="moves"></div></div>
   </section>
 </main>
-<p class="sub" style="text-align:center;margin-top:24px">Page version 1 · 29 Oct</p>
+<p class="sub" style="text-align:center;margin-top:24px">Page version 2 · 29 Oct, results sent back</p>
 <script src="../play/engine.js?v=10"></script>
-<script src="../play/guestcode.js?v=10"></script>
+<script src="../play/guestcode.js?v=11"></script>
 <script>
 "use strict";
 const C = Chess;
@@ -108,7 +110,7 @@ const ANIM_SECONDS = 1.0;
 let animUntil = 0;
 let anim = null, drag = null, pieceEl = [], squareEl = [];
 let g = null, bot = null, worker = null, pos = null, moves = [], sans = [], youWhite = true, flipped = false,
-    selected = -1, thinking = false, gameOver = "", pendingPromo = null, newGame = true;
+    selected = -1, thinking = false, gameOver = "", pendingPromo = null, newGame = true, sent = false;
 
 function show(id) { for (const s of ["enter", "game"]) $(s).classList.toggle("hide", s !== id); window.scrollTo(0, 0); }
 
@@ -121,6 +123,13 @@ async function open() {
   const code = GuestCode.read($("code").value);
   if (!code) { $("enterErr").textContent = "That isn't a code - check the 6 characters."; return; }
   $("enterErr").textContent = "Getting the bot ready…";
+  let used = [];                                            // codes whose game is finished (no file yet: none)
+  try { const r = await fetch("../guestgames/games.json", { cache: "no-cache" }); if (r.ok) used = (await r.json()).games.map(x => x.code); }
+  catch (e) {}
+  const mine = store.get("guest:" + code.code, null);
+  if (used.includes(code.code) && !(mine && mine.over)) {
+    $("enterErr").textContent = "This code has already been used - its game is finished."; return;
+  }
   let list;
   try { list = (await (await fetch("../play/bots.json", { cache: "no-cache" })).json()).bots; }
   catch (e) { $("enterErr").textContent = "Could not reach the bot. Check the connection and try again."; return; }
@@ -151,7 +160,7 @@ function start() {
   const saved = store.get("guest:" + g.code, null);        // this code's game on this device: carry on, or finished
   const first = g.random ? GuestCode.opening(g.seed).uci : [];
   pos = new C.Position(); pos.setFen(C.START);
-  moves = []; sans = []; gameOver = ""; selected = -1; newGame = true;
+  moves = []; sans = []; gameOver = ""; selected = -1; newGame = true; sent = !!(saved && saved.sent);
   youWhite = g.white; flipped = !youWhite;
   for (const u of saved ? saved.moves : first) playUci(u, true);
   $("info").textContent = (bot.elo ? `Bot ≈ ${bot.elo} Elo · ` : "") + `${GuestCode.limitText(g)} a move · you play ${youWhite ? "White" : "Black"}` +
@@ -161,7 +170,18 @@ function start() {
   afterMove();
 }
 
-function save() { store.set("guest:" + g.code, { moves, over: gameOver }); }
+function save() { store.set("guest:" + g.code, { moves, over: gameOver, sent }); }
+
+// The finished game to the relay: a title with the code, then the result as shown and the moves from the start.
+function report() {
+  const title = `Guest game ${GuestCode.format(g.code)}`, body = `${gameOver}
+${GuestCode.sanText(sans)}`;
+  $("gameErr").textContent = "Sending the result back…";
+  fetch(GuestCode.RELAY + "?title=" + encodeURIComponent(title), { method: "POST", body, keepalive: true })
+    .then(r => { if (!r.ok) throw new Error(r.status); sent = true; save();
+                 $("gameErr").textContent = "The result has been sent back. This code can't be played again."; })
+    .catch(() => { $("gameErr").textContent = "The result couldn't be sent yet - open this page again later and enter the code (or use Copy the game)."; });
+}
 
 function playUci(u, quiet, noAnim) {
   const m = pos.legal().find(x => C.uci(x) === u);
@@ -201,6 +221,8 @@ function finished() {
   $("resign").classList.add("hide");
   $("copyGame").classList.remove("hide");
   if (worker) { worker.terminate(); worker = null; }
+  if (sent) $("gameErr").textContent = "This game is finished and its result was sent back.";
+  else report();
 }
 
 function think() {

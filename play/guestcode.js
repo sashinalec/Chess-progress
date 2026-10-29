@@ -4,13 +4,16 @@
    (4, an index into LIMITS), random opening (1), a random number (10: which opening, and different codes for the
    same game) and a check (5 bits: a mistyped code is almost always rejected). The 30 bits are shuffled (a small
    Feistel network) so that codes look random, then written in 32 characters without 0 / O / 1 / I.
-   Used by index.html (making codes) and guest/index.html (playing them). Needs engine.js (Chess) for openings. */
+   Used by index.html (making codes) and guest/index.html (playing them). Needs engine.js (Chess) for openings.
+   (owner, 29 Oct 2026) A finished guest game is posted to RELAY (a free public message relay, ntfy.sh); the owner's
+   PC collects it (guest_results.py), checks it and publishes it in guestgames/games.json, and then the code is used up. */
 const GuestCode = (() => {
   const ALPHABET = "23456789ABCDEFGHJKLMNPQRSTUVWXYZ";
   // Append only: a code stores the index.
   const LIMITS = [["time", 0.1], ["time", 0.5], ["time", 1], ["time", 2], ["time", 5], ["time", 10],
                   ["nodes", 5000], ["nodes", 16000], ["nodes", 64000], ["nodes", 250000], ["nodes", 1000000]];
   const KEYS = [0x5A17, 0x3C9E, 0x71D2, 0x0BE4];
+  const RELAY = "https://ntfy.sh/sashin-chess-guest-2f8d0d932a33";     // guest_results.py TOPIC: change both together
   const OPENING_PLIES = 4;                      // a random opening: 2 random legal moves each
 
   const F = (r, k) => (Math.imul(r ^ KEYS[k], 0x9E3779B1) >>> 17) & 0x7FFF;
@@ -80,5 +83,5 @@ const GuestCode = (() => {
   const limitText = o => o.kind === "time" ? `${o.amount} s` : `${o.amount.toLocaleString("en-GB")} positions`;
   const sanText = san => san.map((m, i) => (i % 2 === 0 ? (i / 2 + 1) + ". " : "") + m).join(" ");
 
-  return { LIMITS, make, read, opening, limitText, sanText, format: s => s.slice(0, 3) + " " + s.slice(3) };
+  return { LIMITS, RELAY, make, read, opening, limitText, sanText, format: s => s.slice(0, 3) + " " + s.slice(3) };
 })();
