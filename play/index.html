@@ -74,7 +74,7 @@ input[type=password], input[type=text] { width: 100%; font: inherit; padding: 9p
 #vboard { width: 100%; aspect-ratio: 1; display: grid; grid-template-columns: repeat(8, minmax(0, 1fr));
   grid-template-rows: repeat(8, minmax(0, 1fr)); border-radius: 6px; overflow: hidden; box-shadow: 0 1px 4px rgba(0,0,0,.25); margin: 8px 0; }
 #vboard .sq { cursor: default; }
-#vmoves span { cursor: pointer; } #vmoves span.on { color: var(--text); font-weight: 700; }
+#vmoves span { cursor: pointer; } #vmoves .nodes { font-size: .72em; color: var(--muted); font-weight: 400; margin-left: 2px; } #vmoves span.on { color: var(--text); font-weight: 700; }
 #moves { font-size: .92rem; color: var(--muted); max-height: 140px; overflow: auto; word-spacing: 2px; }
 #promo { display: none; gap: 8px; margin: 8px 0; }
 #promo button { font-size: 30px; width: 54px; height: 54px; border-radius: 10px; border: 1px solid var(--line); background: var(--card); cursor: pointer; }
@@ -178,7 +178,7 @@ input[type=password], input[type=text] { width: 100%; font: inherit; padding: 9p
     <div class="card"><div id="moves"></div></div>
   </section>
 </main>
-<p class="sub" id="version" style="text-align:center;margin-top:24px">Page version 12 · 29 Oct, guest games show the bot's search</p>
+<p class="sub" id="version" style="text-align:center;margin-top:24px">Page version 13 · 29 Oct, nodes per bot move</p>
 <script src="engine.js?v=10"></script>
 <script src="guestcode.js?v=11"></script>
 <script>
@@ -232,7 +232,7 @@ function showGuests() {
 }
 // (owner, 29 Oct 2026) How hard the bot searched on the guest's device, against its Stockfish rating test at home.
 const kText = n => n >= 10000 ? Math.round(n / 1000) + "k" : n.toLocaleString("en-GB");
-const searchText = x => `the bot searched about ${kText(x.positions)} positions a move (depth ${x.depth}, ${x.seconds} s) on ${x.device}` +
+const searchText = x => `the bot searched about ${kText(x.positions)} nodes (positions) a move (depth ${x.depth}, ${x.seconds} s) on ${x.device}` +
   (x.share_of_test ? `, ${Math.round(100 * x.share_of_test)}% of what it had in its rating test` : "");
 function botMoveSearch(x, ply) {            // [positions, depth, ms] of the bot's move that made ply, or null
   if (!x.search || !ply || (ply % 2 === 1) !== (x.guest === "black")) return null;
@@ -259,9 +259,12 @@ function drawView() {
   $("vinfo").textContent = `${GuestCode.format(x.code)} · ${x.bot_name} · guest ${x.guest} · ${x.result}, ${x.outcome} (${x.why}) · ` +
     (ply ? `after move ${Math.ceil(ply / 2)}` : "the start");
   const s = botMoveSearch(x, ply);
-  if (s) $("vinfo").textContent += s[0] ? ` · the bot searched ${kText(s[0])} positions for this move (depth ${s[1]}, ${(s[2] / 1000).toFixed(1)} s)`
+  if (s) $("vinfo").textContent += s[0] ? ` · the bot searched ${s[0].toLocaleString("en-GB")} nodes (positions) for this move (depth ${s[1]}, ${(s[2] / 1000).toFixed(1)} s)`
                                         : " · this move was the easier level's random move";
-  $("vmoves").innerHTML = x.san.map((m, i) => (i % 2 === 0 ? (i / 2 + 1) + ". " : "") + `<span data-p="${i + 1}"${i + 1 === ply ? ' class="on"' : ""}>${m}</span>`).join(" ");
+  // each bot move with its nodes searched beside it, small (random easier-level moves: "rnd")
+  const nodes = i => { const q = botMoveSearch(x, i + 1); return q ? `<small class="nodes">${q[0] ? kText(q[0]) : "rnd"}</small>` : ""; };
+  $("vmoves").innerHTML = x.san.map((m, i) => (i % 2 === 0 ? (i / 2 + 1) + ". " : "") +
+    `<span data-p="${i + 1}"${i + 1 === ply ? ' class="on"' : ""}>${m}${nodes(i)}</span>`).join(" ");
   for (const el of $("vmoves").children) el.onclick = () => { view.ply = +el.dataset.p; drawView(); };
 }
 const step = n => () => { if (view) { view.ply = Math.max(0, Math.min(view.x.uci.length, n(view.ply))); drawView(); } };
