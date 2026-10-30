@@ -1,5 +1,5 @@
 {
- "built": "2026-10-29 12:34",
+ "built": "2026-10-30 06:18",
  "bots": [
   {
    "id": "ai6",
@@ -474,7 +474,7 @@
   {
    "id": "ai38",
    "name": "AI38",
-   "games": 1107499,
+   "games": 1179381,
    "sizes": [
     128,
     16
@@ -482,11 +482,11 @@
    "head": 16,
    "heads": 1,
    "king_relative": false,
-   "file": "w/ai38_d53d7a6a8a22.bin",
+   "file": "w/ai38_1f1f86b522cd.bin",
    "kb": 690,
    "note": "about 2713 at 0.1 s a move; about 2950 at 5 s a move (Stockfish tests, 24-25 Oct)",
-   "elo": 2622,
-   "elo_date": "2026-10-29",
+   "elo": 2593,
+   "elo_date": "2026-10-30",
    "search": {
     "v2": true,
     "contempt": 0
@@ -495,19 +495,19 @@
   {
    "id": "ai39",
    "name": "AI39",
-   "games": 980151,
+   "games": 1159146,
    "sizes": [
-    126,
-    58
+    122,
+    57
    ],
-   "head": 25,
+   "head": 24,
    "heads": 1,
    "king_relative": false,
-   "file": "w/ai39_bd8def54481e.bin",
-   "kb": 1434,
+   "file": "w/ai39_0ff7d17e2077.bin",
+   "kb": 1402,
    "note": "",
-   "elo": 2562,
-   "elo_date": "2026-10-29",
+   "elo": 2552,
+   "elo_date": "2026-10-30",
    "search": {
     "v2": true,
     "contempt": 0
@@ -516,7 +516,7 @@
   {
    "id": "ai40",
    "name": "AI40",
-   "games": 984216,
+   "games": 1173564,
    "sizes": [
     256,
     32
@@ -524,11 +524,11 @@
    "head": 16,
    "heads": 1,
    "king_relative": false,
-   "file": "w/ai40_80d434aabfae.bin",
+   "file": "w/ai40_d2e0ff65e5fb.bin",
    "kb": 1395,
    "note": "",
-   "elo": 2650,
-   "elo_date": "2026-10-29",
+   "elo": 2562,
+   "elo_date": "2026-10-30",
    "search": {
     "v2": true,
     "contempt": 0
@@ -537,7 +537,7 @@
   {
    "id": "ai40r5",
    "name": "AI40 \u00b7 5% random",
-   "games": 984216,
+   "games": 1173564,
    "sizes": [
     256,
     32
@@ -545,7 +545,7 @@
    "head": 16,
    "heads": 1,
    "king_relative": false,
-   "file": "w/ai40_80d434aabfae.bin",
+   "file": "w/ai40_d2e0ff65e5fb.bin",
    "kb": 1395,
    "note": "AI40's network, but 5% of its moves are a random legal move - an easier level (Elo from a home test at 0.1 s a move; passcode AI40)",
    "elo": 2170,
@@ -560,7 +560,7 @@
   {
    "id": "ai40r10",
    "name": "AI40 \u00b7 10% random",
-   "games": 984216,
+   "games": 1173564,
    "sizes": [
     256,
     32
@@ -568,7 +568,7 @@
    "head": 16,
    "heads": 1,
    "king_relative": false,
-   "file": "w/ai40_80d434aabfae.bin",
+   "file": "w/ai40_d2e0ff65e5fb.bin",
    "kb": 1395,
    "note": "AI40's network, but 10% of its moves are a random legal move - an easier level (Elo from a home test at 0.1 s a move; passcode AI40)",
    "elo": 1990,
@@ -583,7 +583,7 @@
   {
    "id": "ai40r20",
    "name": "AI40 \u00b7 20% random",
-   "games": 984216,
+   "games": 1173564,
    "sizes": [
     256,
     32
@@ -591,7 +591,7 @@
    "head": 16,
    "heads": 1,
    "king_relative": false,
-   "file": "w/ai40_80d434aabfae.bin",
+   "file": "w/ai40_d2e0ff65e5fb.bin",
    "kb": 1395,
    "note": "AI40's network, but 20% of its moves are a random legal move - an easier level (Elo from a home test at 0.1 s a move; passcode AI40)",
    "elo": 1530,
@@ -606,7 +606,7 @@
   {
    "id": "ai40r30",
    "name": "AI40 \u00b7 30% random",
-   "games": 984216,
+   "games": 1173564,
    "sizes": [
     256,
     32
@@ -614,7 +614,7 @@
    "head": 16,
    "heads": 1,
    "king_relative": false,
-   "file": "w/ai40_80d434aabfae.bin",
+   "file": "w/ai40_d2e0ff65e5fb.bin",
    "kb": 1395,
    "note": "AI40's network, but 30% of its moves are a random legal move - an easier level (Elo from a home test at 0.1 s a move; passcode AI40)",
    "elo": 1190,
@@ -629,7 +629,7 @@
   {
    "id": "ai40r50",
    "name": "AI40 \u00b7 50% random",
-   "games": 984216,
+   "games": 1173564,
    "sizes": [
     256,
     32
@@ -637,7 +637,7 @@
    "head": 16,
    "heads": 1,
    "king_relative": false,
-   "file": "w/ai40_80d434aabfae.bin",
+   "file": "w/ai40_d2e0ff65e5fb.bin",
    "kb": 1395,
    "note": "AI40's network, but 50% of its moves are a random legal move - an easier level (Elo from a home test at 0.1 s a move; passcode AI40)",
    "elo": 680,
@@ -652,7 +652,7 @@
   {
    "id": "ai41",
    "name": "AI41",
-   "games": 1018827,
+   "games": 1159115,
    "sizes": [
     128,
     16
@@ -665,6 +665,27 @@
    "note": "king-relative inputs, opening work, reanalysis (the week project)",
    "elo": 2612,
    "elo_date": "2026-10-29",
+   "search": {
+    "v2": true,
+    "contempt": 0
+   }
+  },
+  {
+   "id": "ai51",
+   "name": "AI51",
+   "games": 8,
+   "sizes": [
+    256,
+    32
+   ],
+   "head": 16,
+   "heads": 1,
+   "king_relative": false,
+   "file": "w/ai51_d28ffa29d9e6.bin",
+   "kb": 1395,
+   "note": "",
+   "elo": null,
+   "elo_date": null,
    "search": {
     "v2": true,
     "contempt": 0

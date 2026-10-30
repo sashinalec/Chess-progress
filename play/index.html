@@ -9,11 +9,13 @@
   --bg: #f4f2ee; --card: #ffffff; --text: #1d1d1f; --muted: #6b6b70; --line: #e2dfd8; --accent: #2f6fdf;
   --light-sq: #ecdab9; --dark-sq: #ae8a68; --sel: rgba(47, 111, 223, .45); --last: rgba(246, 210, 74, .55);
   --dot: rgba(20, 20, 20, .28); --check: rgba(220, 50, 50, .6);
+  --win: #1e8e3e; --draw: #7a7a80; --loss: #d93025;
 }
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme="light"]) {
     --bg: #17181b; --card: #222327; --text: #ececee; --muted: #9a9aa2; --line: #34353a; --accent: #6f9cff;
     --light-sq: #c9b18f; --dark-sq: #8b6a4d;
+    --win: #4cc272; --draw: #a2a2aa; --loss: #ff6b5e;
   }
 }
 * { box-sizing: border-box; }
@@ -28,6 +30,8 @@ h1 { font-size: 1.35rem; margin: 4px 0 2px; }
 .bot { display: block; width: 100%; text-align: left; cursor: pointer; font: inherit; color: inherit; }
 .bot b { font-size: 1.05rem; }
 .elo { margin-left: 8px; font-size: .9rem; font-weight: 600; color: var(--accent); }
+.res { margin-left: 8px; font-size: .9rem; font-weight: 700; } .res.win { color: var(--win); }
+.res.draw { color: var(--draw); } .res.loss { color: var(--loss); }
 .bot .meta, .bot .note { color: var(--muted); font-size: .88rem; }
 .bot:active { transform: scale(.99); }
 .row { display: flex; flex-wrap: wrap; gap: 8px; margin: 6px 0 12px; }
@@ -178,7 +182,7 @@ input[type=password], input[type=text] { width: 100%; font: inherit; padding: 9p
     <div class="card"><div id="moves"></div></div>
   </section>
 </main>
-<p class="sub" id="version" style="text-align:center;margin-top:24px">Page version 13 · 29 Oct, nodes per bot move</p>
+<p class="sub" id="version" style="text-align:center;margin-top:24px">Page version 14 · 30 Oct, results as Win / Draw / Loss</p>
 <script src="engine.js?v=10"></script>
 <script src="guestcode.js?v=11"></script>
 <script>
@@ -216,12 +220,20 @@ fetch("../guestgames/games.json", { cache: "no-cache" }).then(r => r.ok ? r.json
   $("viewGuests").onclick = showGuests;
 }).catch(() => {});
 
+// (owner, 30 Oct 2026) A guest game's result from the bot's side: Win (green), Draw (grey) or Loss (red)
+function botResult(x) {
+  const botWhite = x.guest === "black";
+  const kind = x.result === "1/2-1/2" ? "draw" : (x.result === "1-0") === botWhite ? "win" : "loss";
+  return { kind, text: { win: "Win", draw: "Draw", loss: "Loss" }[kind],
+           words: { win: `${x.bot_name} won`, draw: "a draw", loss: `${x.bot_name} lost` }[kind] };
+}
+const resultTag = x => { const r = botResult(x); return `<span class="res ${r.kind}" title="${r.words} (${x.result})">${r.text}</span>`; };
 function showGuests() {
   const list = $("guestList"); list.innerHTML = "";
   for (const x of guestGames) {
     const el = document.createElement("button");
     el.className = "card bot";
-    el.innerHTML = `<b>${GuestCode.format(x.code)} · ${x.bot_name}</b><span class="elo">${x.result}</span>` +
+    el.innerHTML = `<b>${GuestCode.format(x.code)} · ${x.bot_name}</b>${resultTag(x)}` +
       `<div class="meta">${x.finished} · guest played ${x.guest} · ${x.limit} a move · ${x.outcome} (${x.why}) · ` +
       `${Math.ceil(x.san.length / 2)} moves` + (x.positions ? ` · ${searchText(x)}` : "") + `</div>`;
     el.onclick = () => { view = { x, ply: x.uci.length }; $("viewer").classList.remove("hide"); drawView(); $("viewer").scrollIntoView(); };
@@ -257,7 +269,7 @@ function drawView() {
     if (q) el.innerHTML = `<span class="pc ${C.colourOf(q) ? "b" : "w"}">${GLYPH[C.typeOf(q)]}</span>`;
     board.appendChild(el);
   }
-  $("vinfo").textContent = `${GuestCode.format(x.code)} · ${x.bot_name} · guest ${x.guest} · ${x.result}, ${x.outcome} (${x.why}) · ` +
+  $("vinfo").textContent = `${GuestCode.format(x.code)} · ${x.bot_name} · guest ${x.guest} · ${botResult(x).words}, ${x.outcome} (${x.why}) · ` +
     (ply ? `after move ${Math.ceil(ply / 2)}` : "the start");
   const s = botMoveSearch(x, ply);
   if (s) $("vinfo").textContent += s[0] ? ` · the bot searched ${s[0].toLocaleString("en-GB")} nodes (positions) for this move (depth ${s[1]}, ${(s[2] / 1000).toFixed(1)} s)`
@@ -368,7 +380,7 @@ async function makeGuestCode() {
   $("codeList").innerHTML = made.slice(0, 30).map(m => {
     const done = guestGames.find(x => x.code === m.code);
     return `<div><b>${GuestCode.format(m.code)}</b> · ${m.made} · ${m.info} · ` +
-           (done ? `<b>finished: ${done.result}</b>, ${done.outcome}` : "not finished yet") + `</div>`;
+           (done ? `<b>finished:</b> ${resultTag(done)}, ${done.outcome}` : "not finished yet") + `</div>`;
   }).join("");
   show("code");
 }
